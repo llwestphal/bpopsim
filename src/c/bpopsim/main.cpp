@@ -39,7 +39,7 @@ double returnExp(double a)
 {
     exponential_distribution<> exp_dist(a);
     variate_generator<mt19937&, exponential_distribution <> > next_value(rng, exp_dist);
-    return 1/next_value(); //Not sure why I need to do this...
+    return next_value(); //Not sure why I need to do this...
 }
 
 uint64_t returnBin(const uint64_t n, const double p)
@@ -76,7 +76,7 @@ int main()
 	int total_transfers = 200000;
 	double max_divergence_factor = 100;
 	double verbose = 0;  
-	int replicates = 10000;
+	int replicates = 1000;
 	int transfer_interval_to_print = 1;
 	int minimum_printed = 8;
 
@@ -120,7 +120,7 @@ int main()
 		double max_w = 1;
 		uint64_t total_pop_size = initial_population_size;
 		int total_mutations = 0;
-		int total_mutations_lost = 0;
+		int total_subpopulations_lost = 0;
 	
   
 		int transfers = 1;
@@ -131,8 +131,8 @@ int main()
 		{
 			// Move time forward until another mutation occurs.
 
-			divisions_until_mutation += floor(returnExp(1/lambda));
-      if (verbose) cout << "New divisions before next mutation: " << divisions_until_mutation << endl;
+			divisions_until_mutation += floor(returnExp(lambda));
+      if (verbose) cout << "  New divisions before next mutation: " << divisions_until_mutation << endl;
 			
       // Calculate points to output between last time and current time
 			// First time through the loop, a partial time interval
@@ -231,7 +231,6 @@ int main()
           //Break ties randomly here.
           Individual ancestor = populations[divided_lineages[rand() % divided_lineages.size()]];
           
-          
           //What is the new lineage's fitness?
           //Option #1: dirac delta
           double new_w = 0;
@@ -285,10 +284,16 @@ int main()
               if (verbose) cout << "binomial" << it->n << endl;
               it->n = returnBin(it->n, transfer_binomial_sampling_p);
             }
-            // Otherwise, treat as deterministic...
+            // Otherwise, treat as deterministic and take expectation...
             else {
               it->n *= transfer_binomial_sampling_p;
             }
+            
+            // Keep track of lineages we lost
+            if (it->n == 0) {
+              total_subpopulations_lost++;
+            }
+            
 
             new_pop_size += floor(it->n);
             //There is probably a better way to do this, I just don't know the syntax ??by_color[p.color] += p.n;??
@@ -316,7 +321,7 @@ int main()
             this_run.push_back(ratio);
             if (verbose == 1) {
                 cout << "Transfer " << transfers << " : " << total_pop_size << "=>" << new_pop_size << "  R/W Ratio: " << ratio << endl;	
-                cout << "Total mutations: " << total_mutations << " Lost to Drift: " << total_mutations_lost << " Maximum Fitness: " << max_w << endl;
+                cout << "Total mutations: " << total_mutations << " Maximum Fitness: " << max_w << endl;
                 cout << "Size = " << this_run.size() << endl;
             }
           }
@@ -330,6 +335,12 @@ int main()
         }
       }
     }
+    
+    cout << "Total mutations: " << total_mutations << endl;
+    cout << "Total subpopulations lost: " << total_subpopulations_lost << endl;
+    cout << "Transfers: " << transfers << endl;
+    cout << "Maximum Fitness: " << max_w << endl;
+
     runs.push_back(this_run);
   }
 	

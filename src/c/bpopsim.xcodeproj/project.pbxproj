@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
+		70307F1D11F7E39E00BEFD1F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 70307F1C11F7E39E00BEFD1F /* main.cpp */; };
 		8DD76F6A0486A84900D96B5E /* popsim.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C6859E8B029090EE04C91782 /* popsim.1 */; };
 /* End PBXBuildFile section */
 
@@ -25,7 +25,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		70307F1C11F7E39E00BEFD1F /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = bpopsim/main.cpp; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* popsim */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = popsim; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6859E8B029090EE04C91782 /* popsim.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = popsim.1; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -44,19 +44,11 @@
 		08FB7794FE84155DC02AAC07 /* popsim */ = {
 			isa = PBXGroup;
 			children = (
-				08FB7795FE84155DC02AAC07 /* Source */,
+				70307F1911F7E37900BEFD1F /* Source */,
 				C6859E8C029090F304C91782 /* Documentation */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
 			name = popsim;
-			sourceTree = "<group>";
-		};
-		08FB7795FE84155DC02AAC07 /* Source */ = {
-			isa = PBXGroup;
-			children = (
-				08FB7796FE84155DC02AAC07 /* main.cpp */,
-			);
-			name = Source;
 			sourceTree = "<group>";
 		};
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
@@ -65,6 +57,22 @@
 				8DD76F6C0486A84900D96B5E /* popsim */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		70307F0B11F7E2B500BEFD1F /* bpopsim */ = {
+			isa = PBXGroup;
+			children = (
+				70307F1C11F7E39E00BEFD1F /* main.cpp */,
+			);
+			name = bpopsim;
+			sourceTree = "<group>";
+		};
+		70307F1911F7E37900BEFD1F /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				70307F0B11F7E2B500BEFD1F /* bpopsim */,
+			);
+			name = Source;
 			sourceTree = "<group>";
 		};
 		C6859E8C029090F304C91782 /* Documentation */ = {
@@ -101,7 +109,7 @@
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
-			buildConfigurationList = 1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "popsim" */;
+			buildConfigurationList = 1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "bpopsim" */;
 			compatibilityVersion = "Xcode 3.1";
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* popsim */;
@@ -118,7 +126,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8DD76F650486A84900D96B5E /* main.cpp in Sources */,
+				70307F1D11F7E39E00BEFD1F /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -193,7 +201,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "popsim" */ = {
+		1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "bpopsim" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB923608733DC60010E9CD /* Debug */,

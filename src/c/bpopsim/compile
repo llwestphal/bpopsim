@@ -1,4 +1,4 @@
-c++ -I /mnt/home/dittmarw/boost_1_43_0/ -I . -o popsim -O3 -lm \
+c++ -I /mnt/home/dittmarw/boost_1_43_0/ -I /mnt/home/dittmarw/bpopsim/src/c/bpopsim main.cpp -o popsim -O3 -lm \
  -L/mnt/home/dittmarw/boost_1_43_0/stage/lib/ -lboost_program_options
 
 

@@ -5,8 +5,14 @@ const int size_of_by_color = 2;
 
 
 
-int main()
+int main(int argc, char* argv[])
 {
+	int finishCommand = cline(argc, argv);
+	if (argc!=1) 
+	{
+		return 0;
+	}
+
 	double update_time;
 
 	// Simulation parameters that should be arguments

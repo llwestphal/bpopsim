@@ -1,0 +1,4 @@
+c++ -I /mnt/home/dittmarw/boost_1_43_0/ -I . -o popsim -O3 -lm \
+ -L/mnt/home/dittmarw/boost_1_43_0/stage/lib/ -lboost_program_options
+
+

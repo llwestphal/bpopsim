@@ -1,6 +1,7 @@
 // Global random number generator
 //#mt19937 rng(time(NULL));
 #include <pop_sim_header.cpp>
+#include <random.cpp>
 const int size_of_by_color = 2;
 
 

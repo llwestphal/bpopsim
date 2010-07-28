@@ -1,14 +1,22 @@
-// Global random number generator
-//#mt19937 rng(time(NULL));
-#include <pop_sim_header.cpp>
-#include <random.cpp>
+#include "individual.h"
+#include "commandline.cpp"
+
 const int size_of_by_color = 2;
 
-
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+using namespace std;
 
 int main(int argc, char* argv[])
 {
-	int finishCommand = cline(argc, argv);
+	//create generator and seed
+	const gsl_rng_type * T;
+        gsl_rng * randgen;
+	gsl_rng_env_setup();
+        T = gsl_rng_mt19937;
+        randgen = gsl_rng_alloc (T);
+
+	cline(argc, argv);
 	if (argc!=1) 
 	{
 		return 0;
@@ -17,14 +25,14 @@ int main(int argc, char* argv[])
 	double update_time;
 
 	// Simulation parameters that should be arguments
-	double initial_population_size = 2;
-	double pop_size_after_dilution = 5E6;             // N sub 0
+	uint64_t initial_population_size = 2;
+	uint64_t pop_size_after_dilution = int(5E6);             // N sub 0 --int is to get rid of warning
 	double mutation_rate_per_division = 1E-8;         // mu
 	double average_mutation_s = 0.05;                 // s
   	double growth_phase_generations = 6.64;
 	double beneficial_mutation_distribution_code = 0; // 0 = uniform, 1 = exponential
 	double binomial_sampling_threshold = 1000;
-	string output_file_name("output.txt");
+	std::string output_file_name("output.txt");
   
 	//Output parameters that should be arguments
 	int total_transfers = 200000;
@@ -72,7 +80,7 @@ int main(int argc, char* argv[])
 		populations.push_back(w);		
     
 		double max_w = 1;
-		uint64_t total_pop_size = initial_population_size;
+		 double total_pop_size = initial_population_size;
 		int total_mutations = 0;
 		int total_subpopulations_lost = 0;
 	
@@ -85,7 +93,8 @@ int main(int argc, char* argv[])
 		{
 			// Move time forward until another mutation occurs.
 
-			divisions_until_mutation += floor(returnExp(lambda));
+			//divisions_until_mutation += floor(returnExp(lambda));
+			divisions_until_mutation += gsl_ran_exponential(randgen, 1/lambda);
 	if (verbose) cout << "  New divisions before next mutation: " << divisions_until_mutation << endl;
 			
 			// Calculate points to output between last time and current time
@@ -125,7 +134,7 @@ int main(int argc, char* argv[])
         double time_to_next_whole_cell = 0;
         
         vector<int> divided_lineages;	
-        for (int i=0; i< populations.size(); i++) {
+        for (int i=0; i< int(populations.size()); i++) {
         	Individual &this_subpop = populations[i];
         	if (this_subpop.n == 0) continue;
         
@@ -158,7 +167,7 @@ int main(int argc, char* argv[])
         }
             
         //Now update all lineages by the time that actually passed
-        uint64_t new_pop_size = 0;
+        long double new_pop_size = 0;
         
         for (vector<Individual>::iterator it = populations.begin(); it!=populations.end(); ++it) {
         	if (it->n == 0) continue;
@@ -166,7 +175,7 @@ int main(int argc, char* argv[])
           	new_pop_size += it->n;
         }				
                 
-        uint64_t completed_divisions = new_pop_size - total_pop_size;
+        long double completed_divisions = new_pop_size - total_pop_size;
         if (verbose) cout << "Completed divisions: " << completed_divisions << endl;
         divisions_until_mutation = divisions_until_mutation - completed_divisions;
         total_pop_size = new_pop_size;
@@ -192,7 +201,8 @@ int main(int argc, char* argv[])
         }
           //Option #2: exponential
         else {
-         	double this_mutation_s = returnExp(average_mutation_s);
+		double this_mutation_s = gsl_ran_exponential(randgen,1/average_mutation_s);
+         	//double this_mutation_s = returnExp(average_mutation_s);
          	new_w = ancestor.w + this_mutation_s;
         }
           
@@ -227,7 +237,7 @@ int main(int argc, char* argv[])
         	by_color[0] = 0;
         	by_color[1] = 0;
           
-        	double new_pop_size = 0;
+        	long double new_pop_size = 0;
         	//POPULATION: for (my $i=0; $i< scalar @populations; $i++) 	
           	for (vector<Individual>::iterator it = populations.begin(); it!=populations.end(); ++it) {
             		if (it->n == 0) continue;
@@ -235,7 +245,8 @@ int main(int argc, char* argv[])
             // Perform accurate binomial sampling only if below a certain population size
             	if (it->n < binomial_sampling_threshold) {
               		if (verbose) cout << "binomial" << it->n << endl;
-              			it->n = returnBin(it->n, transfer_binomial_sampling_p);
+              			it->n = gsl_ran_binomial(randgen, transfer_binomial_sampling_p, uint64_t(it->n));
+				//it->n = returnBin(it->n, transfer_binomial_sampling_p);
             		}
             // Otherwise, treat as deterministic and take expectation...
             else {
@@ -266,7 +277,7 @@ int main(int argc, char* argv[])
           }
             
           if (verbose) cout << "Colors: " << by_color[0] << " / " << by_color[1] << endl;
-          double ratio = by_color[0] / by_color[1];
+          long double ratio = by_color[0] / by_color[1];
           
           transfers++;
 
@@ -281,7 +292,7 @@ int main(int argc, char* argv[])
           
           total_pop_size = new_pop_size;
 
-          if ( (this_run.size() >= minimum_printed) && ((ratio > max_divergence_factor) || (ratio < 1/max_divergence_factor)) ) {
+          if ( (int(this_run.size()) >= minimum_printed) && ((ratio > max_divergence_factor) || (ratio < 1/max_divergence_factor)) ) {
             if (verbose) cout << "DIVERGENCE CONDITION MET" << endl;
             keep_transferring = false;
           }	
@@ -313,7 +324,7 @@ int main(int argc, char* argv[])
     output_file << on_transfer;
     still_going = false;
     for (int on_run=0; on_run < replicates; on_run++) {
-      if(i<runs[on_run].size()) {
+      if(i<int(runs[on_run].size())) {
         
         output_file << "\t" << runs[on_run][i];
         still_going = true;

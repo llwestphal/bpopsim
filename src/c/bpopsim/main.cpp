@@ -37,14 +37,14 @@ int main(int argc, char* argv[])
 	double mutation_rate_per_division = 1E-8;         // mu
 	double average_mutation_s = 0.05;                 // s
   	double growth_phase_generations = 6.64;
-	double beneficial_mutation_distribution_code = 0; // 0 = uniform, 1 = exponential
+	char beneficial_mutation_distribution_code = 'e'; //e = exponential, u = uniform
 	double binomial_sampling_threshold = 1000;
 	std::string output_file_name("output.txt");
   
 	//Output parameters that should be arguments
 	int total_transfers = 200000;
 	double max_divergence_factor = 100;
-	double verbose = 0;  
+	double verbose = 1;  
 	int replicates = 1000;
 	int transfer_interval_to_print = 1;
 	int minimum_printed = 8;
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
 		populations.push_back(w);		
     
 		double max_w = 1;
-		 double total_pop_size = initial_population_size;
+		double total_pop_size = initial_population_size;
 		int total_mutations = 0;
 		int total_subpopulations_lost = 0;
 	
@@ -200,30 +200,41 @@ int main(int argc, char* argv[])
           	//Break ties randomly here.
           	cSubpopulation& ancestor = populations[divided_lineages[rand() % divided_lineages.size()]];
           
+
+
           	//What is the new lineage's fitness?
           	//Option #1: dirac delta
-          	double new_w = 0;
-          	if (beneficial_mutation_distribution_code == 0) {
-            	new_w = ancestor.GetFitness() + average_mutation_s;
-        }
-          //Option #2: exponential
-        else {
-		double this_mutation_s = gsl_ran_exponential(randgen,1/average_mutation_s);
+          	
+
+
+		//double new_w = 0;
+          	
+
+		//if (beneficial_mutation_distribution_code == 0) {
+            	//new_w = ancestor.GetFitness() + average_mutation_s;
+        	//}
+        	//Option #2: exponential
+        	//else {
+		//double this_mutation_s = gsl_ran_exponential(randgen,1/average_mutation_s);
          	//double this_mutation_s = returnExp(average_mutation_s);
-         	new_w = ancestor.GetFitness() + this_mutation_s;
-        }
+         	//new_w = ancestor.GetFitness() + this_mutation_s;
+        	//}
           
-        	if (verbose) cout << "  Color: " << ancestor.GetMarker() << endl;
-        	if (verbose) cout << "  New Fitness: " << new_w << endl;
+        	
           
           //Create and add the new lineage
 
-        cSubpopulation new_lineage = ancestor.CreateDescendant(new_w);
+        cSubpopulation new_lineage = ancestor.CreateDescendant(randgen);
+
+	if (verbose) cout << "  Color: " << ancestor.GetMarker() << endl;
+        if (verbose) cout << "  New Fitness: " << new_lineage.GetFitness() << endl;
+
+
         populations.push_back(new_lineage);
           
         //Update maximum fitness
-        if(new_w > max_w) {
-        	max_w = new_w;
+        if(new_lineage.GetFitness() > max_w) {
+        	max_w = new_lineage.GetFitness();
         }
         
         }
@@ -246,7 +257,9 @@ int main(int argc, char* argv[])
             // Perform accurate binomial sampling only if below a certain population size
             	if (it->GetNumber() < binomial_sampling_threshold) {
               		if (verbose) cout << "binomial" << it->GetNumber() << endl;
-              			it->SetNumber(gsl_ran_binomial(randgen, transfer_binomial_sampling_p, uint64_t(it->GetNumber())));
+				
+            			it->Transfer(transfer_binomial_sampling_p, randgen);
+				//it->SetNumber(gsl_ran_binomial(randgen, transfer_binomial_sampling_p, uint64_t(it->GetNumber())));
 				//it->n = returnBin(it->n, transfer_binomial_sampling_p);
             		}
             // Otherwise, treat as deterministic and take expectation...

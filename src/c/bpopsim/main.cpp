@@ -1,10 +1,17 @@
-#include "individual.h"
-#include "commandline.cpp"
+#include "cSubpopulation.h"
+#include "commandline.h"
 
 const int size_of_by_color = 2;
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+
+#include <iostream>
+#include <fstream>
+#include <cmath>
+#include <string>
+#include <vector>
+
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -63,20 +70,20 @@ int main(int argc, char* argv[])
 		vector<double> this_run; //This is the vector for the ratio information for each run. 
                              //Push all of the ratio info for one run into this vector, then push vector into runs	
 
-		vector<Individual> populations; //Vector containing all of the populations;
+		vector<cSubpopulation> populations; //Vector containing all of the populations;
 
 		//Seed a red population
-		Individual r;
-		r.n = initial_population_size/2;
-		r.w = 1;
-		r.color = 'r';
+		cSubpopulation r;
+		r.SetNumber(initial_population_size/2);
+    r.SetFitness(1);
+    r.SetMarker('r');
 		populations.push_back(r);
 
 		//Seed a white population
-		Individual w;
-		w.n = initial_population_size/2;
-		w.w = 1;
-		w.color = 'w';
+		cSubpopulation w;
+		w.SetNumber(initial_population_size/2);
+    w.SetFitness(1);
+    w.SetMarker('w');
 		populations.push_back(w);		
     
 		double max_w = 1;
@@ -135,15 +142,15 @@ int main(int argc, char* argv[])
         
         vector<int> divided_lineages;	
         for (int i=0; i< int(populations.size()); i++) {
-        	Individual &this_subpop = populations[i];
-        	if (this_subpop.n == 0) continue;
+        	cSubpopulation &sp = populations[i];
+        	if (sp.GetNumber() == 0) continue;
         
           //what is the time to get to the next whole number of cells?
-        double current_cells = this_subpop.n;
-        double whole_cells = floor(this_subpop.n)+1;
+        double current_cells = sp.GetNumber();
+        double whole_cells = floor(sp.GetNumber())+1;
         // WC = N * exp(growth_rate * t) 
           
-        double this_time_to_next_whole_cell = log(whole_cells / current_cells) / (this_subpop.w);
+        double this_time_to_next_whole_cell = log(whole_cells / current_cells) / (sp.GetFitness());
           
         if ( time_to_next_whole_cell == 0 || (this_time_to_next_whole_cell < time_to_next_whole_cell) ) {
           	divided_lineages.clear();
@@ -169,10 +176,10 @@ int main(int argc, char* argv[])
         //Now update all lineages by the time that actually passed
         long double new_pop_size = 0;
         
-        for (vector<Individual>::iterator it = populations.begin(); it!=populations.end(); ++it) {
-        	if (it->n == 0) continue;
-        	it->n = it->n * exp(log(2) * update_time * it->w);
-          	new_pop_size += it->n;
+        for (vector<cSubpopulation>::iterator it = populations.begin(); it!=populations.end(); ++it) {
+        	if (it->GetNumber() == 0) continue;
+        	it->SetNumber(it->GetNumber() * exp(log(2) * update_time * it->GetFitness()));
+          	new_pop_size += it->GetNumber();
         }				
                 
         long double completed_divisions = new_pop_size - total_pop_size;
@@ -191,40 +198,34 @@ int main(int argc, char* argv[])
           	// ==> This seems to not be entirely accurate...
           
           	//Break ties randomly here.
-          	Individual ancestor = populations[divided_lineages[rand() % divided_lineages.size()]];
+          	cSubpopulation& ancestor = populations[divided_lineages[rand() % divided_lineages.size()]];
           
           	//What is the new lineage's fitness?
           	//Option #1: dirac delta
           	double new_w = 0;
           	if (beneficial_mutation_distribution_code == 0) {
-            	new_w = ancestor.w + average_mutation_s;
+            	new_w = ancestor.GetFitness() + average_mutation_s;
         }
           //Option #2: exponential
         else {
 		double this_mutation_s = gsl_ran_exponential(randgen,1/average_mutation_s);
          	//double this_mutation_s = returnExp(average_mutation_s);
-         	new_w = ancestor.w + this_mutation_s;
+         	new_w = ancestor.GetFitness() + this_mutation_s;
         }
           
-        	if (verbose) cout << "  Color: " << ancestor.color << endl;
+        	if (verbose) cout << "  Color: " << ancestor.GetMarker() << endl;
         	if (verbose) cout << "  New Fitness: " << new_w << endl;
           
           //Create and add the new lineage
 
-        Individual new_lineage;
-        new_lineage.n = 1;
-        new_lineage.w = new_w;
-        new_lineage.color = ancestor.color;
-
+        cSubpopulation new_lineage = ancestor.CreateDescendant(new_w);
         populations.push_back(new_lineage);
           
         //Update maximum fitness
         if(new_w > max_w) {
         	max_w = new_w;
         }
-          
-          //One ancestor organism was converted to the new lineage
-        ancestor.n--;
+        
         }
       
         //When it is time for a transfer, resample population
@@ -239,36 +240,36 @@ int main(int argc, char* argv[])
           
         	long double new_pop_size = 0;
         	//POPULATION: for (my $i=0; $i< scalar @populations; $i++) 	
-          	for (vector<Individual>::iterator it = populations.begin(); it!=populations.end(); ++it) {
-            		if (it->n == 0) continue;
+          	for (vector<cSubpopulation>::iterator it = populations.begin(); it!=populations.end(); ++it) {
+            		if (it->GetNumber() == 0) continue;
             
             // Perform accurate binomial sampling only if below a certain population size
-            	if (it->n < binomial_sampling_threshold) {
-              		if (verbose) cout << "binomial" << it->n << endl;
-              			it->n = gsl_ran_binomial(randgen, transfer_binomial_sampling_p, uint64_t(it->n));
+            	if (it->GetNumber() < binomial_sampling_threshold) {
+              		if (verbose) cout << "binomial" << it->GetNumber() << endl;
+              			it->SetNumber(gsl_ran_binomial(randgen, transfer_binomial_sampling_p, uint64_t(it->GetNumber())));
 				//it->n = returnBin(it->n, transfer_binomial_sampling_p);
             		}
             // Otherwise, treat as deterministic and take expectation...
             else {
-            	it->n *= transfer_binomial_sampling_p;
+            	it->SetNumber(it->GetNumber() * transfer_binomial_sampling_p);
             }
             
             // Keep track of lineages we lost
-            if (it->n == 0) {
+            if (it->GetNumber() == 0) {
             	total_subpopulations_lost++;
             }
             
 
-            new_pop_size += floor(it->n);
+            new_pop_size += floor(it->GetNumber());
             //There is probably a better way to do this, I just don't know the syntax ??by_color[p.color] += p.n;??
-            if (verbose) cout << it->color << endl;
-            if (verbose) cout << it->n << endl;
-            if (verbose) cout << it->w << endl;
-            if (it->color == 'r') {
-            	by_color[0] += it->n;
+            if (verbose) cout << it->GetMarker() << endl;
+            if (verbose) cout << it->GetNumber() << endl;
+            if (verbose) cout << it->GetFitness() << endl;
+            if (it->GetMarker() == 'r') {
+            	by_color[0] += it->GetNumber();
             }
             else {
-            	by_color[1] += it->n;
+            	by_color[1] += it->GetNumber();
             }
           }
           //One color was lost, bail	

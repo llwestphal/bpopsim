@@ -1,13 +1,8 @@
-#include <iostream>
-#include <math.h>
-#include <vector>
-#include <fstream>
-#include <string>
 #include "commandline.h"
 #include <boost/program_options.hpp>
+#include <iostream>
 
 using namespace boost::program_options; 
-
 
 void cline(int argc, char* argv[]) {
 // setup and parse configuration options:

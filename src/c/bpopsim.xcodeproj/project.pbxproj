@@ -7,7 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		701E9219120134B800653784 /* cSubpopulation.cc in Sources */ = {isa = PBXBuildFile; fileRef = 701E9218120134B800653784 /* cSubpopulation.cc */; };
+		701E92841201406800653784 /* libboost_program_options-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 701E92831201406800653784 /* libboost_program_options-mt.a */; };
+		701E92A21201410B00653784 /* libgsl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 701E92A11201410B00653784 /* libgsl.a */; };
 		70307F1D11F7E39E00BEFD1F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 70307F1C11F7E39E00BEFD1F /* main.cpp */; };
+		70D4DBCD1200EB570055362E /* commandline.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 70D4DBCB1200EB570055362E /* commandline.cpp */; };
+		70D4DBCE1200EB570055362E /* random.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 70D4DBCC1200EB570055362E /* random.cpp */; };
 		8DD76F6A0486A84900D96B5E /* popsim.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C6859E8B029090EE04C91782 /* popsim.1 */; };
 /* End PBXBuildFile section */
 
@@ -25,7 +30,15 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		701E9218120134B800653784 /* cSubpopulation.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cSubpopulation.cc; path = bpopsim/cSubpopulation.cc; sourceTree = "<group>"; };
+		701E921A120134BD00653784 /* cSubpopulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cSubpopulation.h; path = bpopsim/cSubpopulation.h; sourceTree = "<group>"; };
+		701E92831201406800653784 /* libboost_program_options-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_program_options-mt.a"; path = "/opt/local/lib/libboost_program_options-mt.a"; sourceTree = "<absolute>"; };
+		701E92A11201410B00653784 /* libgsl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgsl.a; path = /usr/local/lib/libgsl.a; sourceTree = "<absolute>"; };
 		70307F1C11F7E39E00BEFD1F /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = bpopsim/main.cpp; sourceTree = "<group>"; };
+		70D4DBCB1200EB570055362E /* commandline.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = commandline.cpp; path = bpopsim/commandline.cpp; sourceTree = "<group>"; };
+		70D4DBCC1200EB570055362E /* random.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = random.cpp; path = bpopsim/random.cpp; sourceTree = "<group>"; };
+		70D4DBCF1200EB5F0055362E /* commandline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = commandline.h; path = bpopsim/commandline.h; sourceTree = "<group>"; };
+		70D4DBD11200EB5F0055362E /* random.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = random.h; path = bpopsim/random.h; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* popsim */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = popsim; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6859E8B029090EE04C91782 /* popsim.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = popsim.1; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -35,6 +48,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				701E92841201406800653784 /* libboost_program_options-mt.a in Frameworks */,
+				701E92A21201410B00653784 /* libgsl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -44,7 +59,7 @@
 		08FB7794FE84155DC02AAC07 /* popsim */ = {
 			isa = PBXGroup;
 			children = (
-				70307F1911F7E37900BEFD1F /* Source */,
+				70307F1911F7E37900BEFD1F /* bpopsim */,
 				C6859E8C029090F304C91782 /* Documentation */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
@@ -59,20 +74,44 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		70307F0B11F7E2B500BEFD1F /* bpopsim */ = {
+		701E927E12013FFF00653784 /* lib */ = {
 			isa = PBXGroup;
 			children = (
-				70307F1C11F7E39E00BEFD1F /* main.cpp */,
+				701E92831201406800653784 /* libboost_program_options-mt.a */,
+				701E92A11201410B00653784 /* libgsl.a */,
+			);
+			name = lib;
+			sourceTree = "<group>";
+		};
+		70307F0B11F7E2B500BEFD1F /* include */ = {
+			isa = PBXGroup;
+			children = (
+				701E921A120134BD00653784 /* cSubpopulation.h */,
+				70D4DBCF1200EB5F0055362E /* commandline.h */,
+				70D4DBD11200EB5F0055362E /* random.h */,
+			);
+			name = include;
+			sourceTree = "<group>";
+		};
+		70307F1911F7E37900BEFD1F /* bpopsim */ = {
+			isa = PBXGroup;
+			children = (
+				701E927E12013FFF00653784 /* lib */,
+				70D4DBC61200EB360055362E /* src */,
+				70307F0B11F7E2B500BEFD1F /* include */,
 			);
 			name = bpopsim;
 			sourceTree = "<group>";
 		};
-		70307F1911F7E37900BEFD1F /* Source */ = {
+		70D4DBC61200EB360055362E /* src */ = {
 			isa = PBXGroup;
 			children = (
-				70307F0B11F7E2B500BEFD1F /* bpopsim */,
+				701E9218120134B800653784 /* cSubpopulation.cc */,
+				70D4DBCB1200EB570055362E /* commandline.cpp */,
+				70D4DBCC1200EB570055362E /* random.cpp */,
+				70307F1C11F7E39E00BEFD1F /* main.cpp */,
 			);
-			name = Source;
+			name = src;
 			sourceTree = "<group>";
 		};
 		C6859E8C029090F304C91782 /* Documentation */ = {
@@ -127,6 +166,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				70307F1D11F7E39E00BEFD1F /* main.cpp in Sources */,
+				70D4DBCD1200EB570055362E /* commandline.cpp in Sources */,
+				70D4DBCE1200EB570055362E /* random.cpp in Sources */,
+				701E9219120134B800653784 /* cSubpopulation.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -143,6 +185,10 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/local/lib,
+				);
 				PRODUCT_NAME = popsim;
 			};
 			name = Debug;
@@ -154,6 +200,10 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/local/lib,
+				);
 				PRODUCT_NAME = popsim;
 			};
 			name = Release;
@@ -171,6 +221,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;
+				USER_HEADER_SEARCH_PATHS = bpopsim;
 			};
 			name = Debug;
 		};
@@ -186,6 +237,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;
+				USER_HEADER_SEARCH_PATHS = bpopsim;
 			};
 			name = Release;
 		};

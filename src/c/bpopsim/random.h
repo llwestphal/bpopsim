@@ -17,7 +17,6 @@
 #include <boost/random/poisson_distribution.hpp>
 
 class RandomGenerator
-
 {
 
 	public:

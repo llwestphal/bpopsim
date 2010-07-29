@@ -1,4 +1,6 @@
-gcc -Wall -I . -I ~/include/ main.cpp -I ~/boost_1_43_0/ -o popsim -O3  \
- -L ~/boost_1_43_0/stage/lib/ -L ~/lib/ -lboost_program_options -lgsl -lgslcblas 
+g++ -Wall -O3  \
+	 -o bpopsim  \
+ 	-lboost_program_options -lgsl -lgslcblas \
+ 	commandline.cpp cSubpopulation.cc main.cpp 
 
 

@@ -3,18 +3,10 @@
 #include "cPopulation.h"
 #include "cPopulation.cc"
 
-const int size_of_by_color = 2;
-
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
-
 #include <iostream>
-
-#include <cmath>
 #include <string>
-#include <vector>
-
-using namespace std;
 
 int main(int argc, char* argv[])
 {
@@ -44,7 +36,7 @@ int main(int argc, char* argv[])
 	for (int on_run=0; on_run < population.GetReplicates(); on_run++)
 	{	
 		population.ClearRuns();
-    		cout << "Replicate " << on_run+1 << endl;    
+    		std::cout << "Replicate " << on_run+1 << std::endl;    
 
 		population.SeedSubpopulations();
 
@@ -57,7 +49,7 @@ int main(int argc, char* argv[])
 			
 			population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + gsl_ran_exponential(randgen, population.GetLambda()));
 			
-			if (population.GetVerbose()) cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << endl;
+			if (population.GetVerbose()) std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl;
 		      
 			while ( (population.GetDivisionsUntilMutation() > 0) && (population.GetTransfers() < population.GetTotalTransfers()) && 					population.GetKeepTransferring()) 
 			{

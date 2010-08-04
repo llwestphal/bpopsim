@@ -2,12 +2,10 @@
 #define cPopulation_h
 
 #include "cSubpopulation.h"
-
 #include <vector>
 #include <cmath>
 #include <iostream>
 #include <fstream>
-#include <string>
 
 class cPopulation {
 

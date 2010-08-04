@@ -205,5 +205,147 @@ void cPopulation::ClearRuns()
 	m_populations.clear();
 }
 
+void cPopulation::RunSummary()
+{
+		std::cout << "Total mutations: " << GetTotalMutations() << std::endl;
+	    	std::cout << "Total subpopulations lost: " << GetTotalSubpopulationsLost() << std::endl;
+	    	std::cout << "Transfers: " << GetTransfers() << std::endl;
+	    	std::cout << "Maximum Fitness: " << GetMaxW() << std::endl;
+}
+
+void cPopulation::ResetRunStats()
+{
+
+		SetTotalPopSize(GetInitialPopulationSize());
+		SetTotalMutations(0);		
+		SetTotalSubpopulationsLost(0);
+  
+		SetTransfers(1);		
+		SetDivisionsUntilMutation(0);
+		SetKeepTransferring(true);
+
+}
+
+void cPopulation::SetParameters()
+{
+
+	// Simulation parameters that should be arguments
+	SetInitialPopulationSize(2);
+	SetPopSizeAfterDilution(int(5E6));             // N sub 0 --int is to get rid of warning
+	SetMutationRatePerDivision(1E-8);         // mu
+	SetAverageMutationS(0.05);                 // s
+  	SetGrowthPhaseGenerations(6.64);
 
 
+	SetTransferIntervalToPrint(1);
+	SetVerbose(1);
+	SetTotalTransfers(200000);
+	SetMaxDivergenceFactor(100);
+	SetReplicates(1000);
+	SetMinimumPrinted(8);
+	// Simulation parameters that are pre-calculated
+	SetDilutionFactor(exp(log(2) * GetGrowthPhaseGenerations()));
+	SetTransferBinomialSamplingP(1/GetDilutionFactor());
+	SetPopSizeBeforeDilution(GetPopSizeAfterDilution() * GetDilutionFactor());
+	SetLambda(1/GetMutationRatePerDivision());
+	
+	SetBinomialSamplingThreshold(1000);
+
+}
+
+void cPopulation::DisplayParameters()
+{
+	if (GetVerbose()==1) 
+	{
+		std::cout << "u = " << GetMutationRatePerDivision() << std::endl;
+		std::cout << "s = " << GetAverageMutationS() << std::endl;
+		std::cout << "N = " << GetPopSizeAfterDilution() << std::endl;
+		std::cout << "dil = " << GetDilutionFactor() << std::endl;
+	}
+}
+
+void cPopulation::CalculateDivisions()
+{
+	// Move time forward until another mutation occurs.
+	// Calculate points to output between last time and current time
+	// First time through the loop, a partial time interval
+	// may be calculated to get back on $print_interval
+
+      	// Move forward by a large chunk of time which assumes
+     	// all populations have the maximum fitness in the population
+	// This will, at worst, underestimate how long.
+	// We can then move forward by single divisions to find the exact division where the mutation occurs
+
+	SetDesiredDivisions(GetDivisionsUntilMutation());
+       	if (GetDesiredDivisions() + GetTotalPopSize() > GetPopSizeBeforeDilution())
+	{
+       		SetDesiredDivisions(GetPopSizeBeforeDilution() - GetTotalPopSize());
+        }
+        if(GetVerbose() == 1) 
+	{
+		std::cout << "Divisions before next mutation: " << GetDivisionsUntilMutation() <<std::endl;
+	}
+	// Note: we underestimate by a few divisions so that we can step forward by single division increments
+	// as we get close to the one where the mutation happened (or right before a transfer).			
+	if (GetDesiredDivisions() < 1)
+	{
+        	SetDesiredDivisions(1);
+        }
+        if (GetVerbose() == 1) 
+	{
+		std::cout << "Total pop size: " << GetTotalPopSize() <<std::endl;
+		std::cout << "Desired divisions " << GetDesiredDivisions() <<std::endl;
+	}
+			
+	 // How much time would we like to pass to achieve the desired number of divisions?
+	// (assuming the entire population has the maximum fitness)
+	SetUpdateTime(log((GetDesiredDivisions()+(double)GetTotalPopSize()) / GetTotalPopSize()) / (GetMaxW() * log(2)));
+        
+    	//What is the minimum time required to get a single division?
+	SetTimeToNextWholeCell(0);
+
+	DetermineDivisionTime();
+        // At a minumum, we want to make sure that one cell division took place
+        if (GetTimeToNextWholeCell() > GetUpdateTime()) 
+	{
+        	if (GetVerbose())std::cout << "Time to next whole cell greater than update time: " << GetTimeToNextWholeCell() << 										     " < " << GetUpdateTime() <<std::endl;		
+        	SetUpdateTime(GetTimeToNextWholeCell());
+        }
+
+        if (GetVerbose() == 1) 
+	{
+		std::cout << "Update time: " << GetUpdateTime() <<std::endl;		
+        }
+            
+        //Now update all lineages by the time that actually passed
+	
+	SetNewPopSize(0);
+
+	UpdateLineages();
+	std::cout << GetNewPopSize() << " " << GetTotalPopSize() <<std::endl;
+	SetCompletedDivisions(GetNewPopSize() - GetTotalPopSize());
+			        
+	if (GetVerbose())std::cout << "Completed divisions: " << GetCompletedDivisions() <<std::endl;
+	SetDivisionsUntilMutation(GetDivisionsUntilMutation() - GetCompletedDivisions());
+	SetTotalPopSize(GetNewPopSize());
+}
+
+void cPopulation::SeedSubpopulations()
+{
+		//Create red population
+		cSubpopulation r;
+		//Set parameters
+		r.SetNumber(GetInitialPopulationSize()/2);
+    		r.SetFitness(1);
+    		r.SetMarker('r');
+		
+		//Add subpopulation to population
+		AddSubpopulation(r);
+		
+		//Seed a white population
+		cSubpopulation w;
+		w.SetNumber(GetInitialPopulationSize()/2);
+    		w.SetFitness(1);
+    		w.SetMarker('w');	
+    		AddSubpopulation(w);
+}

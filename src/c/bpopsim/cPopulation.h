@@ -7,6 +7,7 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
+#include <string>
 
 class cPopulation {
 
@@ -53,6 +54,13 @@ private:
 	double m_binomial_sampling_threshold;
 
 	bool m_keep_transferring;
+
+	// Simulation parameters that should be arguments
+	uint64_t m_initial_population_size;
+	uint64_t m_pop_size_after_dilution;             // N sub 0 --int is to get rid of warning
+	double m_mutation_rate_per_division;           // mu
+	double m_average_mutation_s;                   // s
+  	double m_growth_phase_generations;
 	
 public:
 
@@ -107,7 +115,12 @@ public:
 	const double GetBinomialSamplingThreshold() { return m_binomial_sampling_threshold; }
 	
 	const bool GetKeepTransferring() {return m_keep_transferring; }
-
+	
+	const uint64_t GetInitialPopulationSize() {return m_initial_population_size; }
+	const uint64_t GetPopSizeAfterDilution() {return m_pop_size_after_dilution; }
+	const double GetMutationRatePerDivision() {return m_mutation_rate_per_division; }
+	const double GetAverageMutationS() {return m_average_mutation_s; }
+	const double GetGrowthPhaseGenerations() { return m_growth_phase_generations; }
 
 	enum e_colors {
 		RED=0,
@@ -156,6 +169,12 @@ public:
 	void SetReplicates ( int in_replicates) { m_replicates = in_replicates; }
 	void SetMinimumPrinted (int in_minimum_printed) { m_minimum_printed = in_minimum_printed; }
 	void SetBinomialSamplingThreshold (double in_binomial_sampling_threshold) { m_binomial_sampling_threshold = in_binomial_sampling_threshold; }
+	void SetInitialPopulationSize(uint64_t in_initial_population_size) {m_initial_population_size =in_initial_population_size; }
+	void SetPopSizeAfterDilution(uint64_t in_pop_size_after_dilution) {m_pop_size_after_dilution = in_pop_size_after_dilution; }
+	void SetMutationRatePerDivision(double in_mutation_rate_per_division) {m_mutation_rate_per_division = in_mutation_rate_per_division; }
+	void SetAverageMutationS(double in_average_mutation_s) {m_average_mutation_s = in_average_mutation_s; }
+	void SetGrowthPhaseGenerations(double in_growth_phase_generations) { m_growth_phase_generations= in_growth_phase_generations; }
+
 
 	//METHODS
 	void AddSubpopulation(cSubpopulation& subpop);
@@ -166,6 +185,12 @@ public:
 	void PushBackRuns();
 	void PrintOut();
 	void ClearRuns();
+	void RunSummary();
+	void ResetRunStats();
+	void SetParameters();
+	void DisplayParameters();
+	void CalculateDivisions();
+	void SeedSubpopulations();
 };
 
 

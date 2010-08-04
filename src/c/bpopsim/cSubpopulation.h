@@ -1,12 +1,12 @@
 #ifndef cSubpopulation_h
 #define cSubpopulation_h
 
-#include <vector>
+
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include "stdint.h"
 
-typedef std::vector<int> MutationList;
+//typedef std::vector<int> MutationList;
 
 class cSubpopulation {
 

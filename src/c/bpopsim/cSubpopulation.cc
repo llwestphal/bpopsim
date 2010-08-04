@@ -20,7 +20,7 @@ long double cSubpopulation::MutantFitness(long double in_fitness, double in_aver
 {
 	if(in_type_of_mutation=='e')
 	{
-		return gsl_ran_exponential(randomgenerator,1/in_average_mutation_s) + in_fitness;
+		return gsl_ran_exponential(randomgenerator,in_average_mutation_s) + in_fitness;
 		
 	}
 	
@@ -28,6 +28,8 @@ long double cSubpopulation::MutantFitness(long double in_fitness, double in_aver
 	{
 		return in_fitness + in_average_mutation_s;
 	}
+
+	return 0;
 
 }
 cSubpopulation& cSubpopulation::CreateDescendant(gsl_rng * randomgenerator)

@@ -1,6 +1,9 @@
 #include "cPopulation.h"
 /* */
 
+using namespace boost::program_options;
+using namespace std;
+
 void cPopulation::AddSubpopulation(cSubpopulation& subpop)
 {
 
@@ -161,12 +164,13 @@ void cPopulation::PushBackRuns()
 {
 	m_runs.push_back(m_this_run);
 }
-void cPopulation::PrintOut()
+
+void cPopulation::PrintOut(const string& output_file_name)
 {
 
 	//Print everything out
-	std::ofstream output_file;
-	output_file.open ("output.txt");
+	ofstream output_file;
+	output_file.open(output_file_name.c_str());
 	output_file << "transfer";
 	for (int on_run=0; on_run < GetReplicates(); on_run++) 
 	{
@@ -226,15 +230,23 @@ void cPopulation::ResetRunStats()
 
 }
 
-void cPopulation::SetParameters()
+void cPopulation::SetParameters(const variables_map &options)
 {
+
+  SetGrowthPhaseGenerations(
+    options.count("generations-per-transfer") ?
+    options["generations-per-transfer"].as<double>() : 6.64
+  );
+
+  SetPopSizeAfterDilution(
+    options.count("population-size-after-transfer") ?
+    options["population-size-after-transfer"].as<uint64_t>() : int(5E6)
+  );  
 
 	// Simulation parameters that should be arguments
 	SetInitialPopulationSize(2);
-	SetPopSizeAfterDilution(int(5E6));             // N sub 0 --int is to get rid of warning
 	SetMutationRatePerDivision(1E-8);         // mu
 	SetAverageMutationS(0.05);                 // s
-  	SetGrowthPhaseGenerations(6.64);
 
 
 	SetTransferIntervalToPrint(1);

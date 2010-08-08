@@ -1,6 +1,6 @@
 g++ -Wall -O3  \
 	 -o bpopsim  \
  	-lboost_program_options -lgsl -lgslcblas \
- 	commandline.cpp cSubpopulation.cc main.cpp 
+ 	cSubpopulation.cc cPopulation.cc main.cpp 
 
 

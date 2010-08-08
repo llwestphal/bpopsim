@@ -6,13 +6,17 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
+#include <string>
+
+// Boost
+#include <boost/program_options.hpp>
+
+using namespace boost::program_options;
+using namespace std;
 
 class cPopulation {
 
 private:
-
-	
-	
 
 	long double m_total_pop_size;
 	long double m_new_pop_size;
@@ -181,11 +185,11 @@ public:
 	void Mutate(gsl_rng * randomgenerator);
 	void Resample(gsl_rng * randomgenerator);
 	void PushBackRuns();
-	void PrintOut();
+	void PrintOut(const string& output_file_name);
 	void ClearRuns();
 	void RunSummary();
 	void ResetRunStats();
-	void SetParameters();
+	void SetParameters(const variables_map &options);
 	void DisplayParameters();
 	void CalculateDivisions();
 	void SeedSubpopulations();

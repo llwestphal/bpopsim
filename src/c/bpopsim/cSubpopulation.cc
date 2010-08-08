@@ -34,15 +34,15 @@ long double cSubpopulation::MutantFitness(long double in_fitness, double in_aver
 }
 cSubpopulation& cSubpopulation::CreateDescendant(gsl_rng * randomgenerator)
 {
-  //clone ourself
+  //Clone ourself
   cSubpopulation& new_sp = *(new cSubpopulation(*this));
   
-  //and there is only one new one
+  // There is only one new one...
   new_sp.SetNumber(1);
-  //taken from the ancestor
+  // ...taken from the ancestor.
   SetNumber(GetNumber()-1);
 
-   //and give new fitness
+  //and give new fitness
   new_sp.SetFitness(MutantFitness(GetFitness(), .05, 'e', randomgenerator));
 
   return new_sp;

@@ -7,47 +7,47 @@ using namespace std;
 void cPopulation::AddSubpopulation(cSubpopulation& subpop)
 {
 
-	m_populations.push_back(subpop);	
+  m_populations.push_back(subpop);	
 
-	SetNumberOfSubpopulations(GetNumberOfSubpopulations()+1);
+  SetNumberOfSubpopulations(GetNumberOfSubpopulations()+1);
 }
 
 void cPopulation::UpdateLineages()
 {
-	for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it)
-	{
-		if (it->GetNumber() == 0) continue;
-        	it->SetNumber(it->GetNumber() * exp(log(2) * GetUpdateTime() * it->GetFitness()));
+  for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it)
+  {
+    if (it->GetNumber() == 0) continue;
+      it->SetNumber(it->GetNumber() * exp(log(2) * GetUpdateTime() * it->GetFitness()));
 
-		SetNewPopSize(GetNewPopSize() + it->GetNumber());
+      SetNewPopSize(GetNewPopSize() + it->GetNumber());
 		
-	}
+  }
 }
 
 void cPopulation::DetermineDivisionTime()
 {
-	for (int i=0; i < int(GetNumberOfSubpopulations()); i++) 
-	{
-		if (m_populations[i].GetNumber() == 0) continue;
-       		//what is the time to get to the next whole number of cells?
-		SetCurrentCells(m_populations[i].GetNumber());
-		SetWholeCells(floor(m_populations[i].GetNumber())+1);
-       		// WC = N * exp(growth_rate * t) 
+  for (int i=0; i < int(GetNumberOfSubpopulations()); i++) 
+  {
+    if (m_populations[i].GetNumber() == 0) continue;
+    //what is the time to get to the next whole number of cells?
+    SetCurrentCells(m_populations[i].GetNumber());
+    SetWholeCells(floor(m_populations[i].GetNumber())+1);
+    // WC = N * exp(growth_rate * t) 
 	
-      		SetThisTimeToNextWholeCell(log(GetWholeCells() / GetCurrentCells()) / (m_populations[i].GetFitness()));       
-        	if ( GetTimeToNextWholeCell() == 0 || (GetThisTimeToNextWholeCell() < GetTimeToNextWholeCell()) ) 
-		{
-			m_divided_lineages.clear();
-          		SetTimeToNextWholeCell(GetThisTimeToNextWholeCell());
-       			m_divided_lineages.push_back(i); //a list, because there can be ties
+    SetThisTimeToNextWholeCell(log(GetWholeCells() / GetCurrentCells()) / (m_populations[i].GetFitness()));       
+    if ( GetTimeToNextWholeCell() == 0 || (GetThisTimeToNextWholeCell() < GetTimeToNextWholeCell()) ) 
+	{
+	  m_divided_lineages.clear();
+          SetTimeToNextWholeCell(GetThisTimeToNextWholeCell());
+       	  m_divided_lineages.push_back(i); //a list, because there can be ties
 			
-   		}
-          	else if (GetThisTimeToNextWholeCell() == GetTimeToNextWholeCell())
-          	{
-          		m_divided_lineages.push_back(i); //a list, because there can be ties
+   	}
+          else if (GetThisTimeToNextWholeCell() == GetTimeToNextWholeCell())
+          {
+            m_divided_lineages.push_back(i); //a list, because there can be ties
 			
-          	}
-        }
+          }
+  }
 	
 }
 
@@ -242,26 +242,51 @@ void cPopulation::SetParameters(const variables_map &options)
     options.count("population-size-after-transfer") ?
     options["population-size-after-transfer"].as<uint64_t>() : int(5E6)
   );  
+  SetInitialPopulationSize(
+    options.count("initial-population-size") ?
+    options["initial-population-size"].as<uint64_t>() : int(2)
+  );  
+  SetMutationRatePerDivision(
+    options.count("mutation-rate-per-division") ?
+    options["mutation-rate-per-division"].as<double>() : 1E-8
+  );  
+  SetAverageMutationS(
+    options.count("average-mutation-s") ?
+    options["average-mutation-s"].as<double>() : 0.05
+  );  
+  SetTransferIntervalToPrint(
+    options.count("transfer-interval-to-print") ?
+    options["transfer-interval-to-print"].as<int>() : 1
+  );  
+  SetVerbose(
+    options.count("verbose") ?
+    options["verbose"].as<int>() : 1
+  );  
+  SetTotalTransfers(
+    options.count("total-transfers") ?
+    options["total-transfers"].as<int>() : 200000
+  );  
+  SetMaxDivergenceFactor(
+    options.count("max-divergence-factor") ?
+    options["max-divergence-factor"].as<int>() : 100
+  );  
+  SetReplicates(
+    options.count("replicates") ?
+    options["replicates"].as<int>() : 1000
+  );  
+  SetMinimumPrinted(
+    options.count("minimum-printed") ?
+    options["minimum-printed"].as<int>() : 8
+  );  
 
-	// Simulation parameters that should be arguments
-	SetInitialPopulationSize(2);
-	SetMutationRatePerDivision(1E-8);         // mu
-	SetAverageMutationS(0.05);                 // s
 
-
-	SetTransferIntervalToPrint(1);
-	SetVerbose(1);
-	SetTotalTransfers(200000);
-	SetMaxDivergenceFactor(100);
-	SetReplicates(1000);
-	SetMinimumPrinted(8);
-	// Simulation parameters that are pre-calculated
-	SetDilutionFactor(exp(log(2) * GetGrowthPhaseGenerations()));
-	SetTransferBinomialSamplingP(1/GetDilutionFactor());
-	SetPopSizeBeforeDilution(GetPopSizeAfterDilution() * GetDilutionFactor());
-	SetLambda(1/GetMutationRatePerDivision());
+  // Simulation parameters that are pre-calculated
+  SetDilutionFactor(exp(log(2) * GetGrowthPhaseGenerations()));
+  SetTransferBinomialSamplingP(1/GetDilutionFactor());
+  SetPopSizeBeforeDilution(GetPopSizeAfterDilution() * GetDilutionFactor());
+  SetLambda(1/GetMutationRatePerDivision());
 	
-	SetBinomialSamplingThreshold(1000);
+  SetBinomialSamplingThreshold(1000);
 
 }
 
@@ -358,6 +383,6 @@ void cPopulation::SeedSubpopulations()
 		cSubpopulation w;
 		w.SetNumber(GetInitialPopulationSize()/2);
     		w.SetFitness(1);
-    		w.SetMarker('w');	
+    		w.SetMarker('w');
     		AddSubpopulation(w);
 }

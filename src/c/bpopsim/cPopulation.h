@@ -1,7 +1,7 @@
 #ifndef cPopulation_h
 #define cPopulation_h
 
-#include "cSubpopulation.h"
+#include "cSubpopulation.h" 
 #include <vector>
 #include <cmath>
 #include <iostream>
@@ -32,6 +32,7 @@ private:
 	int m_total_transfers;
 	int m_transfer_interval_to_print;
 	
+	int m_number_of_lineages;
 
 	std::vector<cSubpopulation> m_populations;
 	std::vector<int> m_divided_lineages;
@@ -75,6 +76,7 @@ public:
 		m_number_of_subpopulations = 0;
 		m_total_mutations = 0;
 		m_total_subpopulations_lost = 0;
+		m_number_of_lineages = 0;
 	}
 	//DESTRUCTOR
 	virtual ~cPopulation() { ; };
@@ -96,6 +98,8 @@ public:
 	const int GetTotalTransfers() {return m_total_transfers; }
 	const int GetReplicates() {return m_replicates; }
 	const int GetMinimumPrinted() {return m_minimum_printed; }
+	
+	const int GetNumberOfLineages() {return m_number_of_lineages; }
 	
 	//std::vector< std::vector<double> > GetRuns() { return &m_runs; }
 	//std::vector<double> GetThisRun() { return &m_this_run; }	
@@ -177,6 +181,7 @@ public:
 	void SetAverageMutationS(double in_average_mutation_s) {m_average_mutation_s = in_average_mutation_s; }
 	void SetGrowthPhaseGenerations(double in_growth_phase_generations) { m_growth_phase_generations= in_growth_phase_generations; }
 
+	void SetNumberOfLineages(int in_number_of_lineages) { m_number_of_lineages= in_number_of_lineages; }
 
 	//METHODS
 	void AddSubpopulation(cSubpopulation& subpop);

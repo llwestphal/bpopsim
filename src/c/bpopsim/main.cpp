@@ -20,18 +20,18 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
   options_description cmdline_options("Allowed options");
   cmdline_options.add_options()
   ("help,h", "produce this help message")
-  ("generations-per-transfer,T", value<double>(), "Number of generations per transfer")
+  ("generations-per-transfer,T", value<double>(), "Generations per transfer")
   ("population-size-after-transfer,N", value<uint64_t>(), "Population size after transfer")
   ("output-file,o", value<string>(), "Output file")
+  ("mutation-rate-per-generation,u", value<double>(), "Mutation rate per generation")
+  ("average-selection-coefficient,s", value<double>(), "Average selection coefficient")
+  ("time-interval,i", value<int>(), "Time interval")
+  ("replicates,r", value<int>(), "Replicates")
+  ("marker-divergence,m", value<int>(), "Max divergence factor")
+  ("verbose,v", value<int>(), "Verbose")
   ;
 
 /* Need to add these as options...
-
-	'mutation-rate-per-generation|u=s' => \$mutation_rate_per_division,
-	'average_selection_coefficient|s=s' => \$average_mutation_s,
-	'time-interval|i=s' => \$transfer_interval_to_print,
-	'replicates|r=s' => \$replicates,
-	'marker-divergence|m=s' => \$max_divergence_factor,
 	'probability-file|p=s' => \$probability_file,
 	'fitnesses|f=s' => \@fitnesses,
 	'detailed' => \$detailed,
@@ -44,7 +44,6 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
 	'single-mutation-only|1' => \$single_mutation_only,	
 	'beneficial-mutation-distribution|d=s' => \$beneficial_mutation_distribution,
 	'seed=s' => \$rand_seed,
-	'verbose|v' => \$verbose,
 */
   store(parse_command_line(argc, argv, cmdline_options), options);
   notify(options);

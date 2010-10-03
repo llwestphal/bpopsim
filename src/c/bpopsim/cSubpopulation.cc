@@ -6,7 +6,8 @@ cSubpopulation::cSubpopulation()
   m_fitness = 0;
   m_number = 0;
   m_marker = 0;
-}
+  m_mutation = 0;
+  }
 
 /* Copy constructor */
 cSubpopulation::cSubpopulation(const cSubpopulation& in)
@@ -14,13 +15,14 @@ cSubpopulation::cSubpopulation(const cSubpopulation& in)
   m_fitness = in.m_fitness;
   m_number = in.m_number;
   m_marker = in.m_marker;
+  m_mutation = in.m_mutation;
 }
 
 long double cSubpopulation::MutantFitness(long double in_fitness, double in_average_mutation_s, char in_type_of_mutation, gsl_rng * randomgenerator)
 {
 	if(in_type_of_mutation=='e')
 	{
-		return gsl_ran_exponential(randomgenerator,in_average_mutation_s) + in_fitness;
+		return  gsl_ran_exponential(randomgenerator,in_average_mutation_s) + in_fitness;
 		
 	}
 	
@@ -44,7 +46,7 @@ cSubpopulation& cSubpopulation::CreateDescendant(gsl_rng * randomgenerator)
 
   //and give new fitness
   new_sp.SetFitness(MutantFitness(GetFitness(), .05, 'e', randomgenerator));
-
+  new_sp.SetMutation(new_sp.GetFitness()-GetFitness());
   return new_sp;
 }
 

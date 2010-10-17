@@ -6,8 +6,7 @@ cSubpopulation::cSubpopulation()
   m_fitness = 0;
   m_number = 0;
   m_marker = 0;
-  m_mutation = 0;
-  }
+}
 
 /* Copy constructor */
 cSubpopulation::cSubpopulation(const cSubpopulation& in)
@@ -15,7 +14,6 @@ cSubpopulation::cSubpopulation(const cSubpopulation& in)
   m_fitness = in.m_fitness;
   m_number = in.m_number;
   m_marker = in.m_marker;
-  m_mutation = in.m_mutation;
 }
 
 long double cSubpopulation::MutantFitness(long double in_fitness, double in_average_mutation_s, char in_type_of_mutation, gsl_rng * randomgenerator)
@@ -34,20 +32,29 @@ long double cSubpopulation::MutantFitness(long double in_fitness, double in_aver
 	return 0;
 
 }
-cSubpopulation& cSubpopulation::CreateDescendant(gsl_rng * randomgenerator)
+//cSubpopulation& cSubpopulation::CreateDescendant(gsl_rng * randomgenerator)
+void cSubpopulation::CreateDescendant(gsl_rng * randomgenerator, cSubpopulation &ancestor)
 {
   //Clone ourself
-  cSubpopulation& new_sp = *(new cSubpopulation(*this));
-  
+  //cSubpopulation& new_sp = *(new cSubpopulation(*this));  
+
+
   // There is only one new one...
-  new_sp.SetNumber(1);
-  // ...taken from the ancestor.
-  SetNumber(GetNumber()-1);
+  //new_sp.SetNumber(1);  
+  SetNumber(1);
+// ...taken from the ancestor.
+  
+  //SetNumber(GetNumber()-1);
+  ancestor.SetNumber(ancestor.GetNumber()-1);
 
   //and give new fitness
-  new_sp.SetFitness(MutantFitness(GetFitness(), .05, 'e', randomgenerator));
-  new_sp.SetMutation(new_sp.GetFitness()-GetFitness());
-  return new_sp;
+  
+  //new_sp.SetFitness(MutantFitness(GetFitness(), .05, 'e', randomgenerator));
+  SetFitness(ancestor.MutantFitness(ancestor.GetFitness(), .05, 'e', randomgenerator));
+
+  //new_sp.SetMutation(new_sp.GetFitness()-GetFitness());
+  //SetMutation(new_sp.GetFitness()-ancestor.GetFitness());
+  //return new_sp;
 }
 
 void cSubpopulation::Transfer(long double success_prob, gsl_rng * randomgenerator)

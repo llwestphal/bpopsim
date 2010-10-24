@@ -11,6 +11,9 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+// Tree
+#include "tree.hh"
+
 using namespace boost::program_options;
 using namespace std;
 
@@ -59,6 +62,66 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
 
 int main(int argc, char* argv[])
 {
+
+
+  //TREE
+
+  cSubpopulation testone;
+
+  testone.SetNumber(1);
+  cSubpopulation testtwo;
+  testtwo.SetNumber(2);
+  cSubpopulation testthree;
+  testthree.SetNumber(3);
+  cSubpopulation testfour;
+  testfour.SetNumber(4);
+
+  cSubpopulation testfive;
+  testfive.SetNumber(5);
+  cSubpopulation testsix;
+  testsix.SetNumber(6);
+  cSubpopulation testseven;
+  testseven.SetNumber(7);
+  cSubpopulation testeight;
+  testeight.SetNumber(8);
+
+
+  tree<cSubpopulation*> trtr;
+  tree<cSubpopulation*>::iterator toptop,oneone,twotwo,threethree,locloc;
+  
+  toptop=trtr.begin();
+  
+  cSubpopulation* testpointer = &testone;
+  cSubpopulation* testpointertwo = &testtwo;
+  cSubpopulation* testpointerthree = &testthree;
+  cSubpopulation* testpointerfour = &testfour;
+
+  cSubpopulation* testpointerfive = &testfive;
+  cSubpopulation* testpointersix = &testsix;
+  cSubpopulation* testpointerseven = &testseven;
+  cSubpopulation* testpointereight = &testeight;
+  
+
+  //cout << testpointer->GetNumber() << endl; 
+  oneone=trtr.insert(toptop,testpointer);
+  twotwo=trtr.append_child(oneone,testpointertwo);
+  
+  trtr.append_child(twotwo,testpointerthree);
+  threethree=trtr.append_child(twotwo,testpointerfour);
+  trtr.append_child(threethree,testpointerfive);
+  trtr.append_child(twotwo,testpointersix);
+  trtr.append_child(oneone,testpointerseven);
+  trtr.append_child(oneone,testpointereight);
+  locloc=trtr.begin();
+  tree<cSubpopulation*>::iterator sibsib=trtr.begin();
+  testone.SetNumber(2000);
+  
+
+  while(sibsib!=trtr.end()) {
+  cout << (*sibsib)->GetNumber() << endl;
+  ++sibsib;
+  }
+
   //set up command line options
   variables_map cmdline_options;
   get_cmdline_options(cmdline_options, argc, argv);

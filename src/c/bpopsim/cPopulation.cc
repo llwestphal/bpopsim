@@ -382,10 +382,16 @@ void cPopulation::SeedSubpopulations()
 
   //const long double (cSubpopulation::* ptfptr) () = &cSubpopulation::GetNumber;
   //const long double test = (r.*ptfptr)();
-  lineageTree p;
-  p.SetLineageSize(r);
-  long double* test = p.GetMutation();
-  std::cout << test << std::endl;
+  //lineageTree p(r);
+  //p.SetLineageSize(r);
+  //long double* test = p.GetMutation();
+  //std::cout << p.GetLineageSize()  << std::endl;
+  std::cout << r.GetNumber() << std::endl;
+
+  r.SetNumber(4);
+  std::cout << r.GetNumber() << std::endl;
+  //std::cout << p.GetLineageSize() << std::endl;
+
   exit(1);
   //subPopMem p = &cSubpopulation::GetNumber;
 

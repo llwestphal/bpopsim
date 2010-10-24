@@ -2,13 +2,13 @@
 #define cPopulation_h
 
 #include "cSubpopulation.h" 
-#include "lineageTree.h"
+//#include "lineageTree.h"
 #include <vector>
 #include <cmath>
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "tree.hh"
+//#include "tree.hh"
 // Boost
 #include <boost/program_options.hpp>
 
@@ -16,6 +16,8 @@ using namespace boost::program_options;
 using namespace std;
 
 class cPopulation {
+
+
 
 private:
 

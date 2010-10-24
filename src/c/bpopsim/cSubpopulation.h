@@ -10,6 +10,8 @@
 
 class cSubpopulation {
 
+friend class lineageTree;
+
 private:
   long double m_fitness;
   long double m_number;

@@ -1,31 +1,35 @@
+#ifndef lineageTree_h
+#define lineageTree_h
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 
-#include "lList.h"
-
-class lineageTree : public cSubpopulation
+#include "cSubpopulation.h"
+#include "tree.hh"
+class lineageTree 
 {
-public:
-  lineageTree() {
 
-  } 
-  lineageTree(cSubpopulation in)
-  {
-    m_poppointer(in);
-  } 
+  private:
+    tree<cSubpopulation*>::iterator m_start_node, m_first_branch;
+    tree<cSubpopulation*> m_base;  
+ 
 
-  ~lineageTree() {}
+  public:
+      lineageTree()
+      {
+         m_start_node = m_base.begin();
+      }
 
-  void SetMutation(const long double in_mutation) { m_mutation = in_mutation; }
-  //void SetLineageSize(cSubpopulation in) {*m_lineagesize = *(&in.m_number); }
+
+      virtual ~lineageTree() {};
+
+  void EstablishRoots(cSubpopulation in_pop){ m_first_branch = m_base.insert(m_start_node, &in_pop); }
   
-  //long double* GetMutation() { return *m_lineagesize; }
-  long double GetLineageSize() { return m_poppointer.GetNumber(); }
-
+  tree<cSubpopulation*>::iterator GetFirstBranch() {return m_first_branch; }
+  tree<cSubpopulation*>::iterator GetStartNode() {return m_start_node; }
+  tree<cSubpopulation*> GetBase() {return m_base; }
 	
-private:
-	long double m_mutation;
-	long double m_lineagesize;
-	cSubpopulation m_poppointer;
 }; 
+
+#endif

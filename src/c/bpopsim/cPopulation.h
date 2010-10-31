@@ -1,14 +1,15 @@
 #ifndef cPopulation_h
 #define cPopulation_h
 
-#include "cSubpopulation.h" 
-//#include "lineageTree.h"
+
+
 #include <vector>
 #include <cmath>
 #include <iostream>
 #include <fstream>
 #include <string>
-//#include "tree.hh"
+#include "tree.hh"
+#include "cSubpopulation.h"
 // Boost
 #include <boost/program_options.hpp>
 
@@ -59,6 +60,8 @@ private:
 
   bool m_keep_transferring;
 
+  char m_beneficial_mutation_distribution;
+
   // Simulation parameters that should be arguments
   uint64_t m_initial_population_size;
   uint64_t m_pop_size_after_dilution;             // N sub 0 --int is to get rid of warning
@@ -96,7 +99,6 @@ public:
   const int GetTotalTransfers() {return m_total_transfers; }
   const int GetReplicates() {return m_replicates; }
   const int GetMinimumPrinted() {return m_minimum_printed; }
-
   //std::vector< std::vector<double> > GetRuns() { return &m_runs; }
   //std::vector<double> GetThisRun() { return &m_this_run; }  
 
@@ -117,12 +119,14 @@ public:
   const double GetBinomialSamplingThreshold() { return m_binomial_sampling_threshold; }
   
   const bool GetKeepTransferring() {return m_keep_transferring; }
-  
+  const char GetBeneficialMutationDistribution() {return m_beneficial_mutation_distribution; }  
+
   const uint64_t GetInitialPopulationSize() {return m_initial_population_size; }
   const uint64_t GetPopSizeAfterDilution() {return m_pop_size_after_dilution; }
   const double GetMutationRatePerDivision() {return m_mutation_rate_per_division; }
   const double GetAverageMutationS() {return m_average_mutation_s; }
   const double GetGrowthPhaseGenerations() { return m_growth_phase_generations; }
+  
 
   enum e_colors {
     RED=0,
@@ -176,6 +180,7 @@ public:
   void SetMutationRatePerDivision(double in_mutation_rate_per_division) {m_mutation_rate_per_division = in_mutation_rate_per_division; }
   void SetAverageMutationS(double in_average_mutation_s) {m_average_mutation_s = in_average_mutation_s; }
   void SetGrowthPhaseGenerations(double in_growth_phase_generations) { m_growth_phase_generations= in_growth_phase_generations; }
+  void SetBeneficialMutationDistribution(char in_beneficial_mutation_distribution) { m_beneficial_mutation_distribution = in_beneficial_mutation_distribution; }
 
   //METHODS
   void AddSubpopulation(cSubpopulation& subpop);
@@ -191,7 +196,7 @@ public:
   void SetParameters(const variables_map &options);
   void DisplayParameters();
   void CalculateDivisions();
-  void SeedSubpopulations();
+  void SeedSubpopulations(tree<cSubpopulation*> base,tree<cSubpopulation*>::iterator root);
 };
 
 

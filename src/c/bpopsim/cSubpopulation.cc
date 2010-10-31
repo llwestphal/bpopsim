@@ -1,4 +1,5 @@
 #include "cSubpopulation.h"
+#include "tree.hh"
 
 /* */
 cSubpopulation::cSubpopulation()
@@ -32,8 +33,7 @@ long double cSubpopulation::MutantFitness(long double in_fitness, double in_aver
 	return 0;
 
 }
-//cSubpopulation& cSubpopulation::CreateDescendant(gsl_rng * randomgenerator)
-void cSubpopulation::CreateDescendant(gsl_rng * randomgenerator, cSubpopulation &ancestor)
+void cSubpopulation::CreateDescendant(gsl_rng * randomgenerator, cSubpopulation &ancestor, double averageselectioncoefficient, char beneficialmutationdistribution)
 {
   //Clone ourself
   //cSubpopulation& new_sp = *(new cSubpopulation(*this));  
@@ -50,7 +50,7 @@ void cSubpopulation::CreateDescendant(gsl_rng * randomgenerator, cSubpopulation 
   //and give new fitness
   
   //new_sp.SetFitness(MutantFitness(GetFitness(), .05, 'e', randomgenerator));
-  SetFitness(ancestor.MutantFitness(ancestor.GetFitness(), .05, 'e', randomgenerator));
+  SetFitness(ancestor.MutantFitness(ancestor.GetFitness(), averageselectioncoefficient, beneficialmutationdistribution, randomgenerator));
 
   //new_sp.SetMutation(new_sp.GetFitness()-GetFitness());
   //SetMutation(new_sp.GetFitness()-ancestor.GetFitness());

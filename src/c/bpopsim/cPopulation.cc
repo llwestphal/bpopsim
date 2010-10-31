@@ -1,10 +1,13 @@
 #include "cPopulation.h"
+
+#include "lineageTree.h"
+
 /* */
 
 using namespace boost::program_options;
 using namespace std;
 
-typedef const long double (cSubpopulation::*subPopMem)();
+//typedef const long double (cSubpopulation::*subPopMem)();
 
 void cPopulation::AddSubpopulation(cSubpopulation& subpop)
 {
@@ -28,27 +31,39 @@ void cPopulation::UpdateLineages()
 
 void cPopulation::DetermineDivisionTime()
 {
-  for (int i=0; i < int(GetNumberOfSubpopulations()); i++) 
-  {  
-     if (m_populations[i].GetNumber() == 0) continue;
+  int itCount = 0;
+  for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it)
+  { 
+     if(it->GetNumber() ==0) continue;
      //what is the time to get to the next whole number of cells?
-     SetCurrentCells(m_populations[i].GetNumber());
-     SetWholeCells(floor(m_populations[i].GetNumber())+1);
+     
+     SetCurrentCells(it->GetNumber());
+
+     SetWholeCells(floor(it->GetNumber())+1);
      // WC = N * exp(growth_rate * t) 
-  
-     SetThisTimeToNextWholeCell(log(GetWholeCells() / GetCurrentCells()) / (m_populations[i].GetFitness()));       
+
+     SetThisTimeToNextWholeCell(log(GetWholeCells() / GetCurrentCells()) / (it->GetFitness()));   
+
      if ( GetTimeToNextWholeCell() == 0 || (GetThisTimeToNextWholeCell() < GetTimeToNextWholeCell()) ) 
      {
+       
        m_divided_lineages.clear();
        SetTimeToNextWholeCell(GetThisTimeToNextWholeCell());
-       m_divided_lineages.push_back(i); //a list, because there can be ties    
+      
+       m_divided_lineages.push_back(itCount); //a list, because there can be ties 
+ 	
      }
      else if (GetThisTimeToNextWholeCell() == GetTimeToNextWholeCell())
      {
-       m_divided_lineages.push_back(i); //a list, because there can be ties
+       
+
+       m_divided_lineages.push_back(itCount); //a list, because there can be ties
+       
       
      }
+  itCount++;
   }
+  
   
 }
 
@@ -68,7 +83,17 @@ void cPopulation::Mutate(gsl_rng * randgen)
 
     //cSubpopulation new_lineage = ancestor.CreateDescendant(randgen);
     cSubpopulation new_lineage;
-    new_lineage.CreateDescendant(randgen,ancestor);
+    new_lineage.CreateDescendant(randgen,ancestor,GetAverageMutationS(),GetBeneficialMutationDistribution());
+    tree<cSubpopulation*> ::iterator descendant_node;
+    //if(new_lineage.GetMarker() == 'w')
+    //{
+    //  descendant_node = Get
+    //}
+    //else
+    //{
+    //   descendant_node =
+     //appendchild(ancestor,new_lineage);
+
 
     //Make another branch
     
@@ -262,7 +287,7 @@ void cPopulation::SetParameters(const variables_map &options)
   );  
   SetVerbose(
     options.count("verbose") ?
-    options["verbose"].as<int>() : 1
+    options["verbose"].as<int>() : 0
   );  
   SetTotalTransfers(
     options.count("total-transfers") ?
@@ -274,13 +299,16 @@ void cPopulation::SetParameters(const variables_map &options)
   );  
   SetReplicates(
     options.count("replicates") ?
-    options["replicates"].as<int>() : 1000
+    options["replicates"].as<int>() : 20
   );  
   SetMinimumPrinted(
     options.count("minimum-printed") ?
     options["minimum-printed"].as<int>() : 8
-  );  
-
+  );
+  SetBeneficialMutationDistribution(
+    options.count("beneficial-mutation-distribution") ?
+    options["beneficial-mutation-distribution"].as<char>() : 'e'
+  );
 
   // Simulation parameters that are pre-calculated
   SetDilutionFactor(exp(log(2) * GetGrowthPhaseGenerations()));
@@ -339,11 +367,11 @@ void cPopulation::CalculateDivisions()
    // How much time would we like to pass to achieve the desired number of divisions?
   // (assuming the entire population has the maximum fitness)
   SetUpdateTime(log((GetDesiredDivisions()+(double)GetTotalPopSize()) / GetTotalPopSize()) / (GetMaxW() * log(2)));
-        
+
       //What is the minimum time required to get a single division?
   SetTimeToNextWholeCell(0);
   DetermineDivisionTime();
-        
+
   // At a minumum, we want to make sure that one cell division took place
         if (GetTimeToNextWholeCell() > GetUpdateTime()) 
   {
@@ -369,7 +397,7 @@ void cPopulation::CalculateDivisions()
   SetTotalPopSize(GetNewPopSize());
 }
 
-void cPopulation::SeedSubpopulations()
+void cPopulation::SeedSubpopulations(tree<cSubpopulation*> base,tree<cSubpopulation*>::iterator root)
 {
   //Create red population
   cSubpopulation r;
@@ -380,33 +408,42 @@ void cPopulation::SeedSubpopulations()
   //Add subpopulation to population
   AddSubpopulation(r);
 
-  //const long double (cSubpopulation::* ptfptr) () = &cSubpopulation::GetNumber;
-  //const long double test = (r.*ptfptr)();
-  //lineageTree p(r);
-  //p.SetLineageSize(r);
-  //long double* test = p.GetMutation();
-  //std::cout << p.GetLineageSize()  << std::endl;
-  std::cout << r.GetNumber() << std::endl;
-
-  r.SetNumber(4);
-  std::cout << r.GetNumber() << std::endl;
-  //std::cout << p.GetLineageSize() << std::endl;
-
-  exit(1);
-  //subPopMem p = &cSubpopulation::GetNumber;
-
-
-
-  //Create base of red lineage tree
-  //lList list;
-  //lineageTree p;	
-  //p.SetLineageSize((r.GetNumber()));
+  //create the roots for the tree
+  //tree<cSubpopulation*> redroot, whiteroot;
+  //tree<cSubpopulation*>::iterator redtop, whitetop;
   
+  tree<cSubpopulation*>::iterator firstbranch;
+  cSubpopulation* redpointer = &r;
+  firstbranch = base.insert(root,redpointer);
+
+  //lineageTree red(); 
+  //red.EstablishRoots(r);
+
+
+  //red.SetNode(
+
+  //r.SetNode(red.GetBase(), red.GetStartNode());
+
+
+  //SetRedTop(GetRedRoot());
+  //SetFirstRedBranch(r);
+  
+
+  //redtop = redroot.begin();
+  //whitetop = whiteroot.begin();
+  //cSubpopulation* redrootnode = &r;
+  //cSubpopulation* whiterootnode = &w;
+
   //Seed a white population
   cSubpopulation w;
   w.SetNumber(GetInitialPopulationSize()/2);
   w.SetFitness(1);
   w.SetMarker('w');
   AddSubpopulation(w);
+
+  
+  //SetWhiteTop(GetWhiteRoot());
+  //SetFirstWhiteBranch(w);
+
 }
 

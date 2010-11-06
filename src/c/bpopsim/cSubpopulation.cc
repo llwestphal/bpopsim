@@ -47,6 +47,7 @@ void cSubpopulation::CreateDescendant(gsl_rng * randomgenerator, cSubpopulation 
   //SetNumber(GetNumber()-1);
   ancestor.SetNumber(ancestor.GetNumber()-1);
 
+  SetMarker(ancestor.GetMarker());
   //and give new fitness
   
   //new_sp.SetFitness(MutantFitness(GetFitness(), .05, 'e', randomgenerator));

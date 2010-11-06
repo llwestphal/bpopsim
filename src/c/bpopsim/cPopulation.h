@@ -10,6 +10,7 @@
 #include <string>
 #include "tree.hh"
 #include "cSubpopulation.h"
+#include "lineageTree.h"
 // Boost
 #include <boost/program_options.hpp>
 
@@ -126,6 +127,9 @@ public:
   const double GetMutationRatePerDivision() {return m_mutation_rate_per_division; }
   const double GetAverageMutationS() {return m_average_mutation_s; }
   const double GetGrowthPhaseGenerations() { return m_growth_phase_generations; }
+
+  cSubpopulation* GetCurrentSubpopulation() { return &(m_populations[GetNumberOfSubpopulations()-1]); }
+
   
 
   enum e_colors {
@@ -183,10 +187,10 @@ public:
   void SetBeneficialMutationDistribution(char in_beneficial_mutation_distribution) { m_beneficial_mutation_distribution = in_beneficial_mutation_distribution; }
 
   //METHODS
-  void AddSubpopulation(cSubpopulation& subpop);
+  void AddSubpopulation(cSubpopulation subpop);
   void UpdateLineages();
   void DetermineDivisionTime();
-  void Mutate(gsl_rng * randomgenerator);
+  void Mutate(gsl_rng * randomgenerator, lineageTree &test);
   void Resample(gsl_rng * randomgenerator);
   void PushBackRuns();
   void PrintOut(const string& output_file_name);
@@ -196,7 +200,7 @@ public:
   void SetParameters(const variables_map &options);
   void DisplayParameters();
   void CalculateDivisions();
-  void SeedSubpopulations(tree<cSubpopulation*> base,tree<cSubpopulation*>::iterator root);
+  void SeedSubpopulations(lineageTree &test);
 };
 
 

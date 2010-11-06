@@ -65,88 +65,19 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
 int main(int argc, char* argv[])
 {
 
-/*
-  //TREE
-
-  cSubpopulation testone;
-
-  testone.SetNumber(1);
-  cSubpopulation testtwo;
-  testtwo.SetNumber(2);
-  cSubpopulation testthree;
-  testthree.SetNumber(3);
-  cSubpopulation testfour;
-  testfour.SetNumber(4);
-
-  cSubpopulation testfive;
-  testfive.SetNumber(5);
-  cSubpopulation testsix;
-  testsix.SetNumber(6);
-  cSubpopulation testseven;
-  testseven.SetNumber(7);
-  cSubpopulation testeight;
-  testeight.SetNumber(8);
-
-
-  tree<cSubpopulation*> trtr;
-  tree<cSubpopulation*>::iterator toptop,oneone,twotwo,threethree,fourfour,locloc;
-  
-  toptop=trtr.begin();
-  */
 
   
-  
 
-//pass redbase, redroot
-//inside function redbase.insert(redroot,pointertonumber)
-  //tree<cSubpopulation>::iterator branch;
-  //branch = redbase.insert(redroot
+  //while(sibsib!=trtr.end()) {
+  //cout << trtr.depth(sibsib);
+  //for(int i=0; i<trtr.depth(sibsib)+1; ++i) 
+//	{
+//		cout << " ";
+//	}
+  //	cout << (*sibsib)->GetNumber() << endl;
+  //	++sibsib;
+  //}
 
-
-  //cSubpopulation* testpointer = &testone;
-  //cSubpopulation* testpointertwo = &testtwo;
-  //cSubpopulation* testpointerthree = &testthree;
-  //cSubpopulation* testpointerfour = &testfour;
-
-  //cSubpopulation* testpointerfive = &testfive;
-  //cSubpopulation* testpointersix = &testsix;
-  //cSubpopulation* testpointerseven = &testseven;
-  //cSubpopulation* testpointereight = &testeight;
-  
-
-  //cout << testpointer->GetNumber() << endl; 
-  //oneone=trtr.insert(toptop,testpointer);
-  //twotwo=trtr.append_child(oneone,testpointertwo);
-  
-  //trtr.append_child(twotwo,testpointerthree);
-
-  //trtr.append_child(trtr.append_child(oneone,testpointertwo),testpointerthree);
-
-
-  //threethree=trtr.append_child(twotwo,testpointerfour);
-  //trtr.append_child(threethree,testpointerfive);
-  //trtr.append_child(threethree,testpointersix);
-  //trtr.append_child(twotwo,testpointersix);
-  //trtr.append_child(threethree,testpointerseven);
-  ///trtr.append_child(fourfour,testpointereight);
-  //trtr.append_child(oneone,testpointerseven);
-  //trtr.append_child(oneone,testpointereight);
-  /*
-  locloc=trtr.begin();
-  tree<cSubpopulation*>::iterator sibsib=trtr.begin();
-  testone.SetNumber(2000);
-  
-
-  while(sibsib!=trtr.end()) {
-  cout << trtr.depth(sibsib);
-  for(int i=0; i<trtr.depth(sibsib)+1; ++i) 
-	{
-		cout << " ";
-	}
-  	cout << (*sibsib)->GetNumber() << endl;
-  	++sibsib;
-  }
-*/
   //set up command line options
   variables_map cmdline_options;
   get_cmdline_options(cmdline_options, argc, argv);
@@ -165,9 +96,7 @@ int main(int argc, char* argv[])
   population.SetParameters(cmdline_options);
   population.DisplayParameters();
 
-  tree<cSubpopulation*> base;
-  tree<cSubpopulation*>::iterator root;
-  root = base.begin();
+  lineageTree testtree;
 
 
   for (int on_run=0; on_run < population.GetReplicates(); on_run++)
@@ -175,7 +104,9 @@ int main(int argc, char* argv[])
     population.ClearRuns();
     std::cout << "Replicate " << on_run+1 << std::endl;    
 
-    population.SeedSubpopulations(base,root);
+
+    population.SeedSubpopulations(testtree);
+
     population.ResetRunStats();    
 
     while ( (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring() )
@@ -188,11 +119,15 @@ int main(int argc, char* argv[])
       while ( (population.GetDivisionsUntilMutation() > 0) && (population.GetTransfers() < population.GetTotalTransfers()) &&           population.GetKeepTransferring()) 
       {
         population.CalculateDivisions();
-        population.Mutate(randgen);
+        population.Mutate(randgen,testtree);
+        
+    
         population.Resample(randgen);      
       }
+
     }
     population.RunSummary();
+    
     population.PushBackRuns();
   }
   

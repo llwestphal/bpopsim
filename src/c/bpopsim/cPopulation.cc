@@ -1,6 +1,5 @@
 #include "cPopulation.h"
 
-#include "lineageTree.h"
 
 /* */
 
@@ -9,7 +8,7 @@ using namespace std;
 
 //typedef const long double (cSubpopulation::*subPopMem)();
 
-void cPopulation::AddSubpopulation(cSubpopulation& subpop)
+void cPopulation::AddSubpopulation(cSubpopulation subpop)
 {
 
   m_populations.push_back(subpop);  
@@ -67,40 +66,34 @@ void cPopulation::DetermineDivisionTime()
   
 }
 
-void cPopulation::Mutate(gsl_rng * randgen)
+void cPopulation::Mutate(gsl_rng * randgen, lineageTree &testtree)
 {
   if (GetDivisionsUntilMutation() <= 0) 
   {
     SetTotalMutations(GetTotalMutations()+1);
+    
     if (m_verbose) std::cout << "* Mutating!" << std::endl;
-        
+    
+       
     //Mutation happened in the one that just divided
 
     //Break ties randomly here.
     cSubpopulation& ancestor = m_populations[m_divided_lineages[rand() % m_divided_lineages.size()]];          
     
-      
 
     //cSubpopulation new_lineage = ancestor.CreateDescendant(randgen);
     cSubpopulation new_lineage;
     new_lineage.CreateDescendant(randgen,ancestor,GetAverageMutationS(),GetBeneficialMutationDistribution());
     tree<cSubpopulation*> ::iterator descendant_node;
-    //if(new_lineage.GetMarker() == 'w')
-    //{
-    //  descendant_node = Get
-    //}
-    //else
-    //{
-    //   descendant_node =
-     //appendchild(ancestor,new_lineage);
-
-
-    //Make another branch
-    
+    //cSubpopulation* temppointer = &new_lineage;
 
     if (GetVerbose()) std::cout << "  Color: " << new_lineage.GetMarker() << std::endl;
     if (GetVerbose()) std::cout << "  New Fitness: " << new_lineage.GetFitness() << std::endl;
     AddSubpopulation(new_lineage);
+    testtree.AppendProgeny(GetCurrentSubpopulation(),descendant_node);
+    testtree.SetCurrentBranch(descendant_node);
+    //cout << (*testtree.GetCurrentBranch())->GetNumber() << " inside" << endl;
+
     //Update maximum fitness
     if(new_lineage.GetFitness() > GetMaxW()) 
     {
@@ -119,10 +112,13 @@ void cPopulation::Resample(gsl_rng * randgen)
           //Is there an exists() in C++?
           m_by_color[RED] = 0;
           m_by_color[WHITE] = 0;
-    
+
+
+
     SetNewPopSize(0);        
     for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it)
     {
+
       if (it->GetNumber() == 0) continue;
             
         // Perform accurate binomial sampling only if below a certain population size
@@ -389,7 +385,7 @@ void cPopulation::CalculateDivisions()
   SetNewPopSize(0);
 
   UpdateLineages();
-  std::cout << GetNewPopSize() << " " << GetTotalPopSize() <<std::endl;
+  //std::cout << GetNewPopSize() << " " << GetTotalPopSize() <<std::endl;
   SetCompletedDivisions(GetNewPopSize() - GetTotalPopSize());
               
   if (GetVerbose())std::cout << "Completed divisions: " << GetCompletedDivisions() <<std::endl;
@@ -397,7 +393,7 @@ void cPopulation::CalculateDivisions()
   SetTotalPopSize(GetNewPopSize());
 }
 
-void cPopulation::SeedSubpopulations(tree<cSubpopulation*> base,tree<cSubpopulation*>::iterator root)
+void cPopulation::SeedSubpopulations(lineageTree &testtree)
 {
   //Create red population
   cSubpopulation r;
@@ -406,44 +402,33 @@ void cPopulation::SeedSubpopulations(tree<cSubpopulation*> base,tree<cSubpopulat
   r.SetFitness(1);
   r.SetMarker('r');
   //Add subpopulation to population
+
+
   AddSubpopulation(r);
 
-  //create the roots for the tree
-  //tree<cSubpopulation*> redroot, whiteroot;
-  //tree<cSubpopulation*>::iterator redtop, whitetop;
-  
-  tree<cSubpopulation*>::iterator firstbranch;
-  cSubpopulation* redpointer = &r;
-  firstbranch = base.insert(root,redpointer);
+  testtree.EstablishRoots(GetCurrentSubpopulation());
+  testtree.SetFirstBranch();
 
-  //lineageTree red(); 
-  //red.EstablishRoots(r);
-
-
-  //red.SetNode(
-
-  //r.SetNode(red.GetBase(), red.GetStartNode());
-
-
-  //SetRedTop(GetRedRoot());
-  //SetFirstRedBranch(r);
-  
-
-  //redtop = redroot.begin();
-  //whitetop = whiteroot.begin();
-  //cSubpopulation* redrootnode = &r;
-  //cSubpopulation* whiterootnode = &w;
 
   //Seed a white population
+
   cSubpopulation w;
   w.SetNumber(GetInitialPopulationSize()/2);
   w.SetFitness(1);
   w.SetMarker('w');
-  AddSubpopulation(w);
+  
 
   
-  //SetWhiteTop(GetWhiteRoot());
-  //SetFirstWhiteBranch(w);
+  AddSubpopulation(w);
+ 
+  tree<cSubpopulation*> ::iterator descendant_node;
+  //cSubpopulation* temppointer = &w;
+    
+    //ancestor.GetNode();
+  testtree.AppendProgeny(GetCurrentSubpopulation(),descendant_node);
+  testtree.SetCurrentBranch(descendant_node);
+
+  
 
 }
 

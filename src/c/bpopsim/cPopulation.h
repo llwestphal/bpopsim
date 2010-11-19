@@ -1,25 +1,19 @@
 #ifndef cPopulation_h
 #define cPopulation_h
 
-
-
 #include <vector>
 #include <cmath>
 #include <iostream>
 #include <fstream>
-#include <string>
-#include "tree.hh"
 #include "cSubpopulation.h"
 #include "lineageTree.h"
+
 // Boost
 #include <boost/program_options.hpp>
 
 using namespace boost::program_options;
-using namespace std;
 
 class cPopulation {
-
-
 
 private:
 
@@ -36,6 +30,7 @@ private:
   int m_minimum_printed;
   int m_total_transfers;
   int m_transfer_interval_to_print;
+  int m_lineage;
 
   std::vector<cSubpopulation> m_populations;
   std::vector<int> m_divided_lineages;
@@ -66,8 +61,8 @@ private:
   // Simulation parameters that should be arguments
   uint64_t m_initial_population_size;
   uint64_t m_pop_size_after_dilution;             // N sub 0 --int is to get rid of warning
-  double m_mutation_rate_per_division;           // mu
-  double m_average_mutation_s;                   // s
+  double m_mutation_rate_per_division;            // mu
+  double m_average_mutation_s;                    // s
   double m_growth_phase_generations;
   
 public:
@@ -75,18 +70,18 @@ public:
   //CONSTRUCTOR  
   cPopulation()
   {
-    m_transfers = 0;
-    m_verbose = 0;
-    m_max_w = 1;
-    m_number_of_subpopulations = 0;
-    m_total_mutations = 0;
-    m_total_subpopulations_lost = 0;
+     m_transfers = 0;
+     m_verbose = 0;
+     m_max_w = 1;
+     m_number_of_subpopulations = 0;
+     m_total_mutations = 0;
+     m_total_subpopulations_lost = 0;
   }
+  
   //DESTRUCTOR
   virtual ~cPopulation() { ; };
   
   //GETTERS
-
   const long double GetTotalPopSize() { return m_total_pop_size; }
   const long double GetRatio() { return m_ratio; }
   
@@ -100,6 +95,7 @@ public:
   const int GetTotalTransfers() {return m_total_transfers; }
   const int GetReplicates() {return m_replicates; }
   const int GetMinimumPrinted() {return m_minimum_printed; }
+  const int GetLineageTree() {return m_lineage; }
   //std::vector< std::vector<double> > GetRuns() { return &m_runs; }
   //std::vector<double> GetThisRun() { return &m_this_run; }  
 
@@ -128,27 +124,17 @@ public:
   const double GetAverageMutationS() {return m_average_mutation_s; }
   const double GetGrowthPhaseGenerations() { return m_growth_phase_generations; }
 
-  cSubpopulation* GetCurrentSubpopulation() { return &(m_populations[GetNumberOfSubpopulations()-1]); }
-
-  
-
   enum e_colors {
     RED=0,
     WHITE=1,
   };
-
-
 
   //Overloaded operators
   
   cSubpopulation& operator [] (int index) { return m_populations[index]; }
   const cSubpopulation& operator [] (int index) const { return m_populations[index]; }
   
-
-
   //  virtual MutationList& GetMutations(const char in_marker) {};
-
-
 
   //SETTERS
   void SetTotalPopSize(long double in_total_pop_size) { m_total_pop_size = in_total_pop_size; }
@@ -185,22 +171,23 @@ public:
   void SetAverageMutationS(double in_average_mutation_s) {m_average_mutation_s = in_average_mutation_s; }
   void SetGrowthPhaseGenerations(double in_growth_phase_generations) { m_growth_phase_generations= in_growth_phase_generations; }
   void SetBeneficialMutationDistribution(char in_beneficial_mutation_distribution) { m_beneficial_mutation_distribution = in_beneficial_mutation_distribution; }
+  void SetLineageTree(int in_lineage) { m_lineage = in_lineage; }
 
   //METHODS
-  void AddSubpopulation(cSubpopulation subpop);
+  void AddSubpopulation(cSubpopulation& subpop);
   void UpdateLineages();
   void DetermineDivisionTime();
-  void Mutate(gsl_rng * randomgenerator, lineageTree &test);
+  void Mutate(gsl_rng * randomgenerator, lineageTree& red, lineageTree& white);
   void Resample(gsl_rng * randomgenerator);
   void PushBackRuns();
-  void PrintOut(const string& output_file_name);
-  void ClearRuns();
+  void PrintOut(const std::string& output_file_name);
+  void ClearRuns(lineageTree& red, lineageTree& white);
   void RunSummary();
   void ResetRunStats();
   void SetParameters(const variables_map &options);
   void DisplayParameters();
   void CalculateDivisions();
-  void SeedSubpopulations(lineageTree &test);
+  void SeedSubpopulations();
 };
 
 

@@ -187,7 +187,7 @@ public:
   void SetParameters(const variables_map &options);
   void DisplayParameters();
   void CalculateDivisions();
-  void SeedSubpopulations();
+  void SeedSubpopulations(lineageTree& red, lineageTree& white);
 };
 
 

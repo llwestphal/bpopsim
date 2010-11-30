@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
    {  
       population.ClearRuns(redTree,whiteTree);
       std::cout << "Replicate " << on_run+1 << std::endl;    
-      population.SeedSubpopulations();
+      population.SeedSubpopulations(redTree,whiteTree);
       population.ResetRunStats();    
 
       while ( (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring() )
@@ -86,6 +86,11 @@ int main(int argc, char* argv[])
       }
       population.RunSummary();
       population.PushBackRuns();
+
+      redTree.PrintTree(output_file);
+      whiteTree.PrintTree(output_file);
+
    }
    population.PrintOut(output_file);
+   
 }

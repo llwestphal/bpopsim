@@ -7,6 +7,7 @@ cSubpopulation::cSubpopulation()
    m_number = 0;
    m_marker = 0;
    m_pointer = 0;
+
 }
 
 /* Copy constructor */
@@ -16,6 +17,7 @@ cSubpopulation::cSubpopulation(const cSubpopulation& in)
    m_number = in.m_number;
    m_marker = in.m_marker;
    m_pointer = in.m_pointer;
+
 }
 
 long double cSubpopulation::MutantFitness(long double in_fitness, double in_average_mutation_s, char in_type_of_mutation, gsl_rng * randomgenerator)
@@ -33,7 +35,7 @@ long double cSubpopulation::MutantFitness(long double in_fitness, double in_aver
    return 0;
 
 }
-void cSubpopulation::CreateDescendant(gsl_rng * randomgenerator, cSubpopulation &ancestor, double averageselectioncoefficient, char beneficialmutationdistribution)
+void cSubpopulation::CreateDescendant(gsl_rng * randomgenerator, cSubpopulation &ancestor, double averageselectioncoefficient, char beneficialmutationdistribution, int sizeoftree)
 {
    // There is only one new one...
    SetNumber(1);
@@ -45,7 +47,7 @@ void cSubpopulation::CreateDescendant(gsl_rng * randomgenerator, cSubpopulation 
    //and give new fitness
    SetFitness(ancestor.MutantFitness(ancestor.GetFitness(), averageselectioncoefficient, beneficialmutationdistribution, randomgenerator));
 
-   SetPointer(ancestor.GetPointer()+1);
+   SetPointer(sizeoftree);
 
 }
 

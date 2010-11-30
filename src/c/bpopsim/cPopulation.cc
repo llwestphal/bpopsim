@@ -62,8 +62,23 @@ void cPopulation::Mutate(gsl_rng * randgen, lineageTree& red, lineageTree& white
       cSubpopulation& ancestor = m_populations[m_divided_lineages[rand() % m_divided_lineages.size()]];          
 
       //cSubpopulation new_lineage = ancestor.CreateDescendant(randgen);
+
       cSubpopulation new_lineage;
-      new_lineage.CreateDescendant(randgen,ancestor,GetAverageMutationS(),GetBeneficialMutationDistribution());
+
+      int sizeoftree=0;
+
+      if(ancestor.GetMarker()=='w')
+      {
+         sizeoftree = white.GetSizeOfTree();
+      }
+
+      else
+      {
+         sizeoftree = red.GetSizeOfTree();
+      }
+     
+
+      new_lineage.CreateDescendant(randgen,ancestor,GetAverageMutationS(),GetBeneficialMutationDistribution(),sizeoftree);
 
       if (GetVerbose()) std::cout << "  Color: " << new_lineage.GetMarker() << std::endl;
       if (GetVerbose()) std::cout << "  New Fitness: " << new_lineage.GetFitness() << std::endl;
@@ -77,7 +92,7 @@ void cPopulation::Mutate(gsl_rng * randgen, lineageTree& red, lineageTree& white
         {
            white.AddNode(new_lineage.GetFitness()-ancestor.GetFitness());
 	   white.SetPointer(ancestor.GetPointer());
-        }
+         }
         else
         {
            red.AddNode(new_lineage.GetFitness()-ancestor.GetFitness());
@@ -177,7 +192,7 @@ void cPopulation::PrintOut(const std::string& output_file_name)
 
    //Print everything out
    std::ofstream output_file;
-   output_file.open(output_file_name.c_str());
+   output_file.open(output_file_name.c_str(),std::ios_base::app);
    output_file << "transfer";
    for (int on_run=0; on_run < GetReplicates(); on_run++) 
    {
@@ -255,7 +270,7 @@ void cPopulation::SetParameters(const variables_map &options)
   );  
   SetMutationRatePerDivision(
     options.count("mutation-rate-per-division") ?
-    options["mutation-rate-per-division"].as<double>() : 1E-7
+    options["mutation-rate-per-division"].as<double>() : 5E-8
   );  
   SetAverageMutationS(
     options.count("average-selection-coefficient") ?
@@ -279,7 +294,7 @@ void cPopulation::SetParameters(const variables_map &options)
   );  
   SetReplicates(
     options.count("replicates") ?
-    options["replicates"].as<int>() : 100
+    options["replicates"].as<int>() : 10
   );  
   SetMinimumPrinted(
     options.count("minimum-printed") ?
@@ -382,7 +397,7 @@ void cPopulation::CalculateDivisions()
   SetTotalPopSize(GetNewPopSize());
 }
 
-void cPopulation::SeedSubpopulations()
+void cPopulation::SeedSubpopulations(lineageTree& red, lineageTree& white)
 {
   //Create red population
   cSubpopulation r;
@@ -400,5 +415,16 @@ void cPopulation::SeedSubpopulations()
 
   AddSubpopulation(r);
   AddSubpopulation(w);
+
+  if(GetLineageTree())
+  {
+
+     white.AddNode(0);
+     white.SetPointer(0);
+     red.AddNode(0);
+     red.SetPointer(0);
+  }
+
+
 }
 

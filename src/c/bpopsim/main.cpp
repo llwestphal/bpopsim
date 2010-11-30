@@ -84,11 +84,12 @@ int main(int argc, char* argv[])
          }
 
       }
+      redTree.CalculateFrequencies(population, output_file);
       population.RunSummary();
       population.PushBackRuns();
 
       redTree.PrintTree(output_file);
-      whiteTree.PrintTree(output_file);
+      //whiteTree.PrintTree(output_file);
 
    }
    population.PrintOut(output_file);

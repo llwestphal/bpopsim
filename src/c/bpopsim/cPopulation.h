@@ -6,7 +6,11 @@
 #include <iostream>
 #include <fstream>
 #include "cSubpopulation.h"
+
+//class cSubpopulation;
+
 #include "lineageTree.h"
+
 
 // Boost
 #include <boost/program_options.hpp>
@@ -123,6 +127,9 @@ public:
   const double GetMutationRatePerDivision() {return m_mutation_rate_per_division; }
   const double GetAverageMutationS() {return m_average_mutation_s; }
   const double GetGrowthPhaseGenerations() { return m_growth_phase_generations; }
+
+  std::vector<cSubpopulation> GetPopulation() { return m_populations; }
+
 
   enum e_colors {
     RED=0,

@@ -67,15 +67,15 @@ void cPopulation::Mutate(gsl_rng * randgen, lineageTree& red, lineageTree& white
 
       int sizeoftree=0;
 
-      if(ancestor.GetMarker()=='w')
-      {
-         sizeoftree = white.GetSizeOfTree();
-      }
+      //if(ancestor.GetMarker()=='w')
+      //{
+        // sizeoftree = white.GetSizeOfTree();
+      //}
 
-      else
-      {
-         sizeoftree = red.GetSizeOfTree();
-      }
+      //else
+      //{
+         sizeoftree = red.GetSizeOfTree()+1;
+      //}
      
 
       new_lineage.CreateDescendant(randgen,ancestor,GetAverageMutationS(),GetBeneficialMutationDistribution(),sizeoftree);
@@ -88,16 +88,16 @@ void cPopulation::Mutate(gsl_rng * randgen, lineageTree& red, lineageTree& white
       if(GetLineageTree())
       {  
 
-        if(new_lineage.GetMarker()=='w')
-        {
-           white.AddNode(new_lineage.GetFitness()-ancestor.GetFitness());
-	   white.SetPointer(ancestor.GetPointer());
-         }
-        else
-        {
+        //if(new_lineage.GetMarker()=='w')
+        //{
+          // white.AddNode(new_lineage.GetFitness()-ancestor.GetFitness());
+	   //white.SetPointer(ancestor.GetPointer());
+         //}
+        //else
+        //{
            red.AddNode(new_lineage.GetFitness()-ancestor.GetFitness());
            red.SetPointer(ancestor.GetPointer());
-        }
+        //}
       }
 
     //Update maximum fitness
@@ -405,6 +405,8 @@ void cPopulation::SeedSubpopulations(lineageTree& red, lineageTree& white)
   r.SetNumber(GetInitialPopulationSize()/2);
   r.SetFitness(1);
   r.SetMarker('r');
+  r.SetPointer(1);
+
 
   //Seed a white population
 
@@ -412,6 +414,7 @@ void cPopulation::SeedSubpopulations(lineageTree& red, lineageTree& white)
   w.SetNumber(GetInitialPopulationSize()/2);
   w.SetFitness(1);
   w.SetMarker('w');
+  w.SetPointer(2);
 
   AddSubpopulation(r);
   AddSubpopulation(w);
@@ -419,11 +422,18 @@ void cPopulation::SeedSubpopulations(lineageTree& red, lineageTree& white)
   if(GetLineageTree())
   {
 
-     white.AddNode(0);
-     white.SetPointer(0);
+     //white.AddNode(0);
+     //white.SetPointer(0);
      red.AddNode(0);
      red.SetPointer(0);
-  }
+
+     red.AddNode(0);
+     red.SetPointer(1);   
+      
+     red.AddNode(0);
+     red.SetPointer(2);
+
+     }
 
 
 }

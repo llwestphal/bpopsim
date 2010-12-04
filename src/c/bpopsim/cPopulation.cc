@@ -48,7 +48,7 @@ void cPopulation::DetermineDivisionTime()
   }
 }
 
-void cPopulation::Mutate(gsl_rng * randgen, lineageTree& tree)
+void cPopulation::Mutate(gsl_rng * randgen, cLineageTree& tree)
 {
    if (GetDivisionsUntilMutation() <= 0) 
    {
@@ -68,7 +68,7 @@ void cPopulation::Mutate(gsl_rng * randgen, lineageTree& tree)
       int sizeoftree=0;
       
       //Assign the new lineage's internal pointer to the last position in the array
-      sizeoftree = rt.GetSizeOfTree()+1;
+      sizeoftree = tree.GetSizeOfTree()+1;
       
       new_lineage.CreateDescendant(randgen,ancestor,GetAverageMutationS(),GetBeneficialMutationDistribution(),sizeoftree);
 
@@ -208,7 +208,7 @@ void cPopulation::PrintOut(const std::string& output_file_name)
    }
 }
 
-void cPopulation::ClearRuns(lineageTree tree)
+void cPopulation::ClearRuns(cLineageTree& tree)
 {
    m_this_run.clear();
    m_populations.clear();
@@ -380,7 +380,7 @@ void cPopulation::CalculateDivisions()
   SetTotalPopSize(GetNewPopSize());
 }
 
-void cPopulation::SeedSubpopulations(lineageTree& tree)
+void cPopulation::SeedSubpopulations(cLineageTree& tree)
 {
   //Create red population
   cSubpopulation r;

@@ -6,7 +6,7 @@ cSubpopulation::cSubpopulation()
    m_fitness = 0;
    m_number = 0;
    m_marker = 0;
-   m_pointer = 0;
+   m_lineage = 0;
 
 }
 
@@ -16,7 +16,7 @@ cSubpopulation::cSubpopulation(const cSubpopulation& in)
    m_fitness = in.m_fitness;
    m_number = in.m_number;
    m_marker = in.m_marker;
-   m_pointer = in.m_pointer;
+   m_lineage = in.m_lineage;
 
 }
 
@@ -46,8 +46,10 @@ void cSubpopulation::CreateDescendant(gsl_rng * randomgenerator, cSubpopulation 
   
    //and give new fitness
    SetFitness(ancestor.MutantFitness(ancestor.GetFitness(), averageselectioncoefficient, beneficialmutationdistribution, randomgenerator));
+ 
+   //Set the subpopulation's internal pointer to itself, i.e. the position of itself in array
 
-   SetPointer(sizeoftree);
+   SetLineage(sizeoftree);
 
 }
 

@@ -6,11 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include "cSubpopulation.h"
-
-//class cSubpopulation;
-
 #include "cLineageTree.h"
-
 
 // Boost
 #include <boost/program_options.hpp>

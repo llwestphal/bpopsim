@@ -86,8 +86,10 @@ int main(int argc, char* argv[])
       population.RunSummary();
       population.PushBackRuns();
 
-      tree.PrintTree(output_file);
-
+      if(population.GetLineageTree())
+      {
+         tree.PrintTree(output_file);
+      }
    }
    population.PrintOut(output_file);
    

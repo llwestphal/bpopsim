@@ -81,7 +81,7 @@ void cPopulation::Mutate(gsl_rng * randgen, cLineageTree& tree)
       {  
            //Add a node that describes the latest mutation that describes the new sublineage
            tree.AddNode(new_lineage.GetFitness()-ancestor.GetFitness());
-           tree.SetPointer(ancestor.GetPointer());
+           tree.SetLineage(ancestor.GetLineage());
       }
 
     //Update maximum fitness
@@ -390,7 +390,7 @@ void cPopulation::SeedSubpopulations(cLineageTree& tree)
   r.SetMarker('r');
 
   //Set the red ancestor to point to the base of the red lineage
-  r.SetPointer(1);
+  r.SetLineage(1);
 
 
   //Seed a white population
@@ -401,7 +401,7 @@ void cPopulation::SeedSubpopulations(cLineageTree& tree)
   w.SetMarker('w');
   
   //Set the white ancestor to point to the base of the white lineage
-  w.SetPointer(2);
+  w.SetLineage(2);
 
   AddSubpopulation(r);
   AddSubpopulation(w);
@@ -412,16 +412,16 @@ void cPopulation::SeedSubpopulations(cLineageTree& tree)
      //This node represents the base of the tree
 
      tree.AddNode(0);
-     tree.SetPointer(0);
+     tree.SetLineage(0);
  
      //This node represents the base of the red lineage
 
      tree.AddNode(0);
-     tree.SetPointer(1);   
+     tree.SetLineage(1);   
       
      //This node represents the base of the white lineage     
      tree.AddNode(0);
-     tree.SetPointer(2);
+     tree.SetLineage(2);
 
   }
 

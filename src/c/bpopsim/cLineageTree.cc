@@ -1,7 +1,7 @@
-#include "lineageTree.h"
+#include "cLineageTree.h"
 #include "cPopulation.h"
 
-void lineageTree::PrintTree(const std::string& output_file_name)
+void cLineageTree::PrintTree(const std::string& output_file_name)
 {
    //Print everything out
    std::ofstream output_file;
@@ -21,7 +21,7 @@ void lineageTree::PrintTree(const std::string& output_file_name)
    output_file.close();
 }
 
-void lineageTree::CalculateFrequencies(cPopulation& in, const std::string& output_file_name)
+void cLineageTree::CalculateFrequencies(cPopulation& in, const std::string& output_file_name)
 {
 
    std::ofstream output_file;
@@ -56,7 +56,7 @@ void lineageTree::CalculateFrequencies(cPopulation& in, const std::string& outpu
 
 }       
      
-void lineageTree::ClearRuns()
+void cLineageTree::ClearRuns()
 {
    m_tree.clear();
    m_pointers.clear();

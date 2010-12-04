@@ -48,7 +48,7 @@ void cPopulation::DetermineDivisionTime()
   }
 }
 
-void cPopulation::Mutate(gsl_rng * randgen, lineageTree& red, lineageTree& white)
+void cPopulation::Mutate(gsl_rng * randgen, lineageTree& tree)
 {
    if (GetDivisionsUntilMutation() <= 0) 
    {
@@ -66,18 +66,10 @@ void cPopulation::Mutate(gsl_rng * randgen, lineageTree& red, lineageTree& white
       cSubpopulation new_lineage;
 
       int sizeoftree=0;
-
-      //if(ancestor.GetMarker()=='w')
-      //{
-        // sizeoftree = white.GetSizeOfTree();
-      //}
-
-      //else
-      //{
-         sizeoftree = red.GetSizeOfTree()+1;
-      //}
-     
-
+      
+      //Assign the new lineage's internal pointer to the last position in the array
+      sizeoftree = rt.GetSizeOfTree()+1;
+      
       new_lineage.CreateDescendant(randgen,ancestor,GetAverageMutationS(),GetBeneficialMutationDistribution(),sizeoftree);
 
       if (GetVerbose()) std::cout << "  Color: " << new_lineage.GetMarker() << std::endl;
@@ -87,17 +79,9 @@ void cPopulation::Mutate(gsl_rng * randgen, lineageTree& red, lineageTree& white
       //Add node to lineage tree
       if(GetLineageTree())
       {  
-
-        //if(new_lineage.GetMarker()=='w')
-        //{
-          // white.AddNode(new_lineage.GetFitness()-ancestor.GetFitness());
-	   //white.SetPointer(ancestor.GetPointer());
-         //}
-        //else
-        //{
-           red.AddNode(new_lineage.GetFitness()-ancestor.GetFitness());
-           red.SetPointer(ancestor.GetPointer());
-        //}
+           //Add a node that describes the latest mutation that describes the new sublineage
+           tree.AddNode(new_lineage.GetFitness()-ancestor.GetFitness());
+           tree.SetPointer(ancestor.GetPointer());
       }
 
     //Update maximum fitness
@@ -224,12 +208,11 @@ void cPopulation::PrintOut(const std::string& output_file_name)
    }
 }
 
-void cPopulation::ClearRuns(lineageTree& red, lineageTree& white)
+void cPopulation::ClearRuns(lineageTree tree)
 {
    m_this_run.clear();
    m_populations.clear();
-   red.ClearRuns();
-   white.ClearRuns();  
+   tree.ClearRuns();
 }
 
 void cPopulation::RunSummary()
@@ -397,14 +380,16 @@ void cPopulation::CalculateDivisions()
   SetTotalPopSize(GetNewPopSize());
 }
 
-void cPopulation::SeedSubpopulations(lineageTree& red, lineageTree& white)
+void cPopulation::SeedSubpopulations(lineageTree& tree)
 {
   //Create red population
   cSubpopulation r;
-  //Set parameters
+
   r.SetNumber(GetInitialPopulationSize()/2);
   r.SetFitness(1);
   r.SetMarker('r');
+
+  //Set the red ancestor to point to the base of the red lineage
   r.SetPointer(1);
 
 
@@ -414,6 +399,8 @@ void cPopulation::SeedSubpopulations(lineageTree& red, lineageTree& white)
   w.SetNumber(GetInitialPopulationSize()/2);
   w.SetFitness(1);
   w.SetMarker('w');
+  
+  //Set the white ancestor to point to the base of the white lineage
   w.SetPointer(2);
 
   AddSubpopulation(r);
@@ -422,19 +409,21 @@ void cPopulation::SeedSubpopulations(lineageTree& red, lineageTree& white)
   if(GetLineageTree())
   {
 
-     //white.AddNode(0);
-     //white.SetPointer(0);
-     red.AddNode(0);
-     red.SetPointer(0);
+     //This node represents the base of the tree
 
-     red.AddNode(0);
-     red.SetPointer(1);   
+     tree.AddNode(0);
+     tree.SetPointer(0);
+ 
+     //This node represents the base of the red lineage
+
+     tree.AddNode(0);
+     tree.SetPointer(1);   
       
-     red.AddNode(0);
-     red.SetPointer(2);
+     //This node represents the base of the white lineage     
+     tree.AddNode(0);
+     tree.SetPointer(2);
 
-     }
-
+  }
 
 }
 

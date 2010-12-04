@@ -1,5 +1,5 @@
-#ifndef lineageTree_h
-#define lineageTree_h
+#ifndef cLineageTree_h
+#define cLineageTree_h
 
 //#include "cPopulation.h"
 
@@ -10,7 +10,7 @@ class cPopulation;
 #include <fstream>
 #include <iomanip> 
 
-class lineageTree
+class cLineageTree
 {
    private:
      std::vector<long double> m_tree;
@@ -18,9 +18,9 @@ class lineageTree
      std::vector<long double> m_frequencies;
    
    public:
-     lineageTree() {;};
+     cLineageTree() {;};
      
-   virtual ~lineageTree() {;};
+   virtual ~cLineageTree() {;};
 
    void AddNode(long double in_mutation){ m_tree.push_back(in_mutation);}
    void SetPointer(int in_previous){m_pointers.push_back(in_previous);}

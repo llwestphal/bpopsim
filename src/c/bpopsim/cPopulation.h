@@ -9,7 +9,7 @@
 
 //class cSubpopulation;
 
-#include "lineageTree.h"
+#include "cLineageTree.h"
 
 
 // Boost
@@ -184,17 +184,17 @@ public:
   void AddSubpopulation(cSubpopulation& subpop);
   void UpdateLineages();
   void DetermineDivisionTime();
-  void Mutate(gsl_rng * randomgenerator, lineageTree& red, lineageTree& white);
+  void Mutate(gsl_rng * randomgenerator, lineageTree& tree);
   void Resample(gsl_rng * randomgenerator);
   void PushBackRuns();
   void PrintOut(const std::string& output_file_name);
-  void ClearRuns(lineageTree& red, lineageTree& white);
+  void ClearRuns(lineageTree& tree);
   void RunSummary();
   void ResetRunStats();
   void SetParameters(const variables_map &options);
   void DisplayParameters();
   void CalculateDivisions();
-  void SeedSubpopulations(lineageTree& red, lineageTree& white);
+  void SeedSubpopulations(lineageTree& tree);
 };
 
 

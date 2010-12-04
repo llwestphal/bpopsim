@@ -20,7 +20,6 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
   ;
 
 /* Need to add these as options...
-  'probability-file|p=s' => \$probability_file,
   'fitnesses|f=s' => \@fitnesses,
   'detailed' => \$detailed,
   'minimum-data-points|z=s' => \$minimum_data_points,
@@ -61,14 +60,13 @@ int main(int argc, char* argv[])
    population.SetParameters(cmdline_options);
    population.DisplayParameters();
 
-   lineageTree redTree;
-   lineageTree whiteTree;
+   cLineageTree tree;
 
    for (int on_run=0; on_run < population.GetReplicates(); on_run++)
    {  
-      population.ClearRuns(redTree,whiteTree);
+      population.ClearRuns(tree);
       std::cout << "Replicate " << on_run+1 << std::endl;    
-      population.SeedSubpopulations(redTree,whiteTree);
+      population.SeedSubpopulations(tree);
       population.ResetRunStats();    
 
       while ( (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring() )
@@ -79,17 +77,16 @@ int main(int argc, char* argv[])
          while ( (population.GetDivisionsUntilMutation() > 0) && (population.GetTransfers() < population.GetTotalTransfers()) &&           population.GetKeepTransferring()) 
          {
             population.CalculateDivisions();
-            population.Mutate(randgen,redTree,whiteTree);
+            population.Mutate(randgen,tree);
             population.Resample(randgen);      
          }
 
       }
-      redTree.CalculateFrequencies(population, output_file);
+      tree.CalculateFrequencies(population, output_file);
       population.RunSummary();
       population.PushBackRuns();
 
-      redTree.PrintTree(output_file);
-      //whiteTree.PrintTree(output_file);
+      tree.PrintTree(output_file);
 
    }
    population.PrintOut(output_file);

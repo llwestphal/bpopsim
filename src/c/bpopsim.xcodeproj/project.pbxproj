@@ -38,10 +38,10 @@
 		70684A91120A007300BE96CA /* cPopulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cPopulation.h; path = bpopsim/cPopulation.h; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* popsim */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = popsim; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6859E8B029090EE04C91782 /* popsim.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = popsim.1; sourceTree = "<group>"; };
+		D952741B132EE0CB009223FC /* tree.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = tree.hh; path = bpopsim/tree.hh; sourceTree = "<group>"; };
+		D952741C132EE0D4009223FC /* tree_util.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = tree_util.hh; path = bpopsim/tree_util.hh; sourceTree = "<group>"; };
 		D9CD9CF9132996B3006E387E /* cLineageTree.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cLineageTree.cc; path = bpopsim/cLineageTree.cc; sourceTree = "<group>"; };
 		D9CD9CFB132996C8006E387E /* cLineageTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cLineageTree.h; path = bpopsim/cLineageTree.h; sourceTree = "<group>"; };
-		D9CD9CFC132996C8006E387E /* cPopulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cPopulation.h; path = bpopsim/cPopulation.h; sourceTree = "<group>"; };
-		D9CD9CFD132996C8006E387E /* cSubpopulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cSubpopulation.h; path = bpopsim/cSubpopulation.h; sourceTree = "<group>"; };
 		D9CD9D03132996F4006E387E /* libgsl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgsl.a; path = /opt/local/lib/libgsl.a; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
@@ -88,6 +88,9 @@
 		70307F0B11F7E2B500BEFD1F /* include */ = {
 			isa = PBXGroup;
 			children = (
+				D952741C132EE0D4009223FC /* tree_util.hh */,
+				D952741B132EE0CB009223FC /* tree.hh */,
+				D9CD9CFB132996C8006E387E /* cLineageTree.h */,
 				70684A91120A007300BE96CA /* cPopulation.h */,
 				701E921A120134BD00653784 /* cSubpopulation.h */,
 			);
@@ -107,9 +110,6 @@
 		70D4DBC61200EB360055362E /* src */ = {
 			isa = PBXGroup;
 			children = (
-				D9CD9CFB132996C8006E387E /* cLineageTree.h */,
-				D9CD9CFC132996C8006E387E /* cPopulation.h */,
-				D9CD9CFD132996C8006E387E /* cSubpopulation.h */,
 				D9CD9CF9132996B3006E387E /* cLineageTree.cc */,
 				70307F1C11F7E39E00BEFD1F /* main.cpp */,
 				70684A90120A007300BE96CA /* cPopulation.cc */,

@@ -44,6 +44,7 @@ void cLineageTree::CalculateFrequencies(cPopulation& in, const std::string& outp
 
    std::cout << std::setprecision(10);
 
+	 /*
    //Iterate through the sub populations
    for (std::vector<cSubpopulation>::iterator it = in.GetPopulation().end(); it!=in.GetPopulation().begin(); --it)
    {
@@ -57,7 +58,7 @@ void cLineageTree::CalculateFrequencies(cPopulation& in, const std::string& outp
          output_file << it->GetNumber() << "	" << it->GetFitness() << std::endl;
          sum+= (it->GetNumber())/(in.GetTotalPopSize());
       }
-   }
+   }*/
    output_file << std::endl;
    //Verify that the sum of all the frequencies of all the lineages is 1
    std::cout << sum << std::endl;
@@ -67,9 +68,15 @@ void cLineageTree::CalculateFrequencies(cPopulation& in, const std::string& outp
 
 }       
      
-void cLineageTree::ClearRuns()
+/*void cLineageTree::ClearRuns()
 {
    m_tree.clear();
    m_lineages.clear();
+}*/
+
+void cLineageTree::ClearRuns()
+{
+	this -> clear();
+	//m_lineages.clear();
 }
   

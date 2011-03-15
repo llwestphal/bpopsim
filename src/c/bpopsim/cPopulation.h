@@ -180,7 +180,8 @@ public:
   void AddSubpopulation(cSubpopulation& subpop);
   void UpdateLineages();
   void DetermineDivisionTime();
-  void Mutate(gsl_rng * randomgenerator, cLineageTree& tree);
+  //void Mutate(gsl_rng * randomgenerator, cLineageTree& tree);
+	void NewMutate(gsl_rng * randomgenerator, cLineageTree& newtree);
   void Resample(gsl_rng * randomgenerator);
   void PushBackRuns();
   void PrintOut(const std::string& output_file_name);
@@ -190,7 +191,8 @@ public:
   void SetParameters(const variables_map &options);
   void DisplayParameters();
   void CalculateDivisions();
-  void SeedSubpopulations(cLineageTree& tree);
+  //void SeedSubpopulations(cLineageTree& tree);
+	void NewSeedSubpopulation(cLineageTree& newtree);
 };
 
 

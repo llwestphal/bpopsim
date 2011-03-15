@@ -16,6 +16,7 @@ cSubpopulation::cSubpopulation(const cSubpopulation& in)
    //m_fitness = in.m_fitness;
    m_number = in.m_number;
    m_marker = in.m_marker;
+   m_genotype = in.m_genotype;
    //m_lineage = in.m_lineage;
 
 }

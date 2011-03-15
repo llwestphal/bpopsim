@@ -13,6 +13,8 @@ syntax: glob
 *.tab
 *.swp
 *~
+*.mode1v3
+*.pbxuser
 
 ## These are for Perl modules in general
 _build

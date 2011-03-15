@@ -45,7 +45,7 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
 
 int main(int argc, char* argv[])
 {
-	 tree<cGenotype>::iterator loc;
+	 tree<cGenotype>::iterator_base loc;
    //set up command line options
    variables_map cmdline_options;
    get_cmdline_options(cmdline_options, argc, argv);
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
       //population.SeedSubpopulations(tree);
 		 population.NewSeedSubpopulation(newtree);
 		 
-		 population.ResetRunStats();    
+		 population.ResetRunStats();
 		 
       while ( (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring() )
       {

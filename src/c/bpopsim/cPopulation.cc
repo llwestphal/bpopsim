@@ -430,15 +430,16 @@ void cPopulation::CalculateDivisions()
 //and the associated header so it would be clear where stuff was changed.
 
 void cPopulation::NewSeedSubpopulation(cLineageTree& newtree) {
-	long double r = 1.0;
-	long double w = 1.0;
+	cGenotype r = 1.0;
+	cGenotype w = 1.0;
 	tree<cGenotype>::iterator top, red_side, white_side;
 	
 	cSubpopulation red, white;
 	
-	top = newtree.begin();
-	red_side = newtree.insert(top, r);
-	white_side = newtree.insert(top, w);
+	newtree.set_head(1);
+	
+	red_side = newtree.insert(newtree.begin(), r);
+	white_side = newtree.insert(newtree.begin(), w);
 	
 	red.SetNumber(GetInitialPopulationSize()/2);
 	red.SetGenotype(red_side);

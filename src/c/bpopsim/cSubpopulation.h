@@ -12,14 +12,14 @@ private:
   long double m_number;
   char m_marker;
   //int m_lineage;
-	tree<cGenotype> *m_genotype;
+	tree<cGenotype>::tree::iterator m_genotype;
 
 public:
   cSubpopulation();
   cSubpopulation(const cSubpopulation& in); // Copy constructor
   virtual ~cSubpopulation() { ; }; 
 
-  const long double GetFitness() { return (*m_genotype); }
+  const long double GetFitness() { return *m_genotype; }
   const long double GetNumber() { return m_number; }
   const char GetMarker() { return m_marker; }
   //const int GetLineage() { return m_lineage; }
@@ -27,7 +27,7 @@ public:
   	 
   //void SetLineage(const int in_lineage) {m_lineage = in_lineage; }
   //void SetFitness(const long double in_fitness) { m_fitness = in_fitness; }
-	void SetGenotype(tree<cGenotype> *location) { m_genotype = location; }
+	void SetGenotype(tree<cGenotype>::tree::iterator location) { m_genotype = location; }
   void SetNumber(const long double in_number) { m_number = in_number; }
   void SetMarker(const char in_marker) { m_marker = in_marker; } 
   void Transfer(long double success_prob, gsl_rng * randomgenerator);

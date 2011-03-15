@@ -55,7 +55,7 @@ void cSubpopulation::CreateDescendant(gsl_rng * randomgenerator, cSubpopulation 
 }*/
 
 void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator, cSubpopulation &ancestor, double averageselectioncoefficient, char beneficialmutationdistribution, tree<cGenotype> in_tree) {
-	tree<cGenotype>::iterator new_geno_it;
+	tree<cGenotype>::iterator_base new_geno_it;
 	// There is only one new one...
 	SetNumber(1);
 	// ...taken from the ancestor.

@@ -50,51 +50,6 @@ void cPopulation::DetermineDivisionTime()
   }
 }
 
-/*void cPopulation::Mutate(gsl_rng * randgen, cLineageTree& tree)
-{
-   if (GetDivisionsUntilMutation() <= 0) 
-   {
-      SetTotalMutations(GetTotalMutations()+1);
-    
-      if (m_verbose) std::cout << "* Mutating!" << std::endl;
-       
-      //Mutation happened in the one that just divided
-
-      //Break ties randomly here.
-      cSubpopulation& ancestor = m_populations[m_divided_lineages[rand() % m_divided_lineages.size()]];          
-
-      //cSubpopulation new_lineage = ancestor.CreateDescendant(randgen);
-
-      cSubpopulation new_lineage;
-
-      int sizeoftree=0;
-      
-      //Assign the new lineage's internal pointer to the last position in the array
-      sizeoftree = tree.GetSizeOfTree()+1;
-      
-      new_lineage.CreateDescendant(randgen,ancestor,GetAverageMutationS(),GetBeneficialMutationDistribution(),sizeoftree);
-
-      if (GetVerbose()) std::cout << "  Color: " << new_lineage.GetMarker() << std::endl;
-      if (GetVerbose()) std::cout << "  New Fitness: " << new_lineage.GetFitness() << std::endl;
-      AddSubpopulation(new_lineage);
-    
-      //Add node to lineage tree
-      if(GetLineageTree())
-      {  
-           //Add a node that describes the latest mutation that describes the new sublineage
-           tree.AddNode(new_lineage.GetFitness()-ancestor.GetFitness());
-           tree.SetLineage(ancestor.GetLineage());
-      }
-
-    //Update maximum fitness
-    if(new_lineage.GetFitness() > GetMaxW()) 
-    {
-       SetMaxW(new_lineage.GetFitness());
-    }
-        
-  }
-}*/
-
 void cPopulation::Resample(gsl_rng * randgen)
 {
   //When it is time for a transfer, resample population
@@ -110,7 +65,7 @@ void cPopulation::Resample(gsl_rng * randgen)
 			// Perform accurate binomial sampling only if below a certain population size
 			if (it->GetNumber() < GetBinomialSamplingThreshold()) 
 			{
-				 if (GetVerbose()) std::cout << "binomial" << it->GetNumber() << std::endl;
+				 if (GetVerbose()) std::cout << "binomial " << it->GetNumber() << std::endl;
 				 it->Transfer(GetTransferBinomialSamplingP(), randgen);
 			}
 			// Otherwise, treat as deterministic and take expectation...
@@ -209,11 +164,11 @@ void cPopulation::PrintOut(const std::string& output_file_name)
    }
 }
 
-void cPopulation::ClearRuns(cLineageTree& tree)
+void cPopulation::ClearRuns(cLineageTree& newtree)
 {
-   //m_this_run.clear();
-   //m_populations.clear();
-   tree.ClearRuns();
+   m_this_run.clear();
+   m_populations.clear();
+   newtree.clear();
 }
 
 void cPopulation::RunSummary()
@@ -381,6 +336,51 @@ void cPopulation::CalculateDivisions()
   SetTotalPopSize(GetNewPopSize());
 }
 
+/*void cPopulation::Mutate(gsl_rng * randgen, cLineageTree& tree)
+ {
+	if (GetDivisionsUntilMutation() <= 0) 
+	{
+	SetTotalMutations(GetTotalMutations()+1);
+ 
+	if (m_verbose) std::cout << "* Mutating!" << std::endl;
+ 
+	//Mutation happened in the one that just divided
+ 
+	//Break ties randomly here.
+	cSubpopulation& ancestor = m_populations[m_divided_lineages[rand() % m_divided_lineages.size()]];          
+ 
+	//cSubpopulation new_lineage = ancestor.CreateDescendant(randgen);
+ 
+	cSubpopulation new_lineage;
+ 
+	int sizeoftree=0;
+ 
+	//Assign the new lineage's internal pointer to the last position in the array
+	sizeoftree = tree.GetSizeOfTree()+1;
+ 
+	new_lineage.CreateDescendant(randgen,ancestor,GetAverageMutationS(),GetBeneficialMutationDistribution(),sizeoftree);
+ 
+	if (GetVerbose()) std::cout << "  Color: " << new_lineage.GetMarker() << std::endl;
+	if (GetVerbose()) std::cout << "  New Fitness: " << new_lineage.GetFitness() << std::endl;
+	AddSubpopulation(new_lineage);
+ 
+	//Add node to lineage tree
+	if(GetLineageTree())
+	{  
+		//Add a node that describes the latest mutation that describes the new sublineage
+		tree.AddNode(new_lineage.GetFitness()-ancestor.GetFitness());
+		tree.SetLineage(ancestor.GetLineage());
+	}
+ 
+	//Update maximum fitness
+	if(new_lineage.GetFitness() > GetMaxW()) 
+	{
+		SetMaxW(new_lineage.GetFitness());
+	}
+ 
+	}
+ }*/
+
 /*void cPopulation::SeedSubpopulations(cLineageTree& tree) {
 	
   //Create red population
@@ -425,18 +425,29 @@ void cPopulation::CalculateDivisions()
 }*/
 
 
-//@agm The function below are meant to accomplish building the new tree using the tree.h header
-//I thought the best way to do this was to comment out all of the previous code in both this file
-//and the associated header so it would be clear where stuff was changed.
+/*@agm The functions below should build a new tree using the tree.h header
+       I thought the best way to do this was to comment out all of the previous code in both this file
+       and the associated header so it would be clear where stuff was changed. */
 
 void cPopulation::NewSeedSubpopulation(cLineageTree& newtree) {
-	cGenotype r = 1.0;
-	cGenotype w = 1.0;
+	cGenotype r, w, head;
+	
+	/*@agm The head is set, though I don't think it is necessary.  The unique code and fitness is set. */
+	
+	r.fitness = 1.0;
+	r.unique_node_id = 1;
+	
+	w.fitness = 1.0;
+	w.unique_node_id = 2;
+	
+	head.unique_node_id = 0;
+	head.fitness = 1.0;
+	
 	tree<cGenotype>::iterator top, red_side, white_side;
 	
 	cSubpopulation red, white;
 	
-	newtree.set_head(1);
+	newtree.set_head(head);
 	
 	red_side = newtree.insert(newtree.begin(), r);
 	white_side = newtree.insert(newtree.begin(), w);
@@ -445,21 +456,15 @@ void cPopulation::NewSeedSubpopulation(cLineageTree& newtree) {
 	red.SetGenotype(red_side);
 	red.SetMarker('r');
 	
-	std::cout << *red_side << std::endl;
-	std::cout << red.GetFitness() << std::endl;
-	
 	white.SetNumber(GetInitialPopulationSize()/2);
 	white.SetGenotype(white_side);
 	white.SetMarker('w');
 	
 	AddSubpopulation(red);
 	AddSubpopulation(white);
-	
-	kptree::print_tree_bracketed(newtree);
-	
 }
 
-void cPopulation::NewMutate(gsl_rng * randgen, cLineageTree& newtree) {
+void cPopulation::NewMutate(gsl_rng * randgen, cLineageTree& newtree, int node_id) {
 	
 	SetTotalMutations(GetTotalMutations()+1);
 	
@@ -472,16 +477,18 @@ void cPopulation::NewMutate(gsl_rng * randgen, cLineageTree& newtree) {
 	
 	cSubpopulation new_subpop;
 	
-	new_subpop.NewCreateDescendant(randgen, ancestor, GetAverageMutationS(), GetBeneficialMutationDistribution(), newtree);
+	new_subpop.NewCreateDescendant(randgen, ancestor, GetAverageMutationS(), GetBeneficialMutationDistribution(), newtree, node_id);
 	
 	if (GetVerbose()) std::cout << "  Color: " << new_subpop.GetMarker() << std::endl;
 	if (GetVerbose()) std::cout << "  New Fitness: " << new_subpop.GetFitness() << std::endl;
+	
 	AddSubpopulation(new_subpop);
 	
 	if(new_subpop.GetFitness() > GetMaxW()) 
 	{
 		SetMaxW(new_subpop.GetFitness());
 	}
+	
 }
 
 

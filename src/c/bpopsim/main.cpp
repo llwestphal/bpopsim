@@ -1,5 +1,6 @@
 #include "cPopulation.h"
 #include "tree_util.hh"
+#include "tree.hh"
 
 // setup and parse configuration options:
 void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
@@ -43,6 +44,20 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
   }
 }
 
+void print_tree(const tree<cGenotype>& tr, tree<cGenotype>::pre_order_iterator it, tree<cGenotype>::pre_order_iterator end)
+{
+	if(!tr.is_valid(it)) return;
+	int rootdepth=tr.depth(it);
+	std::cout << "-----" << std::endl;
+	while(it!=end) {
+		for(int i=0; i<tr.depth(it)-rootdepth; ++i) 
+			std::cout << "  ";
+		  std::cout << (*it).unique_node_id << "," << (*it).fitness << std::endl << std::flush;
+		++it;
+	}
+	std::cout << "-----" << std::endl;
+}
+
 int main(int argc, char* argv[])
 {
 	 tree<cGenotype>::iterator_base loc;
@@ -57,19 +72,17 @@ int main(int argc, char* argv[])
    gsl_rng_env_setup();
    T = gsl_rng_mt19937;
    randgen = gsl_rng_alloc (T);
-	 //Trying to build a tree
 	
    cPopulation population;
    population.SetParameters(cmdline_options);
    population.DisplayParameters();
 	
-	 //This is the old code
-   //cLineageTree tree;
 	 cLineageTree newtree;
 	
    for (int on_run=0; on_run < population.GetReplicates(); on_run++)
    {
-		 population.ClearRuns(/*tree*/ newtree);
+		  int node_id = 3;
+		  population.ClearRuns(newtree);
 		 
       std::cout << "Replicate " << on_run+1 << std::endl;   
 		 
@@ -78,31 +91,24 @@ int main(int argc, char* argv[])
 		 
 		 population.ResetRunStats();
 		 
-      while ( (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring() )
-      {
+      while ( (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring() ){
+				
          population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + gsl_ran_exponential(randgen, population.GetLambda()));
-         if (population.GetVerbose()) std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl;
-         
-         while ( (population.GetDivisionsUntilMutation() > 0) && (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring()) 
-         {
-            population.CalculateDivisions();
-            //population.Mutate(randgen,tree);
-					 if (population.GetDivisionsUntilMutation() <= 0) { population.NewMutate(randgen, newtree); };
-					 if (population.GetTotalPopSize() >= population.GetPopSizeBeforeDilution()) { population.Resample(randgen); };      
+				 if (population.GetVerbose()) std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl;
+         while ( (population.GetDivisionsUntilMutation() > 0) && (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring()) {
+					 population.CalculateDivisions();
+					 if (population.GetDivisionsUntilMutation() <= 0) { node_id++; population.NewMutate(randgen, newtree, node_id); };
+					 if (population.GetTotalPopSize() >= population.GetPopSizeBeforeDilution()) { population.Resample(randgen); };  
+					 
          }
-
+				
       }
-      //tree.CalculateFrequencies(population, output_file);
+		  //print_tree(newtree, newtree.begin(), newtree.end());
       population.RunSummary();
       population.PushBackRuns();
-		  /*
-      if(population.GetLineageTree())
-      {
-         tree.PrintTree(output_file);
-      }*/
-			
+		  kptree::print_tree_bracketed(newtree);
+		  std::cout << std::endl;
    }
-   population.PrintOut(output_file);
- 
-   
+	 
+   //population.PrintOut(output_file);
 }

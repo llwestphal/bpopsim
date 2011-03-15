@@ -77,7 +77,7 @@ public:
      m_total_mutations = 0;
      m_total_subpopulations_lost = 0;
   }
-  
+	
   //DESTRUCTOR
   virtual ~cPopulation() { ; };
   
@@ -180,8 +180,7 @@ public:
   void AddSubpopulation(cSubpopulation& subpop);
   void UpdateLineages();
   void DetermineDivisionTime();
-  //void Mutate(gsl_rng * randomgenerator, cLineageTree& tree);
-	void NewMutate(gsl_rng * randomgenerator, cLineageTree& newtree);
+	void NewMutate(gsl_rng * randomgenerator, cLineageTree& newtree, int node_id);
   void Resample(gsl_rng * randomgenerator);
   void PushBackRuns();
   void PrintOut(const std::string& output_file_name);
@@ -191,7 +190,6 @@ public:
   void SetParameters(const variables_map &options);
   void DisplayParameters();
   void CalculateDivisions();
-  //void SeedSubpopulations(cLineageTree& tree);
 	void NewSeedSubpopulation(cLineageTree& newtree);
 };
 

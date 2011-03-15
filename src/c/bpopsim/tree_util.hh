@@ -59,18 +59,19 @@ void print_tree_bracketed(const tree<T>& t, std::ostream& str)
 
 
 // Print everything under this root in a flat, bracketed structure.
-
+//@agm I change this in an attempt to get it to work on a more complex node type
+	
 template<class T>
 void print_subtree_bracketed(const tree<T>& t, typename tree<T>::iterator iRoot, std::ostream& str) 
 	{
 	if(t.empty()) return;
 	if (t.number_of_children(iRoot) == 0) {
-		str << *iRoot;	
+		str << (*iRoot).unique_node_id << ":" << (*iRoot).fitness;	
 		}
 	else {
 		// parent
-		str << *iRoot;
-		str << "(";
+		str << (*iRoot).unique_node_id << ":" << (*iRoot).fitness;
+		str << "{";
 		// child1, ..., childn
 		int siblingCount = t.number_of_siblings(t.begin(iRoot));
 		int siblingNum;
@@ -83,7 +84,7 @@ void print_subtree_bracketed(const tree<T>& t, typename tree<T>::iterator iRoot,
 				str << ", ";
 				}
 			}
-		str << ")";
+		str << "}";
 		}
 	}
 

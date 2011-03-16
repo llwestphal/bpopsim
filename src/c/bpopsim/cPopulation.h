@@ -177,10 +177,13 @@ public:
   void SetLineageTree(int in_lineage) { m_lineage = in_lineage; }
 
   //METHODS
-  void AddSubpopulation(cSubpopulation& subpop);
+  void AddSubpopulation(cSubpopulation& subpop,
+												unsigned int& node_id);
   void UpdateLineages();
   void DetermineDivisionTime();
-	void NewMutate(gsl_rng * randomgenerator, cLineageTree& newtree, int node_id);
+	void NewMutate(gsl_rng * randomgenerator, 
+								 cLineageTree& newtree, 
+								 unsigned int& node_id);
   void Resample(gsl_rng * randomgenerator);
   void PushBackRuns();
   void PrintOut(const std::string& output_file_name);
@@ -190,7 +193,8 @@ public:
   void SetParameters(const variables_map &options);
   void DisplayParameters();
   void CalculateDivisions();
-	void NewSeedSubpopulation(cLineageTree& newtree);
+	void NewSeedSubpopulation(cLineageTree& newtree, 
+														unsigned int& node_id);
 };
 
 

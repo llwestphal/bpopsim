@@ -25,7 +25,10 @@ public:
   void SetNumber(const long double in_number) { m_number = in_number; }
   void SetMarker(const char in_marker) { m_marker = in_marker; } 
   void Transfer(long double success_prob, gsl_rng * randomgenerator);
-  long double MutantFitness(long double in_fitness, double in_average_mutation_s, char in_type_of_mutation, gsl_rng * randomgenerator);  
+  long double MutantFitness(long double in_fitness, 
+														double in_average_mutation_s, 
+														char in_type_of_mutation, 
+														gsl_rng * randomgenerator);  
 
 	/*###################################################################################
   @agm Here I added the counter as a crude way to keep track of unique_node_id's.
@@ -34,7 +37,12 @@ public:
 	     This is likely not ideal or fastest with huge trees.
 	 ####################################################################################*/
 	
-	virtual void NewCreateDescendant(gsl_rng * randomgenerator, cSubpopulation &ancestor, double averageselectioncoefficient, char beneficialmutationdistribution, tree<cGenotype> in_tree, int node_id);
+	virtual void NewCreateDescendant(gsl_rng * randomgenerator, 
+																	 cSubpopulation &ancestor, 
+																	 double averageselectioncoefficient, 
+																	 char beneficialmutationdistribution, 
+																	 tree<cGenotype> in_tree, 
+																	 unsigned int node_id);
 
 };
 #endif

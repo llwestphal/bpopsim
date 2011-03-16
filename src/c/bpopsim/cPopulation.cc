@@ -2,10 +2,11 @@
 #include "cLineageTree.h"
 #include "tree_util.hh"
 
-void cPopulation::AddSubpopulation(cSubpopulation& subpop)
+void cPopulation::AddSubpopulation(cSubpopulation& subpop, unsigned int& node_id)
 {
-   m_populations.push_back(subpop);  
+   m_populations.push_back(subpop);
    SetNumberOfSubpopulations(GetNumberOfSubpopulations()+1);
+	 node_id++;
 }
 
 void cPopulation::UpdateLineages()
@@ -429,26 +430,35 @@ void cPopulation::CalculateDivisions()
        I thought the best way to do this was to comment out all of the previous code in both this file
        and the associated header so it would be clear where stuff was changed. */
 
-void cPopulation::NewSeedSubpopulation(cLineageTree& newtree) {
-	cGenotype r, w, head;
+void cPopulation::NewSeedSubpopulation(cLineageTree& newtree, 
+																			 unsigned int& node_id) {
+	cGenotype r, w;
+	//cGenotype head;
+	tree<cGenotype>::iterator top, red_side, white_side;
+	long double starting_fitness = 1.0;
+	
+	//initialize object of cSubpopulation type
+	cSubpopulation red, white;
 	
 	/*@agm The head is set, though I don't think it is necessary.  The unique code and fitness is set. */
 	
-	r.fitness = 1.0;
-	r.unique_node_id = 1;
+	/*@agm This function leads to a really odd problem when incrementing from the AddSubpopulation function.
+				 Notice the red and white objects must by set before their the function can be called which increments
+	       node_id... ahh but if the function call cannot be made without first assigning a node_id... irritating*/
 	
-	w.fitness = 1.0;
-	w.unique_node_id = 2;
+	//assign first node id
+	//head.unique_node_id = node_id;
 	
-	head.unique_node_id = 0;
-	head.fitness = 1.0;
+	//assign initial fitness
+	//head.fitness = starting_fitness;
+	r.fitness = starting_fitness;
+	r.unique_node_id = node_id;
+  w.fitness = starting_fitness;
+	w.unique_node_id = (node_id+1);
 	
-	tree<cGenotype>::iterator top, red_side, white_side;
 	
-	cSubpopulation red, white;
-	
-	newtree.set_head(head);
-	
+	//start building tree
+	//newtree.set_head(head);
 	red_side = newtree.insert(newtree.begin(), r);
 	white_side = newtree.insert(newtree.begin(), w);
 	
@@ -460,11 +470,13 @@ void cPopulation::NewSeedSubpopulation(cLineageTree& newtree) {
 	white.SetGenotype(white_side);
 	white.SetMarker('w');
 	
-	AddSubpopulation(red);
-	AddSubpopulation(white);
+	AddSubpopulation(red, node_id);
+	AddSubpopulation(white, node_id);	
 }
 
-void cPopulation::NewMutate(gsl_rng * randgen, cLineageTree& newtree, int node_id) {
+void cPopulation::NewMutate(gsl_rng * randgen, 
+														cLineageTree& newtree, 
+														unsigned int& node_id) {
 	
 	SetTotalMutations(GetTotalMutations()+1);
 	
@@ -477,12 +489,17 @@ void cPopulation::NewMutate(gsl_rng * randgen, cLineageTree& newtree, int node_i
 	
 	cSubpopulation new_subpop;
 	
-	new_subpop.NewCreateDescendant(randgen, ancestor, GetAverageMutationS(), GetBeneficialMutationDistribution(), newtree, node_id);
+	new_subpop.NewCreateDescendant(randgen, 
+																 ancestor, 
+																 GetAverageMutationS(), 
+																 GetBeneficialMutationDistribution(), 
+																 newtree, 
+																 node_id);
 	
 	if (GetVerbose()) std::cout << "  Color: " << new_subpop.GetMarker() << std::endl;
 	if (GetVerbose()) std::cout << "  New Fitness: " << new_subpop.GetFitness() << std::endl;
 	
-	AddSubpopulation(new_subpop);
+	AddSubpopulation(new_subpop, node_id);
 	
 	if(new_subpop.GetFitness() > GetMaxW()) 
 	{

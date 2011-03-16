@@ -5,7 +5,7 @@
        this is not resistance, I'm just not sure what @jeb wanted as a class with static variables. */
 
 typedef struct {
-	int unique_node_id;
+	unsigned int unique_node_id;
 	long double fitness;
 } cGenotype;
 

@@ -81,15 +81,16 @@ int main(int argc, char* argv[])
 	
    for (int on_run=0; on_run < population.GetReplicates(); on_run++)
    {
-		  int node_id = 3;
+		  unsigned int node_id = 0;
 		  population.ClearRuns(newtree);
 		 
       std::cout << "Replicate " << on_run+1 << std::endl;   
 		 
       //population.SeedSubpopulations(tree);
-		 population.NewSeedSubpopulation(newtree);
+		  population.NewSeedSubpopulation(newtree, node_id);
+		  //std::cout << node_id << std::endl;
 		 
-		 population.ResetRunStats();
+		  population.ResetRunStats();
 		 
       while ( (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring() ){
 				
@@ -97,7 +98,7 @@ int main(int argc, char* argv[])
 				 if (population.GetVerbose()) std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl;
          while ( (population.GetDivisionsUntilMutation() > 0) && (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring()) {
 					 population.CalculateDivisions();
-					 if (population.GetDivisionsUntilMutation() <= 0) { node_id++; population.NewMutate(randgen, newtree, node_id); };
+					 if (population.GetDivisionsUntilMutation() <= 0) { population.NewMutate(randgen, newtree, node_id); };
 					 if (population.GetTotalPopSize() >= population.GetPopSizeBeforeDilution()) { population.Resample(randgen); };  
 					 
          }

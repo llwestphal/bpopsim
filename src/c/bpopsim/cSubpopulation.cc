@@ -31,7 +31,12 @@ long double cSubpopulation::MutantFitness(long double in_fitness, double in_aver
 
 }
 
-void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator, cSubpopulation &ancestor, double averageselectioncoefficient, char beneficialmutationdistribution, tree<cGenotype> in_tree, int node_id) {
+void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator, 
+																				 cSubpopulation &ancestor, 
+																				 double averageselectioncoefficient, 
+																				 char beneficialmutationdistribution, 
+																				 tree<cGenotype> in_tree, 
+																				 unsigned int node_id) {
 	tree<cGenotype>::iterator_base new_geno_it;
 	// There is only one new one...
 	SetNumber(1);

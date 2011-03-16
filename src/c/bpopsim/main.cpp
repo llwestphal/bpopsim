@@ -1,6 +1,7 @@
 #include "cPopulation.h"
 #include "tree_util.hh"
 #include "tree.hh"
+#include <time.h>
 
 // setup and parse configuration options:
 void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
@@ -48,6 +49,7 @@ int main(int argc, char* argv[])
 {
 	 tree<cGenotype>::iterator_base loc;
 	 unsigned int node_id;
+	 long seed;
 	
    //set up command line options
    variables_map cmdline_options;
@@ -55,13 +57,13 @@ int main(int argc, char* argv[])
    std::string output_file = cmdline_options["output-file"].as<std::string>();
   
    //create generator and seed
-   //const gsl_rng_type * T;
+   //@agm fixed to the computer time so it has a different random seed at each runtime
 	 const gsl_rng_type *T;
    gsl_rng * randgen;
-   //gsl_rng_env_setup();
-   //T = gsl_rng_mt19937;
-	 //gsl_rng_set(T, rand())
-	 T = gsl_rng_default;
+   T = gsl_rng_mt19937;
+	 randgen = gsl_rng_alloc (T);
+	 seed = time (NULL) * getpid();
+	 gsl_rng_set(randgen, seed);
 	
    //Initialize Population object
 	 cPopulation population;
@@ -87,7 +89,6 @@ int main(int argc, char* argv[])
       while( (population.GetTransfers() < population.GetTotalTransfers()) && 
 						 population.GetKeepTransferring() ) 
 			{
-				 randgen = gsl_rng_alloc (T);
 				
          // Calculate the number of divisions until the next mutation 
 				 population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + gsl_ran_exponential(randgen, population.GetLambda()));
@@ -108,8 +109,6 @@ int main(int argc, char* argv[])
 					 } 
 					 
          }
-				 gsl_rng_free (randgen);
-				
       }
 		  //print_tree(newtree, newtree.begin(), newtree.end());
       population.RunSummary();

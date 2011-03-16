@@ -55,11 +55,13 @@ int main(int argc, char* argv[])
    std::string output_file = cmdline_options["output-file"].as<std::string>();
   
    //create generator and seed
-   const gsl_rng_type * T;
+   //const gsl_rng_type * T;
+	 const gsl_rng_type *T;
    gsl_rng * randgen;
-   gsl_rng_env_setup();
-   T = gsl_rng_mt19937;
-   randgen = gsl_rng_alloc (T);
+   //gsl_rng_env_setup();
+   //T = gsl_rng_mt19937;
+	 //gsl_rng_set(T, rand())
+	 T = gsl_rng_default;
 	
    //Initialize Population object
 	 cPopulation population;
@@ -85,6 +87,7 @@ int main(int argc, char* argv[])
       while( (population.GetTransfers() < population.GetTotalTransfers()) && 
 						 population.GetKeepTransferring() ) 
 			{
+				 randgen = gsl_rng_alloc (T);
 				
          // Calculate the number of divisions until the next mutation 
 				 population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + gsl_ran_exponential(randgen, population.GetLambda()));
@@ -105,6 +108,7 @@ int main(int argc, char* argv[])
 					 } 
 					 
          }
+				 gsl_rng_free (randgen);
 				
       }
 		  //print_tree(newtree, newtree.begin(), newtree.end());

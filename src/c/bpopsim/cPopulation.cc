@@ -2,28 +2,20 @@
 #include "cLineageTree.h"
 #include "tree_util.hh"
 
-void cPopulation::AddSubpopulation(cSubpopulation& subpop, unsigned int& node_id)
+void cPopulation::UpdateLineages() 
 {
-   m_populations.push_back(subpop);
-   SetNumberOfSubpopulations(GetNumberOfSubpopulations()+1);
-	 node_id++;
-}
-
-void cPopulation::UpdateLineages()
-{
-  for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it)
-  {
+  for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
      if (it->GetNumber() == 0) continue;
      it->SetNumber(it->GetNumber() * exp(log(2) * GetUpdateTime() * it->GetFitness()));
      SetNewPopSize(GetNewPopSize() + it->GetNumber());
   }
 }
 
-void cPopulation::DetermineDivisionTime()
+void cPopulation::DetermineDivisionTime() 
 {
    int itCount = 0;
-   for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it)
-   { 
+	
+   for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) { 
       if(it->GetNumber() == 0) continue;
       //what is the time to get to the next whole number of cells?
      
@@ -34,24 +26,54 @@ void cPopulation::DetermineDivisionTime()
 
       SetThisTimeToNextWholeCell(log(GetWholeCells() / GetCurrentCells()) / (it->GetFitness()));   
 
-      if ( GetTimeToNextWholeCell() == 0 || (GetThisTimeToNextWholeCell() < GetTimeToNextWholeCell()) ) 
-      {
-       
+      if ( GetTimeToNextWholeCell() == 0 || (GetThisTimeToNextWholeCell() < GetTimeToNextWholeCell()) ) {
         m_divided_lineages.clear();
         SetTimeToNextWholeCell(GetThisTimeToNextWholeCell());
         m_divided_lineages.push_back(itCount); //a list, because there can be ties 
- 	
       }
-      else if (GetThisTimeToNextWholeCell() == GetTimeToNextWholeCell())
-      {
-
+      else if (GetThisTimeToNextWholeCell() == GetTimeToNextWholeCell()) {
         m_divided_lineages.push_back(itCount); //a list, because there can be ties
       }
     itCount++;
   }
 }
 
-void cPopulation::Resample(gsl_rng * randgen)
+//Here I try to iterate through the populations in m_population twice
+//The first time, I simply sum the number extant populations
+//The second time, I iterate through and count all of the children of 
+//each node, then I divide that number of children by the total population size
+//This should give the relative frequence of a given unique_node_id in the 
+//population.
+
+//Later I plan to put this information into a vector of vectors
+
+void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree, 
+																								std::vector< std::vector<double> >& frequencies)
+{
+	tree<cGenotype>::iterator loc;
+	int counter;
+	
+	for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
+		counter = 0;
+		loc = it -> GetGenotypeIter();
+		tree<cGenotype>::iterator node_children = newtree.begin(loc);
+		
+		//std::cout << (*loc).unique_node_id << ", ";
+		
+		if (node_children != newtree.end(loc)) std::cout << std::endl << "Children of " << (*loc).unique_node_id << ":" << std::endl;
+	  while(node_children != newtree.end(loc)) {
+			std::cout << (*node_children).unique_node_id << ", ";
+			node_children++;
+			counter++;
+		}
+		
+		tree<cGenotype>::sibling_iterator start_loc2 = newtree.begin(loc);
+		if (start_loc2 != newtree.end(loc)) std::cout << std::endl << "Number of Children Above: " << counter << std::endl;
+	}
+}
+
+
+void cPopulation::Resample(gsl_rng * randgen) 
 {
   //When it is time for a transfer, resample population
 		
@@ -60,24 +82,20 @@ void cPopulation::Resample(gsl_rng * randgen)
 	 m_by_color[RED] = 0;
 	 m_by_color[WHITE] = 0;
 	 SetNewPopSize(0);        
-	 for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it)
-	 {
+	 for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
 			if (it->GetNumber() == 0) continue;       
 			// Perform accurate binomial sampling only if below a certain population size
-			if (it->GetNumber() < GetBinomialSamplingThreshold()) 
-			{
+			if (it->GetNumber() < GetBinomialSamplingThreshold()) {
 				 if (GetVerbose()) std::cout << "binomial " << it->GetNumber() << std::endl;
 				 it->Transfer(GetTransferBinomialSamplingP(), randgen);
 			}
 			// Otherwise, treat as deterministic and take expectation...
-			else 
-			{
+			else {
 				 it->SetNumber(it->GetNumber() * GetTransferBinomialSamplingP());
 			}
 					
 			// Keep track of lineages we lost
-			if (it->GetNumber() == 0) 
-			{  
+			if (it->GetNumber() == 0) {  
 				 SetTotalSubpopulationsLost(GetTotalSubpopulationsLost()+1);
 			}
 			
@@ -85,29 +103,21 @@ void cPopulation::Resample(gsl_rng * randgen)
 			if (GetVerbose()) std::cout << it->GetMarker() << std::endl;
 			if (GetVerbose()) std::cout << it->GetNumber() << std::endl;
 			if (GetVerbose()) std::cout << it->GetFitness() << std::endl;
-			if (it->GetMarker() == 'r') 
-			{
-				 m_by_color[RED] += it->GetNumber();
-			}
-			else 
-			{
-				 m_by_color[WHITE] += it->GetNumber();
-			}
+			if (it->GetMarker() == 'r') m_by_color[RED] += it->GetNumber();
+			else m_by_color[WHITE] += it->GetNumber();
 	 }
 	 //One color was lost, bail  
-	 if ( (m_by_color[RED] == 0) || (m_by_color[WHITE] == 0) ) 
-	 {
+	 if ( (m_by_color[RED] == 0) || (m_by_color[WHITE] == 0) ) {
 			SetKeepTransferring(false);
 	 }     
 	 if (GetVerbose()) std::cout << "Colors: " << m_by_color[RED] << " / " << m_by_color[WHITE] << std::endl;
 	 SetRatio(m_by_color[RED] / m_by_color[WHITE]);
 	 SetTransfers(GetTransfers()+1);
 
-	 if ( (GetTransfers() >= 0) && (GetTransfers() % GetTransferIntervalToPrint() == 0) ) 
-	 {  
+	 if ( (GetTransfers() >= 0) && (GetTransfers() % GetTransferIntervalToPrint() == 0) ) {  
 			m_this_run.push_back(GetRatio());
-			if (GetVerbose() == 1) 
-			{ 
+		 
+			if (GetVerbose() == 1) { 
 				 std::cout << "Transfer " << GetTransfers() << " : " << GetTotalPopSize() << 
 				 "=>" << GetNewPopSize() << "  R/W Ratio: " << GetRatio() << std::endl;  
 				 std::cout << "Total mutations: " << GetTotalMutations() << " Maximum Fitness: " << GetMaxW() << std::endl;
@@ -316,7 +326,7 @@ void cPopulation::CalculateDivisions()
   // At a minumum, we want to make sure that one cell division took place
   if (GetTimeToNextWholeCell() > GetUpdateTime()) 
   {
-     if (GetVerbose())std::cout << "Time to next whole cell greater than update time: " << GetTimeToNextWholeCell() <<                          " < " << GetUpdateTime() <<std::endl;    
+     if (GetVerbose())std::cout << "Time to next whole cell greater than update time: " << GetTimeToNextWholeCell() << " < " << GetUpdateTime() <<std::endl;    
      SetUpdateTime(GetTimeToNextWholeCell());
   }
 
@@ -337,128 +347,33 @@ void cPopulation::CalculateDivisions()
   SetTotalPopSize(GetNewPopSize());
 }
 
-/*void cPopulation::Mutate(gsl_rng * randgen, cLineageTree& tree)
- {
-	if (GetDivisionsUntilMutation() <= 0) 
-	{
-	SetTotalMutations(GetTotalMutations()+1);
- 
-	if (m_verbose) std::cout << "* Mutating!" << std::endl;
- 
-	//Mutation happened in the one that just divided
- 
-	//Break ties randomly here.
-	cSubpopulation& ancestor = m_populations[m_divided_lineages[rand() % m_divided_lineages.size()]];          
- 
-	//cSubpopulation new_lineage = ancestor.CreateDescendant(randgen);
- 
-	cSubpopulation new_lineage;
- 
-	int sizeoftree=0;
- 
-	//Assign the new lineage's internal pointer to the last position in the array
-	sizeoftree = tree.GetSizeOfTree()+1;
- 
-	new_lineage.CreateDescendant(randgen,ancestor,GetAverageMutationS(),GetBeneficialMutationDistribution(),sizeoftree);
- 
-	if (GetVerbose()) std::cout << "  Color: " << new_lineage.GetMarker() << std::endl;
-	if (GetVerbose()) std::cout << "  New Fitness: " << new_lineage.GetFitness() << std::endl;
-	AddSubpopulation(new_lineage);
- 
-	//Add node to lineage tree
-	if(GetLineageTree())
-	{  
-		//Add a node that describes the latest mutation that describes the new sublineage
-		tree.AddNode(new_lineage.GetFitness()-ancestor.GetFitness());
-		tree.SetLineage(ancestor.GetLineage());
-	}
- 
-	//Update maximum fitness
-	if(new_lineage.GetFitness() > GetMaxW()) 
-	{
-		SetMaxW(new_lineage.GetFitness());
-	}
- 
-	}
- }*/
-
-/*void cPopulation::SeedSubpopulations(cLineageTree& tree) {
-	
-  //Create red population
-  cSubpopulation r;
-
-  r.SetNumber(GetInitialPopulationSize()/2);
-  r.SetFitness(1);
-  r.SetMarker('r');
-
-  //Set the red ancestor to point to the base of the red lineage
-  r.SetLineage(1);
-
-
-  //Seed a white population
-
-  cSubpopulation w;
-  w.SetNumber(GetInitialPopulationSize()/2);
-  w.SetFitness(1);
-  w.SetMarker('w');
-  
-  //Set the white ancestor to point to the base of the white lineage
-  w.SetLineage(2);
-
-  AddSubpopulation(r);
-  AddSubpopulation(w);
-
-  if(GetLineageTree()) {
-     //This node represents the base of the tree
-     tree.AddNode(0);
-     tree.SetLineage(0);
- 
-     //This node represents the base of the red lineage
-     tree.AddNode(0);
-     tree.SetLineage(1);   
-      
-     //This node represents the base of the white lineage     
-     tree.AddNode(0);
-     tree.SetLineage(2);
-
-  }
-
-}*/
-
-
 /*@agm The functions below should build a new tree using the tree.h header
        I thought the best way to do this was to comment out all of the previous code in both this file
        and the associated header so it would be clear where stuff was changed. */
 
 void cPopulation::NewSeedSubpopulation(cLineageTree& newtree, 
-																			 unsigned int& node_id) {
+																			 unsigned int& node_id) 
+{	
 	cGenotype r, w;
-	//cGenotype head;
 	tree<cGenotype>::iterator top, red_side, white_side;
 	long double starting_fitness = 1.0;
 	
 	//initialize object of cSubpopulation type
 	cSubpopulation red, white;
+	node_id = 0;
 	
 	/*@agm The head is set, though I don't think it is necessary.  The unique code and fitness is set. */
 	
 	/*@agm This function leads to a really odd problem when incrementing from the AddSubpopulation function.
 				 Notice the red and white objects must by set before their the function can be called which increments
 	       node_id... ahh but if the function call cannot be made without first assigning a node_id... irritating*/
-	
-	//assign first node id
-	//head.unique_node_id = node_id;
-	
-	//assign initial fitness
-	//head.fitness = starting_fitness;
+
 	r.fitness = starting_fitness;
 	r.unique_node_id = node_id;
   w.fitness = starting_fitness;
 	w.unique_node_id = (node_id+1);
 	
-	
-	//start building tree
-	//newtree.set_head(head);
+	//Start building the tree
 	red_side = newtree.insert(newtree.begin(), r);
 	white_side = newtree.insert(newtree.begin(), w);
 	
@@ -474,10 +389,19 @@ void cPopulation::NewSeedSubpopulation(cLineageTree& newtree,
 	AddSubpopulation(white, node_id);	
 }
 
+void cPopulation::AddSubpopulation(cSubpopulation& subpop, 
+																	 unsigned int& node_id) 
+{
+	m_populations.push_back(subpop);
+	SetNumberOfSubpopulations(GetNumberOfSubpopulations()+1);
+	node_id++;
+	//std::cout << subpop.GetNode_id() << " " << subpop.GetFitness() << std::endl;
+}
+
 void cPopulation::NewMutate(gsl_rng * randgen, 
 														cLineageTree& newtree, 
-														unsigned int& node_id) {
-	
+														unsigned int& node_id) 
+{	
 	SetTotalMutations(GetTotalMutations()+1);
 	
 	if (m_verbose) std::cout << "* Mutating!" << std::endl;

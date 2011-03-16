@@ -44,23 +44,11 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
   }
 }
 
-void print_tree(const tree<cGenotype>& tr, tree<cGenotype>::pre_order_iterator it, tree<cGenotype>::pre_order_iterator end)
-{
-	if(!tr.is_valid(it)) return;
-	int rootdepth=tr.depth(it);
-	std::cout << "-----" << std::endl;
-	while(it!=end) {
-		for(int i=0; i<tr.depth(it)-rootdepth; ++i) 
-			std::cout << "  ";
-		  std::cout << (*it).unique_node_id << "," << (*it).fitness << std::endl << std::flush;
-		++it;
-	}
-	std::cout << "-----" << std::endl;
-}
-
 int main(int argc, char* argv[])
 {
 	 tree<cGenotype>::iterator_base loc;
+	 unsigned int node_id;
+	
    //set up command line options
    variables_map cmdline_options;
    get_cmdline_options(cmdline_options, argc, argv);
@@ -73,33 +61,48 @@ int main(int argc, char* argv[])
    T = gsl_rng_mt19937;
    randgen = gsl_rng_alloc (T);
 	
-   cPopulation population;
+   //Initialize Population object
+	 cPopulation population;
    population.SetParameters(cmdline_options);
    population.DisplayParameters();
 	
+	 //Initialize Tree object 
 	 cLineageTree newtree;
 	
+	 std::vector< std::vector<double> > frequencies;
+	 
    for (int on_run=0; on_run < population.GetReplicates(); on_run++)
    {
-		  unsigned int node_id = 0;
 		  population.ClearRuns(newtree);
 		 
       std::cout << "Replicate " << on_run+1 << std::endl;   
 		 
-      //population.SeedSubpopulations(tree);
 		  population.NewSeedSubpopulation(newtree, node_id);
 		  //std::cout << node_id << std::endl;
 		 
 		  population.ResetRunStats();
 		 
-      while ( (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring() ){
+      while( (population.GetTransfers() < population.GetTotalTransfers()) && 
+						 population.GetKeepTransferring() ) 
+			{
 				
-         population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + gsl_ran_exponential(randgen, population.GetLambda()));
-				 if (population.GetVerbose()) std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl;
-         while ( (population.GetDivisionsUntilMutation() > 0) && (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring()) {
+         // Calculate the number of divisions until the next mutation 
+				 population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + gsl_ran_exponential(randgen, population.GetLambda()));
+				
+				 // 
+				if (population.GetVerbose()) { std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl; }
+         
+			 	 while( population.GetDivisionsUntilMutation() > 0 && 
+								population.GetTransfers() < population.GetTotalTransfers() && 
+								population.GetKeepTransferring() ) 
+				 {
 					 population.CalculateDivisions();
-					 if (population.GetDivisionsUntilMutation() <= 0) { population.NewMutate(randgen, newtree, node_id); };
-					 if (population.GetTotalPopSize() >= population.GetPopSizeBeforeDilution()) { population.Resample(randgen); };  
+					 if( population.GetDivisionsUntilMutation() <= 0) { population.NewMutate(randgen, newtree, node_id); }
+					 if( population.GetTotalPopSize() >= population.GetPopSizeBeforeDilution()) {
+						 population.FrequenciesPerTransferPerNode(newtree, frequencies);
+						 population.Resample(randgen); 
+					   //kptree::print_tree_bracketed(newtree);
+					 } 
 					 
          }
 				
@@ -107,7 +110,7 @@ int main(int argc, char* argv[])
 		  //print_tree(newtree, newtree.begin(), newtree.end());
       population.RunSummary();
       population.PushBackRuns();
-		  kptree::print_tree_bracketed(newtree);
+		  //kptree::print_tree_bracketed(newtree);
 		  std::cout << std::endl;
    }
 	 

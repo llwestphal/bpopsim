@@ -18,6 +18,8 @@ public:
   virtual ~cSubpopulation() { ; }; 
 
   const long double GetFitness() { return (*m_genotype).fitness; }
+	tree<cGenotype>::iterator GetGenotypeIter() { return m_genotype; }
+	const int GetNode_id() { return (*m_genotype).unique_node_id; }
   const long double GetNumber() { return m_number; }
   const char GetMarker() { return m_marker; }
   

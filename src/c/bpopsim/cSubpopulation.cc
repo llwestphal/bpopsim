@@ -15,7 +15,10 @@ cSubpopulation::cSubpopulation(const cSubpopulation& in)
    m_genotype = in.m_genotype;
 }
 
-long double cSubpopulation::MutantFitness(long double in_fitness, double in_average_mutation_s, char in_type_of_mutation, gsl_rng * randomgenerator)
+long double cSubpopulation::MutantFitness(long double in_fitness, 
+																					double in_average_mutation_s, 
+																					char in_type_of_mutation, 
+																					gsl_rng * randomgenerator) 
 {
    if(in_type_of_mutation=='e')
    {
@@ -36,7 +39,8 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 																				 double averageselectioncoefficient, 
 																				 char beneficialmutationdistribution, 
 																				 tree<cGenotype> in_tree, 
-																				 unsigned int node_id) {
+																				 unsigned int node_id) 
+{	
 	tree<cGenotype>::iterator_base new_geno_it;
 	// There is only one new one...
 	SetNumber(1);
@@ -46,7 +50,10 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 	SetMarker(ancestor.GetMarker());
 	
 	cGenotype new_genotype;
-	new_genotype.fitness = ancestor.MutantFitness(ancestor.GetFitness(), averageselectioncoefficient, beneficialmutationdistribution, randomgenerator);
+	new_genotype.fitness = ancestor.MutantFitness(ancestor.GetFitness(), 
+																								averageselectioncoefficient, 
+																								beneficialmutationdistribution, 
+																								randomgenerator);
 	new_genotype.unique_node_id = node_id;
 	
 	/* @agm I'm checking to see if the new fitness is the same as the old fitness.
@@ -56,18 +63,17 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 	
 	if (new_genotype.fitness != (*ancestor.m_genotype).fitness) { 
 		new_geno_it = in_tree.append_child(ancestor.m_genotype, new_genotype); 
-		//std::cout << new_genotype.unique_node_id << " " << new_genotype.fitness << std::endl;
-	
 	}
-	
-	
-	
+
 	SetGenotype(new_geno_it);
 	
 }
 
-void cSubpopulation::Transfer(long double success_prob, gsl_rng * randomgenerator)
-{
-   SetNumber(gsl_ran_binomial(randomgenerator, success_prob, uint64_t(GetNumber())));
+void cSubpopulation::Transfer(long double success_prob, 
+															gsl_rng * randomgenerator) {
+	
+   SetNumber(gsl_ran_binomial(randomgenerator, 
+															success_prob, 
+															uint64_t(GetNumber())));
 }
 

@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
    {
 		  population.ClearRuns(newtree);
 		 
-      std::cout << "Replicate " << on_run+1 << std::endl;   
+      std::cout << "Replicate " << on_run+1;   
 		 
 		  population.NewSeedSubpopulation(newtree, node_id);
 		  //std::cout << node_id << std::endl;
@@ -103,6 +103,7 @@ int main(int argc, char* argv[])
 					 population.CalculateDivisions();
 					 if( population.GetDivisionsUntilMutation() <= 0) { population.NewMutate(randgen, newtree, node_id); }
 					 if( population.GetTotalPopSize() >= population.GetPopSizeBeforeDilution()) {
+						 std::cout << std::endl << std::endl << "Passing....." << std::endl;
 						 population.FrequenciesPerTransferPerNode(newtree, frequencies);
 						 population.Resample(randgen); 
 					   //kptree::print_tree_bracketed(newtree);
@@ -110,12 +111,24 @@ int main(int argc, char* argv[])
 					 
          }
       }
-		  //print_tree(newtree, newtree.begin(), newtree.end());
+		  std::cout << std::endl << std::endl;
       population.RunSummary();
       population.PushBackRuns();
 		  //kptree::print_tree_bracketed(newtree);
 		  std::cout << std::endl;
    }
 	 
+	 std::cout << "Done with simulation... Here's the Output:" << std::endl << std::endl;
+	 for (int i = 0; i<frequencies.size(); i++) {
+		 double total_freqs = 0;
+		 for (int j = 0; j<frequencies[i].size(); j++) {
+			 //@agm set up a minimum frequency to report the print out the number so it isn't overwhelming.
+			 if (frequencies[i][j] > 0.001) {
+				 std::cout << "Frequency of mutation # " << j << " at time " << i << " is: " << frequencies[i][j] << std::endl;
+			 }
+			 total_freqs += frequencies[i][j];
+		 }
+		 std::cout << "Round # " << i << " sum of frequencies is: " << total_freqs << std::endl << std::endl;
+	 }
    //population.PrintOut(output_file);
 }

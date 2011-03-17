@@ -38,38 +38,50 @@ void cPopulation::DetermineDivisionTime()
   }
 }
 
-//Here I try to iterate through the populations in m_population twice
-//The first time, I simply sum the number extant populations
-//The second time, I iterate through and count all of the children of 
-//each node, then I divide that number of children by the total population size
-//This should give the relative frequence of a given unique_node_id in the 
-//population.
+//@agm Here I try to iterate through the populations in m_populations, request the size of 
+//     each node, and divide the size of each node (subpopulation) by the total population size
+//     This should give the relative frequence of a given unique_node_id in the population.
 
-//Later I plan to put this information into a vector of vectors
+//@agm Now the information is stored in a vector and passed back to the main function for final printing
+
+//@agm For some reason, it does the 'for' loop twice, but it doesn't seem to screw up the vector output...
 
 void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree, 
 																								std::vector< std::vector<double> >& frequencies)
 {
 	tree<cGenotype>::iterator loc;
-	int counter;
+	double total_freqs=0;
+	
+	//Uncomment here to use the alternative to the size member function, aka number_of_children
+	//@agm I just commented it out to stop the irritating warning
+	
+	int total_nodes, num_children;
+	std::vector<double> freq_per_node;
+	
+	total_nodes = newtree.size();
+	std::cout << std::endl << "Total nodes on the tree: " << total_nodes << std::endl;
 	
 	for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
-		counter = 0;
+		if (it->GetNumber() == 0) continue;
 		loc = it -> GetGenotypeIter();
-		tree<cGenotype>::iterator node_children = newtree.begin(loc);
 		
-		//std::cout << (*loc).unique_node_id << ", ";
+		//@agm It wasn't clear to me which member function I ought to use size or number_of_children.
+		//@agm It seems the right answer is size
+		num_children = newtree.size(loc);
 		
-		if (node_children != newtree.end(loc)) std::cout << std::endl << "Children of " << (*loc).unique_node_id << ":" << std::endl;
-	  while(node_children != newtree.end(loc)) {
-			std::cout << (*node_children).unique_node_id << ", ";
-			node_children++;
-			counter++;
-		}
+		freq_per_node.push_back( (double) num_children/total_nodes );
 		
-		tree<cGenotype>::sibling_iterator start_loc2 = newtree.begin(loc);
-		if (start_loc2 != newtree.end(loc)) std::cout << std::endl << "Number of Children Above: " << counter << std::endl;
+		//@agm I think total_freqs should always be larger than 1.0
+		total_freqs += (double) num_children/total_nodes;
+	
+		//@agm This is so it only spits out frequencies if there is more than one member of the mutation node.
+		//if ( num_children > 1 ) {
+			//std::cout << std::endl << "Frequency of # " << (*loc).unique_node_id << " mutation: " << (double) num_children/total_nodes;
+		//}
 	}
+	//@agm Printing sum of frequencies and building the doubly deep vector
+	std::cout << std::endl << "Sum of all freqs: " << total_freqs;
+	frequencies.push_back(freq_per_node);
 }
 
 

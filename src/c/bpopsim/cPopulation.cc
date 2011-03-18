@@ -1,6 +1,4 @@
 #include "cPopulation.h"
-#include "cLineageTree.h"
-#include "tree_util.hh"
 
 void cPopulation::UpdateLineages() 
 {

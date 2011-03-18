@@ -6,12 +6,16 @@
 #include <iostream>
 #include <fstream>
 #include "cSubpopulation.h"
-#include "cLineageTree.h"
+#include <algorithm>
+#include <iomanip> 
 
 // Boost
 #include <boost/program_options.hpp>
 
 using namespace boost::program_options;
+
+//@agm This is a remnant from cLineageTree.h
+class cLineageTree : public tree<cGenotype> {};
 
 class cPopulation {
 
@@ -199,6 +203,5 @@ public:
 								 cLineageTree& newtree, 
 								 unsigned int& node_id);
 };
-
 
 #endif

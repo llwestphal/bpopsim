@@ -45,21 +45,22 @@ void cPopulation::DetermineDivisionTime()
 //@agm For some reason, it does the 'for' loop twice, but it doesn't seem to screw up the vector output...
 
 void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree, 
-																								std::vector< std::vector<double> >& frequencies)
+																								std::vector< std::vector<cGenotype> >& frequencies)
 {
 	tree<cGenotype>::iterator loc;
 	double total_freqs=0;
 	
-	//Uncomment here to use the alternative to the size member function, aka number_of_children
-	//@agm I just commented it out to stop the irritating warning
-	
 	int total_nodes, num_children;
-	std::vector<double> freq_per_node;
+	
+	//@agm switched vector type to cGenotype to ensure the correct unique_node_id is passed back
+	std::vector<cGenotype> freq_per_node;
 	
 	total_nodes = newtree.size();
-	std::cout << std::endl << "Total nodes on the tree: " << total_nodes << std::endl;
+	Cout << Endl << "Total nodes on the tree: " << total_nodes << Endl;
 	
 	for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
+		cGenotype nodes_in_tree;
+		
 		if (it->GetNumber() == 0) continue;
 		loc = it -> GetGenotypeIter();
 		
@@ -67,18 +68,23 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree,
 		//@agm It seems the right answer is size
 		num_children = newtree.size(loc);
 		
-		freq_per_node.push_back( (double) num_children/total_nodes );
+		//@agm I realized I ought to use the cGenotype struct to store the frequency info
+		//     because I need to know the unique_node_id associated with a particular mutation.
+		//     This will require changing the frequencies internal vector type.
+		nodes_in_tree.unique_node_id = (*loc).unique_node_id;
+		nodes_in_tree.fitness = (double) num_children/total_nodes;
 		
 		//@agm I think total_freqs should always be larger than 1.0
 		total_freqs += (double) num_children/total_nodes;
 	
 		//@agm This is so it only spits out frequencies if there is more than one member of the mutation node.
 		//if ( num_children > 1 ) {
-			//std::cout << std::endl << "Frequency of # " << (*loc).unique_node_id << " mutation: " << (double) num_children/total_nodes;
+			//Cout << Endl << "Frequency of # " << (*loc).unique_node_id << " mutation: " << (double) num_children/total_nodes;
 		//}
+		freq_per_node.push_back(nodes_in_tree);
 	}
 	//@agm Printing sum of frequencies and building the doubly deep vector
-	std::cout << std::endl << "Sum of all freqs: " << total_freqs;
+	Cout << Endl << "Sum of all freqs: " << total_freqs;
 	frequencies.push_back(freq_per_node);
 }
 

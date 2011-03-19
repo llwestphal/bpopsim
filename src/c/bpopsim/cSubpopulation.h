@@ -1,12 +1,17 @@
 #ifndef cSubpopulation_h
 #define cSubpopulation_h
 
+//I added this macros section to avoid scoping for common function calls
+//Anything added here will be available throughout the program
+#define Endl std::endl
+#define Cout std::cout
+
 #include <gsl/gsl_randist.h>
 #include <stdint.h>
 #include "tree.hh"
 
 /*@agm Rather than create a new class, I created a struct... it seemed simpler
- since the cGenotype type will not have any methods either way. */
+       since the cGenotype type will not have any methods either way. */
 
 struct cGenotype{
  unsigned int unique_node_id;
@@ -17,9 +22,9 @@ struct cGenotype{
 //     For now, the struct works better.
 
 /*class cGenotype{
- public:
- unsigned int unique_node_id;
- long double fitness;
+  public:
+    unsigned int unique_node_id;
+    long double fitness;
  };*/
 
 class cSubpopulation {

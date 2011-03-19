@@ -57,9 +57,9 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 	new_genotype.unique_node_id = node_id;
 	
 	/* @agm I'm checking to see if the new fitness is the same as the old fitness.
-		 Ostensibly this ought not be possible, but you never know.
-	   Either way, the new genotype will not be added to the list if it has the 
-		 same fitness as its parent... at least that's what I think it's doing. */
+					Ostensibly this ought not be possible, but you never know.
+	        Either way, the new genotype will not be added to the list if it has the 
+		      same fitness as its parent... at least that's what I think it's doing. */
 	
 	if (new_genotype.fitness != (*ancestor.m_genotype).fitness) { 
 		new_geno_it = in_tree.append_child(ancestor.m_genotype, new_genotype); 

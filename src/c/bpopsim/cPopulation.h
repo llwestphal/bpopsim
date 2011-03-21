@@ -35,6 +35,7 @@ private:
   int m_total_transfers;
   int m_transfer_interval_to_print;
   int m_lineage;
+	int m_seed;
 
   std::vector<cSubpopulation> m_populations;
   std::vector<int> m_divided_lineages;
@@ -95,11 +96,12 @@ public:
   const int GetNumberOfSubpopulations() { return m_number_of_subpopulations; }
   const int GetNewPopSize() { return m_new_pop_size; }
   const int GetVerbose() { return m_verbose; }
-  const int GetTransferIntervalToPrint() {return m_transfer_interval_to_print; }
-  const int GetTotalTransfers() {return m_total_transfers; }
-  const int GetReplicates() {return m_replicates; }
-  const int GetMinimumPrinted() {return m_minimum_printed; }
-  const int GetLineageTree() {return m_lineage; }
+  const int GetTransferIntervalToPrint() { return m_transfer_interval_to_print; }
+  const int GetTotalTransfers() { return m_total_transfers; }
+  const int GetReplicates() { return m_replicates; }
+  const int GetMinimumPrinted() { return m_minimum_printed; }
+  const int GetLineageTree() { return m_lineage; }
+	
   //std::vector< std::vector<double> > GetRuns() { return &m_runs; }
   //std::vector<double> GetThisRun() { return &m_this_run; }  
 
@@ -127,6 +129,8 @@ public:
   const double GetMutationRatePerDivision() {return m_mutation_rate_per_division; }
   const double GetAverageMutationS() {return m_average_mutation_s; }
   const double GetGrowthPhaseGenerations() { return m_growth_phase_generations; }
+	
+	const long GetSeed() { return m_seed; }
 
   std::vector<cSubpopulation> GetPopulation() { return m_populations; }
 
@@ -179,6 +183,7 @@ public:
   void SetGrowthPhaseGenerations(double in_growth_phase_generations) { m_growth_phase_generations= in_growth_phase_generations; }
   void SetBeneficialMutationDistribution(char in_beneficial_mutation_distribution) { m_beneficial_mutation_distribution = in_beneficial_mutation_distribution; }
   void SetLineageTree(int in_lineage) { m_lineage = in_lineage; }
+	void SetSeedParams(long seed_type) { m_seed = seed_type; }
 
   //METHODS
 	//@agm To keep the lines of manageable length, if a method has multiple variables, each variable got a new line

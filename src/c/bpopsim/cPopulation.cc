@@ -275,6 +275,10 @@ void cPopulation::SetParameters(const variables_map &options)
     options.count("lineage-tree") ?
     options["lineage-tree"].as<int>() : 1
   );
+	SetSeedParams(
+		options.count("seed") ?
+		options["seed"].as<long>() : 0
+	);
 
   // Simulation parameters that are pre-calculated
   SetDilutionFactor(exp(log(2) * GetGrowthPhaseGenerations()));

@@ -20,6 +20,7 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
   ("type-of-mutations,f", value<char>(), "Type of mutations")
   ("verbose,v", value<int>(), "Verbose")
   ("lineage-tree,l", value<int>(), "Lineage Tree")
+	("seed,d", value<long>(), "Seed for Selection")
   ;
 
 /* Need to add these as options...
@@ -55,20 +56,21 @@ int main(int argc, char* argv[])
    variables_map cmdline_options;
    get_cmdline_options(cmdline_options, argc, argv);
    std::string output_file = cmdline_options["output-file"].as<std::string>();
-  
-   //create generator and seed
-   //@agm fixed to the computer time so it has a different random seed at each runtime
-	 const gsl_rng_type *T;
-   gsl_rng * randgen;
-   T = gsl_rng_mt19937;
-	 randgen = gsl_rng_alloc (T);
-	 seed = time (NULL) * getpid();
-	 gsl_rng_set(randgen, seed);
 	
    //Initialize Population object
 	 cPopulation population;
    population.SetParameters(cmdline_options);
    population.DisplayParameters();
+	
+	 //create generator and seed
+	 //@agm fixed to the computer time so it has a different random seed at each runtime
+	 const gsl_rng_type *T;
+	 gsl_rng * randgen;
+	 T = gsl_rng_mt19937;
+	 randgen = gsl_rng_alloc (T);
+	 if ( population.GetSeed() == 0 ) { seed = time (NULL) * getpid(); }
+	 else { seed = population.GetSeed(); }
+	 gsl_rng_set(randgen, seed);
 	
 	 //Initialize Tree object 
 	 cLineageTree newtree;

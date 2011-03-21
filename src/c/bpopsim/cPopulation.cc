@@ -49,12 +49,9 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree,
 {
 	tree<cGenotype>::iterator loc, update_location;
 	double total_freqs(0);
+	std::vector<cGenotypeFrequency> freq_per_node;
 	
 	int total_cells(0);
-	
-	//@agm switched vector type to cGenotype to ensure the correct unique_node_id is passed back
-	std::vector<cGenotypeFrequency> freq_per_node;
-	std::vector<int> number_per_subpop;
 	
 	for(std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
 		if (it->GetNumber() == 0) continue;
@@ -62,7 +59,7 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree,
 	}
 	
 	freq_per_node.resize(newtree.size());
-	number_per_subpop.resize(newtree.size());
+	std::vector<int> number_per_subpop (newtree.size(),0);
 	
 	for(std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
 		if (it->GetNumber() == 0) continue;
@@ -79,7 +76,7 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree,
 		cGenotypeFrequency this_node;
 		update_location = it -> GetGenotypeIter();
 		this_node.unique_node_id = (*update_location).unique_node_id;
-		this_node.frequency = (double) number_per_subpop[(*update_location).unique_node_id]/total_cells;
+		this_node.frequency = (double) number_per_subpop[this_node.unique_node_id]/total_cells;
 		
 		freq_per_node[(*update_location).unique_node_id] = this_node;
 		total_freqs += this_node.frequency;

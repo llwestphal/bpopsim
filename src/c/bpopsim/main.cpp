@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 	 //Initialize Tree object 
 	 cLineageTree newtree;
 	
-	 std::vector< std::vector<cGenotype> > frequencies;
+	 std::vector< std::vector<cGenotypeFrequency> > frequencies;
 	 
    for (int on_run=0; on_run < population.GetReplicates(); on_run++)
    {
@@ -123,10 +123,10 @@ int main(int argc, char* argv[])
 		 double total_freqs = 0;
 		 for (int j = 0; j<frequencies[i].size(); j++) {
 			 //@agm set up a minimum frequency to report the print out the number so it isn't overwhelming.
-			 if (frequencies[i][j].fitness > 0.001) {
-				 Cout << "Frequency of mutation # " << (frequencies[i][j]).unique_node_id << " at time " << i << " is: " << (frequencies[i][j]).fitness << Endl;
+			 if (frequencies[i][j].frequency > 0.001) {
+				 Cout << "Frequency of mutation # " << (frequencies[i][j]).unique_node_id << " at time " << i << " is: " << (frequencies[i][j]).frequency << Endl;
 			 }
-			 total_freqs += frequencies[i][j].fitness;
+			 total_freqs += frequencies[i][j].frequency;
 		 }
 		 Cout << "Round # " << i << " sum of frequencies is: " << total_freqs << Endl << Endl;
 	 }

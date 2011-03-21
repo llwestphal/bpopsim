@@ -27,6 +27,11 @@ struct cGenotype{
     long double fitness;
  };*/
 
+struct cGenotypeFrequency{
+	unsigned int unique_node_id;
+	long double frequency;
+};
+
 class cSubpopulation {
 
 private:

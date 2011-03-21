@@ -185,7 +185,7 @@ public:
   void UpdateLineages();
   void DetermineDivisionTime();
 	void FrequenciesPerTransferPerNode(tree<cGenotype> newtree, 
-																		 std::vector< std::vector<cGenotype> >& frequencies);
+																		 std::vector< std::vector<cGenotypeFrequency> >& frequencies);
   void Resample(gsl_rng * randomgenerator);
   void PushBackRuns();
   void PrintOut(const std::string& output_file_name);

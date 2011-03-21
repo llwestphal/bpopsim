@@ -45,44 +45,48 @@ void cPopulation::DetermineDivisionTime()
 //@agm For some reason, it does the 'for' loop twice, but it doesn't seem to screw up the vector output...
 
 void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree, 
-																								std::vector< std::vector<cGenotype> >& frequencies)
+																								std::vector< std::vector<cGenotypeFrequency> >& frequencies)
 {
-	tree<cGenotype>::iterator loc;
-	double total_freqs=0;
+	tree<cGenotype>::iterator loc, update_location;
+	double total_freqs(0);
 	
-	int total_nodes, num_children;
+	int total_cells(0);
 	
 	//@agm switched vector type to cGenotype to ensure the correct unique_node_id is passed back
-	std::vector<cGenotype> freq_per_node;
+	std::vector<cGenotypeFrequency> freq_per_node;
+	std::vector<int> number_per_subpop;
 	
-	total_nodes = newtree.size();
-	Cout << Endl << "Total nodes on the tree: " << total_nodes << Endl;
-	
-	for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
-		cGenotype nodes_in_tree;
-		
+	for(std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
 		if (it->GetNumber() == 0) continue;
-		loc = it -> GetGenotypeIter();
-		
-		//@agm It wasn't clear to me which member function I ought to use size or number_of_children.
-		//@agm It seems the right answer is size
-		num_children = newtree.size(loc);
-		
-		//@agm I realized I ought to use the cGenotype struct to store the frequency info
-		//     because I need to know the unique_node_id associated with a particular mutation.
-		//     This will require changing the frequencies internal vector type.
-		nodes_in_tree.unique_node_id = (*loc).unique_node_id;
-		nodes_in_tree.fitness = (double) num_children/total_nodes;
-		
-		//@agm I think total_freqs should always be larger than 1.0
-		total_freqs += (double) num_children/total_nodes;
-	
-		//@agm This is so it only spits out frequencies if there is more than one member of the mutation node.
-		//if ( num_children > 1 ) {
-			//Cout << Endl << "Frequency of # " << (*loc).unique_node_id << " mutation: " << (double) num_children/total_nodes;
-		//}
-		freq_per_node.push_back(nodes_in_tree);
+		total_cells += it -> GetNumber();
 	}
+	
+	freq_per_node.resize(newtree.size());
+	number_per_subpop.resize(newtree.size());
+	
+	for(std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
+		if (it->GetNumber() == 0) continue;
+
+		update_location = it -> GetGenotypeIter();
+			
+		while(update_location != NULL) {
+			number_per_subpop[(*update_location).unique_node_id] += it -> GetNumber();
+			update_location = newtree.parent(update_location);
+		}
+	}
+	
+	for(std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
+		cGenotypeFrequency this_node;
+		update_location = it -> GetGenotypeIter();
+		this_node.unique_node_id = (*update_location).unique_node_id;
+		this_node.frequency = (double) number_per_subpop[(*update_location).unique_node_id]/total_cells;
+		
+		freq_per_node[(*update_location).unique_node_id] = this_node;
+		total_freqs += this_node.frequency;
+	}
+	
+	Cout << Endl << "There are " << total_cells << " cells, in " << newtree.size() << " nodes."<< Endl;
+
 	//@agm Printing sum of frequencies and building the doubly deep vector
 	Cout << Endl << "Sum of all freqs: " << total_freqs;
 	frequencies.push_back(freq_per_node);

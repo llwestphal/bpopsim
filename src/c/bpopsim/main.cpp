@@ -20,7 +20,7 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
   ("type-of-mutations,f", value<char>(), "Type of mutations")
   ("verbose,v", value<int>(), "Verbose")
   ("lineage-tree,l", value<int>(), "Lineage Tree")
-	("seed,d", value<long>(), "Seed for Selection")
+	("seed,d", value<long>(), "Seed for random number generator")
   ;
 
 /* Need to add these as options...
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
    population.DisplayParameters();
 	
 	 //create generator and seed
-	 //@agm fixed to the computer time so it has a different random seed at each runtime
+	 //@agm defaults to system time seed
 	 const gsl_rng_type *T;
 	 gsl_rng * randgen;
 	 T = gsl_rng_mt19937;
@@ -110,6 +110,7 @@ int main(int argc, char* argv[])
 						 Cout << Endl << Endl << "Passing....." << Endl;
 						 population.FrequenciesPerTransferPerNode(newtree, frequencies);
 						 population.Resample(randgen); 
+						 Cout << Endl << population.GetTotalPopSize() << " " << population.GetPopSizeBeforeDilution() << Endl;
 					   //kptree::print_tree_bracketed(newtree);
 					 } 
 					 

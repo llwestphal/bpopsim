@@ -1,5 +1,7 @@
 #include "cPopulation.h"
 
+//There may be a problem here
+
 void cPopulation::UpdateLineages() 
 {
   for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
@@ -40,9 +42,7 @@ void cPopulation::DetermineDivisionTime()
 //     each node, and divide the size of each node (subpopulation) by the total population size
 //     This should give the relative frequence of a given unique_node_id in the population.
 
-//@agm Now the information is stored in a vector and passed back to the main function for final printing
-
-//@agm For some reason, it does the 'for' loop twice, but it doesn't seem to screw up the vector output...
+//@agm Now the information is stored in a vector and passed back to the main function for final printing.
 
 void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree, 
 																								std::vector< std::vector<cGenotypeFrequency> >& frequencies)
@@ -54,7 +54,6 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree,
 	int total_cells(0);
 	
 	for(std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
-		if (it->GetNumber() == 0) continue;
 		total_cells += it -> GetNumber();
 	}
 	
@@ -62,8 +61,6 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree,
 	std::vector<int> number_per_subpop (newtree.size(),0);
 	
 	for(std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
-		if (it->GetNumber() == 0) continue;
-
 		update_location = it -> GetGenotypeIter();
 			
 		while(update_location != NULL) {
@@ -98,9 +95,17 @@ void cPopulation::Resample(gsl_rng * randgen)
 	 //Is there an exists() in C++?
 	 m_by_color[RED] = 0;
 	 m_by_color[WHITE] = 0;
-	 SetNewPopSize(0);        
+	 SetNewPopSize(0); 
+	
 	 for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
-			if (it->GetNumber() == 0) continue;       
+		  // Keep track of lineages we lost 
+		  if (it->GetNumber() == 0) {
+				SetTotalSubpopulationsLost(GetTotalSubpopulationsLost()+1);
+			  continue;
+		  }
+		 
+		  // Something is wrong here.****
+		 
 			// Perform accurate binomial sampling only if below a certain population size
 			if (it->GetNumber() < GetBinomialSamplingThreshold()) {
 				 if (GetVerbose()) std::cout << "binomial " << it->GetNumber() << std::endl;
@@ -110,16 +115,14 @@ void cPopulation::Resample(gsl_rng * randgen)
 			else {
 				 it->SetNumber(it->GetNumber() * GetTransferBinomialSamplingP());
 			}
-					
-			// Keep track of lineages we lost
-			if (it->GetNumber() == 0) {  
-				 SetTotalSubpopulationsLost(GetTotalSubpopulationsLost()+1);
-			}
 			
-			SetNewPopSize(GetNewPopSize() + floor(it->GetNumber()));
-			if (GetVerbose()) std::cout << it->GetMarker() << std::endl;
-			if (GetVerbose()) std::cout << it->GetNumber() << std::endl;
-			if (GetVerbose()) std::cout << it->GetFitness() << std::endl;
+			SetNewPopSize(GetNewPopSize() + (int) floor(it->GetNumber()));
+		 
+		  if (GetVerbose()) { 
+				std::cout << it->GetMarker() << std::endl;
+			  std::cout << it->GetNumber() << std::endl;
+			  std::cout << it->GetFitness() << std::endl;
+			}	
 			if (it->GetMarker() == 'r') m_by_color[RED] += it->GetNumber();
 			else m_by_color[WHITE] += it->GetNumber();
 	 }
@@ -399,10 +402,12 @@ void cPopulation::NewSeedSubpopulation(cLineageTree& newtree,
 	white_side = newtree.insert(newtree.begin(), w);
 	
 	red.SetNumber(GetInitialPopulationSize()/2);
+	//white.SetNumber(1);
 	red.SetGenotype(red_side);
 	red.SetMarker('r');
 	
 	white.SetNumber(GetInitialPopulationSize()/2);
+	//red.SetNumber(1);
 	white.SetGenotype(white_side);
 	white.SetMarker('w');
 	

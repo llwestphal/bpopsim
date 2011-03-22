@@ -1,4 +1,5 @@
 #include "cSubpopulation.h"
+#include <cmath>
 
 /* */
 cSubpopulation::cSubpopulation()
@@ -45,7 +46,15 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 	// There is only one new one...
 	SetNumber(1);
 	// ...taken from the ancestor.
-	ancestor.SetNumber(ancestor.GetNumber()-1);
+	
+	//**********************************************************************************
+	//For some reason uncommenting this will cause everything to get screwed up
+	//For example, the GetNumber() function will start returning a negative number
+	//This will cause the population number to not properly decrement after dilution
+	// etc, etc, etc
+	//It's being left for posterity
+	//**********************************************************************************
+	//ancestor.SetNumber(ancestor.GetNumber()-1);
 	
 	SetMarker(ancestor.GetMarker());
 	
@@ -72,8 +81,15 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 void cSubpopulation::Transfer(long double success_prob, 
 															gsl_rng * randomgenerator) {
 	
-   SetNumber(gsl_ran_binomial(randomgenerator, 
-															success_prob, 
-															uint64_t(GetNumber())));
+	int random_gsl_int;
+	
+	random_gsl_int = gsl_ran_binomial(randomgenerator, 
+													 success_prob, 
+													 u_int64_t(GetNumber()));
+	
+	if ( x > 10 ) std::cout << std::endl << "This is gsl out: " << " " << 
+		randomgenerator << " " << success_prob << " " << random_gsl_int << " " << x << std::endl;
+   
+	SetNumber(random_gsl_int);
 }
 

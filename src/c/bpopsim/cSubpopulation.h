@@ -9,6 +9,7 @@
 #include <gsl/gsl_randist.h>
 #include <stdint.h>
 #include "tree.hh"
+#include <iostream>
 
 /*@agm Rather than create a new class, I created a struct... it seemed simpler
        since the cGenotype type will not have any methods either way. */
@@ -58,14 +59,6 @@ public:
 														double in_average_mutation_s, 
 														char in_type_of_mutation, 
 														gsl_rng * randomgenerator);  
-
-	/*###################################################################################
-  @agm Here I added the counter as a crude way to keep track of unique_node_id's.
-			 I'm sure there is a better way to do this 
-			 Also, notice I pass the entire tree rather than a segment or immediate parent
-	     This is likely not ideal or fastest with huge trees.
-	 ####################################################################################*/
-	
 	virtual void NewCreateDescendant(gsl_rng * randomgenerator, 
 																	 cSubpopulation &ancestor, 
 																	 double averageselectioncoefficient, 

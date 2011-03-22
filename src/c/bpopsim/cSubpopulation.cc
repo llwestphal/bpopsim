@@ -88,8 +88,9 @@ void cSubpopulation::Transfer(long double success_prob,
 													 success_prob, 
 													 u_int64_t(GetNumber()));
 	
-	if ( GetNumber() > 10 ) std::cout << std::endl << "This is gsl out: " << " " << 
-		randomgenerator << " " << success_prob << " " << random_gsl_int << " " << GetNumber() << std::endl;
+
+	//if ( random_gsl_int > 10 ) std::cout << std::endl << "This is gsl out: " << " " << 
+		//randomgenerator << " " << success_prob << " " << random_gsl_int << " " << random_gsl_int << std::endl;
    
 	SetNumber(random_gsl_int);
 }

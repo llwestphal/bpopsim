@@ -21,9 +21,11 @@ class cPopulation {
 
 private:
 
-  long double m_total_pop_size;
-  long double m_new_pop_size;
   long double m_ratio;
+  
+  // we calculate the population size on demand
+  uint64_t m_population_size;
+  bool m_population_size_stale;
 
   int m_total_mutations;
   int m_total_subpopulations_lost;
@@ -42,12 +44,13 @@ private:
   std::vector< std::vector<double> > m_runs;
   std::vector<double> m_this_run;
 
-  double m_divisions_until_mutation;
+  // @JEB: An int rather than a uint because this can go negative by a few cells
+  //       when cells (usually the ancestors) divide simultaneously.
+  int64_t m_divisions_until_mutation; 
+  
   double m_desired_divisions;
   double m_completed_divisions;
   double m_update_time;
-  double m_current_cells;
-  double m_whole_cells;
   double m_this_time_to_next_whole_cell;
   double m_time_to_next_whole_cell;
   double m_max_w;
@@ -81,20 +84,21 @@ public:
      m_number_of_subpopulations = 0;
      m_total_mutations = 0;
      m_total_subpopulations_lost = 0;
+     m_population_size_stale = true;
   }
 	
   //DESTRUCTOR
   virtual ~cPopulation() { ; };
   
   //GETTERS
-  const long double GetTotalPopSize() { return m_total_pop_size; }
   const long double GetRatio() { return m_ratio; }
+  
+  const uint64_t GetPopulationSize(); // calculated on demand
   
   const int GetTotalMutations() { return m_total_mutations; }
   const int GetTotalSubpopulationsLost() { return m_total_subpopulations_lost; }
   const int GetTransfers() { return m_transfers; }
   const int GetNumberOfSubpopulations() { return m_number_of_subpopulations; }
-  const int GetNewPopSize() { return m_new_pop_size; }
   const int GetVerbose() { return m_verbose; }
   const int GetTransferIntervalToPrint() { return m_transfer_interval_to_print; }
   const int GetTotalTransfers() { return m_total_transfers; }
@@ -105,14 +109,8 @@ public:
   //std::vector< std::vector<double> > GetRuns() { return &m_runs; }
   //std::vector<double> GetThisRun() { return &m_this_run; }  
 
-  const double GetDivisionsUntilMutation() { return m_divisions_until_mutation; }
-  const double GetDesiredDivisions() { return m_desired_divisions; }
+  const int64_t GetDivisionsUntilMutation() { return m_divisions_until_mutation; }   //!@JEB - keep
   const double GetCompletedDivisions() { return m_completed_divisions; }
-  const double GetUpdateTime() { return m_update_time; }
-  const double GetCurrentCells() { return m_current_cells; }
-  const double GetWholeCells() { return m_whole_cells; }
-  const double GetThisTimeToNextWholeCell() { return m_this_time_to_next_whole_cell; }
-  const double GetTimeToNextWholeCell() { return m_time_to_next_whole_cell; }
   const double GetMaxW() { return m_max_w; }
   const double GetPopSizeBeforeDilution() { return m_pop_size_before_dilution; }
   const double GetDilutionFactor() { return m_dilution_factor; }
@@ -148,20 +146,12 @@ public:
   //  virtual MutationList& GetMutations(const char in_marker) {};
 
   //SETTERS
-  void SetTotalPopSize(long double in_total_pop_size) { m_total_pop_size = in_total_pop_size; }
   void SetTotalMutations(int in_total_mutations) { m_total_mutations = in_total_mutations; }
   void SetTotalSubpopulationsLost(int in_total_subpopulations_lost) { m_total_subpopulations_lost=in_total_subpopulations_lost; }
   void SetTransfers(int in_transfers) { m_transfers = in_transfers; }
-  void SetDivisionsUntilMutation(double in_divisions_until_mutation){ m_divisions_until_mutation = in_divisions_until_mutation; }  
-  void SetDesiredDivisions(double in_desired_divisions){ m_desired_divisions = in_desired_divisions; }
+  void SetDivisionsUntilMutation(int64_t in_divisions_until_mutation){ m_divisions_until_mutation = in_divisions_until_mutation; }  //!@JEB - keep
   void SetNumberOfSubpopulations(int in_number_of_subpopulations){ m_number_of_subpopulations = in_number_of_subpopulations; }
-  void SetNewPopSize(int in_new_pop_size) {m_new_pop_size = in_new_pop_size; }
   void SetCompletedDivisions(int in_completed_divisions) {m_completed_divisions = in_completed_divisions; }
-  void SetUpdateTime(double in_update_time) {m_update_time = in_update_time; }
-  void SetCurrentCells(double in_current_cells) { m_current_cells = in_current_cells; }
-  void SetWholeCells(double in_whole_cells) { m_whole_cells = in_whole_cells; }
-  void SetThisTimeToNextWholeCell(double in_this_time_to_next_whole_cell) { m_this_time_to_next_whole_cell = in_this_time_to_next_whole_cell; }
-  void SetTimeToNextWholeCell(double in_time_to_next_whole_cell) { m_time_to_next_whole_cell = in_time_to_next_whole_cell; }
   void SetMaxW(double in_max_w) { m_max_w = in_max_w; }
   void SetVerbose(int in_verbose) { m_verbose = in_verbose; }
   void SetPopSizeBeforeDilution(double in_pop_size_before_dilution) { m_pop_size_before_dilution = in_pop_size_before_dilution; }
@@ -187,8 +177,13 @@ public:
 
   //METHODS
 	//@agm To keep the lines of manageable length, if a method has multiple variables, each variable got a new line
-  void UpdateLineages();
-  void DetermineDivisionTime();
+    
+  //! Move time forward by this increment, growing all subpopulations
+  void UpdateSubpopulations(long double update_time);
+
+  //! Calculate the time until the next subpopulation divides (passes a whole number of cells)
+  long double TimeToNextWholeCell();
+
 	void FrequenciesPerTransferPerNode(tree<cGenotype> newtree, 
 																		 std::vector< std::vector<cGenotypeFrequency> >& frequencies);
   void Resample(gsl_rng * randomgenerator);

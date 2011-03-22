@@ -1,7 +1,10 @@
+#include <time.h>
+#include <cmath>
+
 #include "cPopulation.h"
 #include "tree_util.hh"
 #include "tree.hh"
-#include <time.h>
+
 
 // setup and parse configuration options:
 void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
@@ -93,7 +96,7 @@ int main(int argc, char* argv[])
 			{
 				
          // Calculate the number of divisions until the next mutation 
-				 population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + gsl_ran_exponential(randgen, population.GetLambda()));
+				 population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + round(gsl_ran_exponential(randgen, population.GetLambda())));
 				
 				 // 
 				if (population.GetVerbose()) { std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl; }
@@ -106,11 +109,11 @@ int main(int argc, char* argv[])
 					 
 					 if( population.GetDivisionsUntilMutation() <= 0) { population.NewMutate(randgen, newtree, node_id); }
 					 
-					 if( population.GetTotalPopSize() >= population.GetPopSizeBeforeDilution()) {
+					 if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
 						 Cout << Endl << Endl << "Passing....." << Endl;
 						 population.FrequenciesPerTransferPerNode(newtree, frequencies);
 						 population.Resample(randgen); 
-						 Cout << Endl << population.GetTotalPopSize() << " " << population.GetPopSizeBeforeDilution() << Endl;
+						 Cout << Endl << population.GetPopulationSize() << " " << population.GetPopSizeBeforeDilution() << Endl;
 					   //kptree::print_tree_bracketed(newtree);
 					 } 
 					 

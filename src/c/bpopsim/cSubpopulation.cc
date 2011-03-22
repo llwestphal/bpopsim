@@ -1,5 +1,7 @@
-#include "cSubpopulation.h"
+#include <iostream>
 #include <cmath>
+
+#include "cSubpopulation.h"
 
 /* */
 cSubpopulation::cSubpopulation()
@@ -45,7 +47,6 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 	tree<cGenotype>::iterator_base new_geno_it;
 	// There is only one new one...
 	SetNumber(1);
-	// ...taken from the ancestor.
 	
 	//**********************************************************************************
 	//For some reason uncommenting this will cause everything to get screwed up
@@ -54,8 +55,10 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 	// etc, etc, etc
 	//It's being left for posterity
 	//**********************************************************************************
-	//ancestor.SetNumber(ancestor.GetNumber()-1);
-	
+
+	// ...taken from the ancestor.
+	ancestor.SetNumber(ancestor.GetNumber()-1);
+	  
 	SetMarker(ancestor.GetMarker());
 	
 	cGenotype new_genotype;
@@ -80,15 +83,13 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 
 void cSubpopulation::Transfer(long double success_prob, 
 															gsl_rng * randomgenerator) {
-	
-	int random_gsl_int;
-	
-	random_gsl_int = gsl_ran_binomial(randomgenerator, 
+		
+	int random_gsl_int = gsl_ran_binomial(randomgenerator, 
 													 success_prob, 
 													 u_int64_t(GetNumber()));
 	
-	if ( x > 10 ) std::cout << std::endl << "This is gsl out: " << " " << 
-		randomgenerator << " " << success_prob << " " << random_gsl_int << " " << x << std::endl;
+	if ( GetNumber() > 10 ) std::cout << std::endl << "This is gsl out: " << " " << 
+		randomgenerator << " " << success_prob << " " << random_gsl_int << " " << GetNumber() << std::endl;
    
 	SetNumber(random_gsl_int);
 }

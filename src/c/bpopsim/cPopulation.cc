@@ -1,41 +1,60 @@
 #include "cPopulation.h"
 
-//There may be a problem here
-
-void cPopulation::UpdateLineages() 
+void cPopulation::UpdateSubpopulations(long double update_time) 
 {
+  // @JEB note that m_divided_lineages is only valid when we assume our 
+  // chunking is good such that each subpop can divide only once when mutation is happening
+  m_divided_lineages.clear();
+  
+  m_population_size_stale = true; // we are changind the size of the population here.
+  
+  int i=-1;
   for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
-     if (it->GetNumber() == 0) continue;
-     it->SetNumber(it->GetNumber() * exp(log(2) * GetUpdateTime() * it->GetFitness()));
-     SetNewPopSize(GetNewPopSize() + it->GetNumber());
+    i++; // must advance iterator before continue statement
+    if (it->GetNumber() == 0) continue;
+
+    // N = No * exp(log(2)*growth_rate * t) 
+    double new_number = it->GetNumber() * exp(log(2) * update_time * it->GetFitness());     
+    if (static_cast<uint32_t>(new_number) - static_cast<uint32_t>(it->GetNumber()) >= 1) {
+      m_divided_lineages.push_back(i);
+    }
+    it->SetNumber(new_number);
   }
 }
 
-void cPopulation::DetermineDivisionTime() 
+// @JEB for efficiency, we only recalculate this if it has been marked stale
+const uint64_t cPopulation::GetPopulationSize() 
 {
-   int itCount = 0;
-	
+  if (!m_population_size_stale) return m_population_size;
+
+  m_population_size = 0;
+  for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
+     m_population_size += static_cast<int>(it->GetNumber());
+  }  
+  m_population_size_stale = false;
+  return m_population_size;
+}
+
+long double cPopulation::TimeToNextWholeCell() 
+{
+   long double time_to_next_whole_cell = -1;
    for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) { 
+   
       if(it->GetNumber() == 0) continue;
-      //what is the time to get to the next whole number of cells?
-     
-      SetCurrentCells(it->GetNumber());
 
-      SetWholeCells(floor(it->GetNumber())+1);
-      // WC = N * exp(growth_rate * t) 
+      //what is the time to get to the next whole number of cells?     
+      long double current_cells = it->GetNumber();
+      long double next_whole_cells = static_cast<int>(it->GetNumber());
+      
+      // N = No * exp(log(2) * growth_rate * t) 
+      long double this_time_to_next_whole_cell = (log(next_whole_cells / current_cells) / (it->GetFitness())) / log(2);   
 
-      SetThisTimeToNextWholeCell(log(GetWholeCells() / GetCurrentCells()) / (it->GetFitness()));   
-
-      if ( GetTimeToNextWholeCell() == 0 || (GetThisTimeToNextWholeCell() < GetTimeToNextWholeCell()) ) {
-        m_divided_lineages.clear();
-        SetTimeToNextWholeCell(GetThisTimeToNextWholeCell());
-        m_divided_lineages.push_back(itCount); //a list, because there can be ties 
+      if ( time_to_next_whole_cell == -1 || (this_time_to_next_whole_cell < time_to_next_whole_cell) ) {
+        time_to_next_whole_cell = this_time_to_next_whole_cell;
       }
-      else if (GetThisTimeToNextWholeCell() == GetTimeToNextWholeCell()) {
-        m_divided_lineages.push_back(itCount); //a list, because there can be ties
-      }
-    itCount++;
   }
+  
+  return time_to_next_whole_cell;
 }
 
 //@agm Here I try to iterate through the populations in m_populations, request the size of 
@@ -90,12 +109,14 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree,
 void cPopulation::Resample(gsl_rng * randgen) 
 {
   //When it is time for a transfer, resample population
-		
+  
+  uint32_t population_size_before_transfer = m_population_size;
+  m_population_size_stale = true; // we are changind the size of the population here.
+ 
 	 if (GetVerbose()) std::cout << ">> Transfer!" << std::endl;
 	 //Is there an exists() in C++?
 	 m_by_color[RED] = 0;
 	 m_by_color[WHITE] = 0;
-	 SetNewPopSize(0); 
 	
 	 for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
 		  // Keep track of lineages we lost 
@@ -115,9 +136,7 @@ void cPopulation::Resample(gsl_rng * randgen)
 			else {
 				 it->SetNumber(it->GetNumber() * GetTransferBinomialSamplingP());
 			}
-			
-			SetNewPopSize(GetNewPopSize() + (int) floor(it->GetNumber()));
-		 
+					 
 		  if (GetVerbose()) { 
 				std::cout << it->GetMarker() << std::endl;
 			  std::cout << it->GetNumber() << std::endl;
@@ -138,13 +157,13 @@ void cPopulation::Resample(gsl_rng * randgen)
 			m_this_run.push_back(GetRatio());
 		 
 			if (GetVerbose() == 1) { 
-				 std::cout << "Transfer " << GetTransfers() << " : " << GetTotalPopSize() << 
-				 "=>" << GetNewPopSize() << "  R/W Ratio: " << GetRatio() << std::endl;  
+				 std::cout << "Transfer " << GetTransfers() << " : " << population_size_before_transfer << 
+				 "=>" << GetPopulationSize() << "  R/W Ratio: " << GetRatio() << std::endl;  
 				 std::cout << "Total mutations: " << GetTotalMutations() << " Maximum Fitness: " << GetMaxW() << std::endl;
 				 std::cout << "Size = " << m_this_run.size() << std::endl;
 			}
 	 }  
-	 SetTotalPopSize(GetNewPopSize());
+
 	 if ( (int(m_this_run.size()) >= GetMinimumPrinted()) && ((GetRatio() > GetMaxDivergenceFactor()) || (GetRatio() < 1/GetMaxDivergenceFactor())) )   
 	 {
 			if (GetVerbose()) std::cout << "DIVERGENCE CONDITION MET" << std::endl;
@@ -213,7 +232,6 @@ void cPopulation::RunSummary()
 void cPopulation::ResetRunStats()
 {
 
-   SetTotalPopSize(GetInitialPopulationSize());
    SetTotalMutations(0);    
    SetTotalSubpopulationsLost(0);
    SetTransfers(1);    
@@ -284,7 +302,7 @@ void cPopulation::SetParameters(const variables_map &options)
 	);
 
   // Simulation parameters that are pre-calculated
-  SetDilutionFactor(exp(log(2) * GetGrowthPhaseGenerations()));
+  SetDilutionFactor(exp(log(2)*GetGrowthPhaseGenerations()));
   SetTransferBinomialSamplingP(1/GetDilutionFactor());
   SetPopSizeBeforeDilution(GetPopSizeAfterDilution() * GetDilutionFactor());
   SetLambda(1/GetMutationRatePerDivision());
@@ -293,8 +311,7 @@ void cPopulation::SetParameters(const variables_map &options)
 
 void cPopulation::DisplayParameters()
 {
-  if (GetVerbose()==1) 
-  {
+  if (GetVerbose()==1) {
     std::cout << "u = " << GetMutationRatePerDivision() << std::endl;
     std::cout << "s = " << GetAverageMutationS() << std::endl;
     std::cout << "N = " << GetPopSizeAfterDilution() << std::endl;
@@ -314,61 +331,55 @@ void cPopulation::CalculateDivisions()
   // This will, at worst, underestimate how long.
   // We can then move forward by single divisions to find the exact division where the mutation occurs
 
-  SetDesiredDivisions(GetDivisionsUntilMutation());
-  if (GetDesiredDivisions() + GetTotalPopSize() > GetPopSizeBeforeDilution())
-  {
-     SetDesiredDivisions(GetPopSizeBeforeDilution() - GetTotalPopSize());
+  // We would like to move forward by as many divisions as it takes to
+  // get to either (1) the next mutation OR (2) the next transfer.
+  long double desired_divisions = GetDivisionsUntilMutation();
+  if (desired_divisions + GetPopulationSize() > GetPopSizeBeforeDilution()) {
+     desired_divisions = GetPopSizeBeforeDilution() - GetPopulationSize();
   }
   
-  if(GetVerbose() == 1) 
-      {
-         std::cout << "Divisions before next mutation: " << GetDivisionsUntilMutation() <<std::endl;
-      }
+  if(GetVerbose() == 1) {
+    std::cout << "Divisions before next mutation: " << GetDivisionsUntilMutation() <<std::endl;
+  }
   
   // Note: we underestimate by a few divisions so that we can step forward by single division increments
   // as we get close to the one where the mutation happened (or right before a transfer).      
   
-  if (GetDesiredDivisions() < 1)
-  {
-     SetDesiredDivisions(1);
+  if (desired_divisions < 1) {
+     desired_divisions = 1;
   }
   
-  if (GetVerbose() == 1) 
-  {
-     std::cout << "Total pop size: " << GetTotalPopSize() <<std::endl;
-     std::cout << "Desired divisions " << GetDesiredDivisions() <<std::endl;
+  if (GetVerbose() == 1) {
+     std::cout << "Total pop size: " << GetPopulationSize() <<std::endl;
+     std::cout << "Desired divisions " << desired_divisions <<std::endl;
   }
       
-   // How much time would we like to pass to achieve the desired number of divisions?
-  // (assuming the entire population has the maximum fitness)
-  SetUpdateTime(log((GetDesiredDivisions()+(double)GetTotalPopSize()) / GetTotalPopSize()) / (GetMaxW() * log(2)));
-
-  //What is the minimum time required to get a single division?
-  SetTimeToNextWholeCell(0);
-  DetermineDivisionTime();
+  // How much time would we like to pass to achieve the desired number of divisions?
+  // (Assuming the entire population has the maximum fitness, makes us underestimate by a few)
+  long double update_time = log((desired_divisions+(double)GetPopulationSize()) / (double)GetPopulationSize()) / (GetMaxW());
 
   // At a minumum, we want to make sure that one cell division took place
-  if (GetTimeToNextWholeCell() > GetUpdateTime()) 
-  {
-     if (GetVerbose())std::cout << "Time to next whole cell greater than update time: " << GetTimeToNextWholeCell() << " < " << GetUpdateTime() <<std::endl;    
-     SetUpdateTime(GetTimeToNextWholeCell());
+
+  // What is the minimum time required to get a single division?
+  long double time_to_next_whole_cell = TimeToNextWholeCell();
+
+  if (time_to_next_whole_cell > update_time) {
+     if (GetVerbose())std::cout << "Time to next whole cell greater than update time: " << time_to_next_whole_cell << " < " << update_time <<std::endl;    
+     update_time = time_to_next_whole_cell;
   }
 
-  if (GetVerbose() == 1) 
-  {
-     std::cout << "Update time: " << GetUpdateTime() <<std::endl;    
+  if (GetVerbose() == 1) {
+     std::cout << "Update time: " << update_time <<std::endl;    
   }
             
   //Now update all lineages by the time that actually passed
  
-  SetNewPopSize(0);
-  UpdateLineages();
-
-  SetCompletedDivisions(GetNewPopSize() - GetTotalPopSize());
+  uint32_t previous_population_size = m_population_size;
+  UpdateSubpopulations(update_time);
+  SetCompletedDivisions(GetPopulationSize() - previous_population_size);
               
   if (GetVerbose())std::cout << "Completed divisions: " << GetCompletedDivisions() <<std::endl;
   SetDivisionsUntilMutation(GetDivisionsUntilMutation() - GetCompletedDivisions());
-  SetTotalPopSize(GetNewPopSize());
 }
 
 /*@agm The functions below should build a new tree using the tree.h header
@@ -402,12 +413,10 @@ void cPopulation::NewSeedSubpopulation(cLineageTree& newtree,
 	white_side = newtree.insert(newtree.begin(), w);
 	
 	red.SetNumber(GetInitialPopulationSize()/2);
-	//white.SetNumber(1);
 	red.SetGenotype(red_side);
 	red.SetMarker('r');
 	
 	white.SetNumber(GetInitialPopulationSize()/2);
-	//red.SetNumber(1);
 	white.SetGenotype(white_side);
 	white.SetMarker('w');
 	
@@ -418,6 +427,7 @@ void cPopulation::NewSeedSubpopulation(cLineageTree& newtree,
 void cPopulation::AddSubpopulation(cSubpopulation& subpop, 
 																	 unsigned int& node_id) 
 {
+  m_population_size_stale = true; // we have just changed the population size
 	m_populations.push_back(subpop);
 	SetNumberOfSubpopulations(GetNumberOfSubpopulations()+1);
 	node_id++;
@@ -428,16 +438,18 @@ void cPopulation::NewMutate(gsl_rng * randgen,
 														cLineageTree& newtree, 
 														unsigned int& node_id) 
 {	
-	SetTotalMutations(GetTotalMutations()+1);
+	m_total_mutations++;
 	
 	if (m_verbose) std::cout << "* Mutating!" << std::endl;
 	
 	//Mutation happened in the one that just divided
-	
 	//Break ties randomly here.
 	cSubpopulation& ancestor = m_populations[m_divided_lineages[rand() % m_divided_lineages.size()]];          
-	
 	cSubpopulation new_subpop;
+  
+  std::cout << "Divided has number: " << ancestor.GetNumber() << std::endl;
+  // There must be at least two cells for a mutation to have occurred...
+  assert(ancestor.GetNumber() >= 2);
 	
 	new_subpop.NewCreateDescendant(randgen, 
 																 ancestor, 

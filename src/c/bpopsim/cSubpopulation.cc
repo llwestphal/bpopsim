@@ -47,14 +47,6 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 	tree<cGenotype>::iterator_base new_geno_it;
 	// There is only one new one...
 	SetNumber(1);
-	
-	//**********************************************************************************
-	//For some reason uncommenting this will cause everything to get screwed up
-	//For example, the GetNumber() function will start returning a negative number
-	//This will cause the population number to not properly decrement after dilution
-	// etc, etc, etc
-	//It's being left for posterity
-	//**********************************************************************************
 
 	// ...taken from the ancestor.
 	ancestor.SetNumber(ancestor.GetNumber()-1);

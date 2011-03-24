@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <time.h>
 #include "tree.hh"
+#include "tree_util.hh"
 
 #include <boost/program_options.hpp>
 
@@ -25,7 +26,7 @@
        since the cGenotype type will not have any methods either way. */
 
 struct cGenotype{
- u_int64_t unique_node_id;
+ uint64_t unique_node_id;
  long double fitness;
  };
 
@@ -34,12 +35,12 @@ struct cGenotype{
 
 /*class cGenotype{
   public:
-    u_int64 unique_node_id;
+    uint64 unique_node_id;
     long double fitness;
  };*/
 
 struct cGenotypeFrequency{
-	u_int64_t unique_node_id;
+	uint64_t unique_node_id;
 	long double frequency;
 };
 
@@ -57,7 +58,7 @@ public:
 
   const long double GetFitness() { return (*m_genotype).fitness; }
   tree<cGenotype>::iterator GetGenotypeIter() { return m_genotype; }
-  const int GetNode_id() { return (*m_genotype).unique_node_id; }
+  const uint64_t GetNode_id() { return (*m_genotype).unique_node_id; }
   const long double GetNumber() { return m_number; }
   const char GetMarker() { return m_marker; }
   
@@ -66,15 +67,15 @@ public:
   void SetMarker(const char in_marker) { m_marker = in_marker; } 
   void Transfer(long double success_prob, gsl_rng * randomgenerator);
   long double MutantFitness(long double in_fitness, 
-							double in_average_mutation_s, 
-							char in_type_of_mutation, 
-							gsl_rng * randomgenerator);  
+                            double in_average_mutation_s, 
+                            char in_type_of_mutation, 
+                            gsl_rng * randomgenerator);  
   virtual void NewCreateDescendant(gsl_rng * randomgenerator, 
                                    cSubpopulation &ancestor, 
-								   double averageselectioncoefficient, 
-								   char beneficialmutationdistribution, 
-								   tree<cGenotype> in_tree, 
-								   u_int64_t node_id);
+                                   double averageselectioncoefficient, 
+                                   char beneficialmutationdistribution, 
+                                   tree<cGenotype> in_tree, 
+                                   uint64_t node_id);
 
 };
 #endif

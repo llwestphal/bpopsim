@@ -1,6 +1,5 @@
 #include "cPopulation.h"
 
-
 // setup and parse configuration options:
 void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
 
@@ -9,13 +8,13 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
   ("help,h", "produce this help message")
   ("generations-per-transfer,T", value<double>(), "Generations per transfer")
   ("population-size-after-transfer,N", value<uint64_t>(), "Population size after transfer")
-  ("number-of-transfers,n", value<uint64_t>(), "Max number of transfer to replicate")
+  ("number-of-transfers,n", value<int>(), "Max number of transfer to replicate")
   ("output-file,o", value<std::string>(), "Output file")
   ("mutation-rate-per-division,u", value<double>(), "Mutation rate per division")
   ("average-selection-coefficient,s", value<double>(), "Average selection coefficient")
-  ("time-interval,i", value<u_int64_t>(), "Time interval")
-  ("replicates,r", value<u_int64_t>(), "Replicates")
-  ("marker-divergence,m", value<u_int64_t>(), "Max divergence factor")
+  ("time-interval,i", value<int>(), "Time interval")
+  ("replicates,r", value<int>(), "Replicates")
+  ("marker-divergence,m", value<int>(), "Max divergence factor")
   ("type-of-mutations,f", value<char>(), "Type of mutations")
   ("verbose,v", value<int>(), "Verbose")
   ("lineage-tree,l", value<int>(), "Lineage Tree")
@@ -112,19 +111,16 @@ int main(int argc, char* argv[])
 						 population.Resample(randgen); 
 						 count++;
 						 Cout << Endl << "Passing.... " << count << Endl;
-					     //population.PrintFrequenciesToScreen(frequencies);
-						 //population.PrintOut(output_file, frequencies);
 					 }
-         }
-      }
+                 }
+            }
       Cout << Endl << Endl;
       population.RunSummary();
       population.PushBackRuns();
       //kptree::print_tree_bracketed(newtree);
-      Cout << Endl;
-      Cout << Endl << "Printing to screen.... " << Endl;
+      Cout << Endl << Endl << "Printing to screen.... " << Endl;
       population.PrintFrequenciesToScreen(frequencies);
-      //population.PrintOut(output_file, frequencies);
+      population.PrintOut(output_file, frequencies);
    }
 	 
    //population.PrintOut(output_file, frequencies);

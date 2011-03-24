@@ -33,7 +33,7 @@
 		701E921A120134BD00653784 /* cSubpopulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cSubpopulation.h; path = bpopsim/cSubpopulation.h; sourceTree = "<group>"; };
 		701E92831201406800653784 /* libboost_program_options-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_program_options-mt.a"; path = "/opt/local/lib/libboost_program_options-mt.a"; sourceTree = "<absolute>"; };
 		70307F1C11F7E39E00BEFD1F /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = bpopsim/main.cpp; sourceTree = "<group>"; };
-		70684A90120A007300BE96CA /* cPopulation.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cPopulation.cc; path = bpopsim/cPopulation.cc; sourceTree = "<group>"; };
+		70684A90120A007300BE96CA /* cPopulation.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cPopulation.cc; path = bpopsim/cPopulation.cc; sourceTree = "<group>"; wrapsLines = 0; };
 		70684A91120A007300BE96CA /* cPopulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cPopulation.h; path = bpopsim/cPopulation.h; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* popsim */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = popsim; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6859E8B029090EE04C91782 /* popsim.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = popsim.1; sourceTree = "<group>"; };

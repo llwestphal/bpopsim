@@ -1,9 +1,4 @@
-#include <time.h>
-#include <cmath>
-
 #include "cPopulation.h"
-#include "tree_util.hh"
-#include "tree.hh"
 
 
 // setup and parse configuration options:
@@ -14,6 +9,7 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
   ("help,h", "produce this help message")
   ("generations-per-transfer,T", value<double>(), "Generations per transfer")
   ("population-size-after-transfer,N", value<uint64_t>(), "Population size after transfer")
+	("number-of-transfers,n", value<uint64_t>(), "Max number of transfer to replicate")
   ("output-file,o", value<std::string>(), "Output file")
   ("mutation-rate-per-division,u", value<double>(), "Mutation rate per division")
   ("average-selection-coefficient,s", value<double>(), "Average selection coefficient")
@@ -52,7 +48,7 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
 int main(int argc, char* argv[])
 {
 	 tree<cGenotype>::iterator_base loc;
-	 unsigned int node_id;
+	 u_int64_t node_id;
 	 long seed;
 	
    //set up command line options
@@ -84,6 +80,7 @@ int main(int argc, char* argv[])
    {
 		  population.ClearRuns(newtree);
 		 
+		  int count(0);
       std::cout << "Replicate " << on_run+1;   
 		 
 		  population.NewSeedSubpopulation(newtree, node_id);
@@ -99,7 +96,8 @@ int main(int argc, char* argv[])
 				 population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + round(gsl_ran_exponential(randgen, population.GetLambda())));
 				
 				 // 
-				if (population.GetVerbose()) { std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl; }
+				if (population.GetVerbose()) { 
+					std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl; }
          
 			 	 while( population.GetDivisionsUntilMutation() > 0 && 
 								population.GetTransfers() < population.GetTotalTransfers() && 
@@ -109,39 +107,25 @@ int main(int argc, char* argv[])
 					 
 					 if( population.GetDivisionsUntilMutation() <= 0) { population.NewMutate(randgen, newtree, node_id); }
 					 
-<<<<<<< local
-					 if( population.GetTotalPopSize() >= population.GetPopSizeBeforeDilution()) {
-						 Cout << Endl << Endl << "Passing..... " << on_run+1 << Endl;
-=======
 					 if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
-						 Cout << Endl << Endl << "Passing....." << Endl;
->>>>>>> other
 						 population.FrequenciesPerTransferPerNode(newtree, frequencies);
 						 population.Resample(randgen); 
-						 Cout << Endl << population.GetPopulationSize() << " " << population.GetPopSizeBeforeDilution() << Endl;
-					   //kptree::print_tree_bracketed(newtree);
-					 } 
-					 
+						 count++;
+						 Cout << Endl << "Passing.... " << count << Endl;
+					     //population.PrintFrequenciesToScreen(frequencies);
+						 //population.PrintOut(output_file, frequencies);
+					 }
          }
       }
-		  Cout << Endl << Endl;
+      Cout << Endl << Endl;
       population.RunSummary();
       population.PushBackRuns();
-		  //kptree::print_tree_bracketed(newtree);
-		  Cout << Endl;
+      //kptree::print_tree_bracketed(newtree);
+      Cout << Endl;
+      Cout << Endl << "Printing to screen.... " << Endl;
+      population.PrintFrequenciesToScreen(frequencies);
+      //population.PrintOut(output_file, frequencies);
    }
 	 
-	 Cout << "Done with simulation... Here's the Output:" << Endl << Endl;
-	 for (int i = 0; i<frequencies.size(); i++) {
-		 double total_freqs = 0;
-		 for (int j = 0; j<frequencies[i].size(); j++) {
-			 //@agm set up a minimum frequency to report the print out the number so it isn't overwhelming.
-			 if (frequencies[i][j].frequency > 0.001) {
-				 Cout << "Frequency of mutation # " << (frequencies[i][j]).unique_node_id << " at time " << i << " is: " << (frequencies[i][j]).frequency << Endl;
-			 }
-			 total_freqs += frequencies[i][j].frequency;
-		 }
-		 Cout << "Round # " << i << " sum of frequencies is: " << total_freqs << Endl << Endl;
-	 }
-   //population.PrintOut(output_file);
+   //population.PrintOut(output_file, frequencies);
 }

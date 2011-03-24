@@ -1,6 +1,3 @@
-#include <iostream>
-#include <cmath>
-
 #include "cSubpopulation.h"
 
 /* */
@@ -19,9 +16,9 @@ cSubpopulation::cSubpopulation(const cSubpopulation& in)
 }
 
 long double cSubpopulation::MutantFitness(long double in_fitness, 
-																					double in_average_mutation_s, 
-																					char in_type_of_mutation, 
-																					gsl_rng * randomgenerator) 
+                                          double in_average_mutation_s, 
+                                          char in_type_of_mutation, 
+                                          gsl_rng * randomgenerator) 
 {
    if(in_type_of_mutation=='e')
    {
@@ -38,11 +35,11 @@ long double cSubpopulation::MutantFitness(long double in_fitness,
 }
 
 void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator, 
-																				 cSubpopulation &ancestor, 
-																				 double averageselectioncoefficient, 
-																				 char beneficialmutationdistribution, 
-																				 tree<cGenotype> in_tree, 
-																				 unsigned int node_id) 
+                                         cSubpopulation &ancestor, 
+                                         double averageselectioncoefficient, 
+                                         char beneficialmutationdistribution, 
+                                         tree<cGenotype> in_tree, 
+                                         u_int64_t node_id) 
 {	
 	tree<cGenotype>::iterator_base new_geno_it;
 	// There is only one new one...
@@ -55,9 +52,9 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 	
 	cGenotype new_genotype;
 	new_genotype.fitness = ancestor.MutantFitness(ancestor.GetFitness(), 
-																								averageselectioncoefficient, 
-																								beneficialmutationdistribution, 
-																								randomgenerator);
+                                                  averageselectioncoefficient, 
+                                                  beneficialmutationdistribution, 
+                                                  randomgenerator);
 	new_genotype.unique_node_id = node_id;
 	
 	/* @agm I'm checking to see if the new fitness is the same as the old fitness.
@@ -65,20 +62,18 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 	        Either way, the new genotype will not be added to the list if it has the 
 		      same fitness as its parent... at least that's what I think it's doing. */
 	
-	if (new_genotype.fitness != (*ancestor.m_genotype).fitness) { 
-		new_geno_it = in_tree.append_child(ancestor.m_genotype, new_genotype); 
-	}
+    new_geno_it = in_tree.append_child(ancestor.m_genotype, new_genotype); 
 
 	SetGenotype(new_geno_it);
 	
 }
 
 void cSubpopulation::Transfer(long double success_prob, 
-															gsl_rng * randomgenerator) {
+                              gsl_rng * randomgenerator) {
 		
 	int random_gsl_int = gsl_ran_binomial(randomgenerator, 
-													 success_prob, 
-													 u_int64_t(GetNumber()));
+                                          success_prob, 
+                                          u_int64_t(GetNumber()));
 	
 
 	//if ( random_gsl_int > 10 ) std::cout << std::endl << "This is gsl out: " << " " << 

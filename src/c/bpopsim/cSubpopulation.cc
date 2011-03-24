@@ -71,7 +71,7 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 void cSubpopulation::Transfer(long double success_prob, 
                               gsl_rng * randomgenerator) {
 		
-	int random_gsl_int = gsl_ran_binomial(randomgenerator, 
+	u_int64_t random_gsl_int = gsl_ran_binomial(randomgenerator, 
                                           success_prob, 
                                           u_int64_t(GetNumber()));
 	

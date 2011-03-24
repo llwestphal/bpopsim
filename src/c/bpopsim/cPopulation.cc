@@ -9,11 +9,11 @@ void cPopulation::SetParameters(const variables_map &options)
 		);
   SetPopSizeAfterDilution(
 		options.count("population-size-after-transfer") ?
-		options["population-size-after-transfer"].as<uint64_t>() : int(5E6)
+		options["population-size-after-transfer"].as<uint64_t>() : u_int64_t(5E6)
 		); 
   SetInitialPopulationSize(
 		options.count("initial-population-size") ?
-		options["initial-population-size"].as<uint64_t>() : int(2)
+		options["initial-population-size"].as<uint64_t>() : u_int64_t(2)
 		);  
   SetMutationRatePerDivision(
 		options.count("mutation-rate-per-division") ?
@@ -37,7 +37,7 @@ void cPopulation::SetParameters(const variables_map &options)
 		);  
   SetMaxDivergenceFactor(
 		options.count("marker-divergence") ?
-		options["marker-divergence"].as<int>() : 100
+		options["marker-divergence"].as<u_int64_t>() : 100
 		);  
   SetReplicates(
 		options.count("replicates") ?
@@ -45,7 +45,7 @@ void cPopulation::SetParameters(const variables_map &options)
 		);  
   SetMinimumPrinted(
 		options.count("minimum-printed") ?
-		options["minimum-printed"].as<int>() : 8
+		options["minimum-printed"].as<u_int64_t>() : 8
 		);
   SetBeneficialMutationDistribution(
 		options.count("type-of-mutations") ?
@@ -76,7 +76,7 @@ void cPopulation::UpdateSubpopulations(long double update_time)
   
   m_population_size_stale = true; // we are changind the size of the population here.
   
-  int i=-1;
+  u_int64_t i=-1;
   for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
     i++; // must advance iterator before continue statement
     if (it->GetNumber() == 0) continue;
@@ -97,7 +97,7 @@ const uint64_t cPopulation::GetPopulationSize()
 
   m_population_size = 0;
   for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
-     m_population_size += static_cast<int>(it->GetNumber());
+     m_population_size += static_cast<u_int64_t>(it->GetNumber());
   }  
   m_population_size_stale = false;
   return m_population_size;
@@ -112,7 +112,7 @@ long double cPopulation::TimeToNextWholeCell()
 
       //what is the time to get to the next whole number of cells?     
       long double current_cells = it->GetNumber();
-      long double next_whole_cells = static_cast<int>(it->GetNumber());
+      long double next_whole_cells = static_cast<u_int64_t>(it->GetNumber());
       
       // N = No * exp(log(2) * growth_rate * t) 
       long double this_time_to_next_whole_cell = (log(next_whole_cells / current_cells) / (it->GetFitness())) / log(2);   
@@ -138,14 +138,14 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree,
 	double total_freqs(0);
 	std::vector<cGenotypeFrequency> freq_per_node;
 	
-	int total_cells(0);
+	u_int64_t total_cells(0);
 	
 	for(std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
 		total_cells += it -> GetNumber();
 	}
 	
 	freq_per_node.resize(newtree.size());
-	std::vector<int> number_per_subpop (newtree.size(),0);
+	std::vector<u_int64_t> number_per_subpop (newtree.size(),0);
 	
 	for(std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
 		update_location = it -> GetGenotypeIter();
@@ -160,7 +160,7 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree,
 		cGenotypeFrequency this_node;
 		update_location = it -> GetGenotypeIter();
 		this_node.unique_node_id = (*update_location).unique_node_id;
-		this_node.frequency = (double) number_per_subpop[this_node.unique_node_id]/total_cells;
+		this_node.frequency = (long double) number_per_subpop[this_node.unique_node_id]/total_cells;
 		
 		freq_per_node[this_node.unique_node_id] = this_node;
 		total_freqs += this_node.frequency;
@@ -229,7 +229,7 @@ void cPopulation::Resample(gsl_rng * randgen)
 			}
 	 }  
 
-	 if ( (int(m_this_run.size()) >= GetMinimumPrinted()) && 
+	 if ( (u_int64_t(m_this_run.size()) >= GetMinimumPrinted()) && 
 			 ((GetRatio() > GetMaxDivergenceFactor()) || 
 				(GetRatio() < 1/GetMaxDivergenceFactor())) )   
 	 {
@@ -367,7 +367,7 @@ void cPopulation::NewSeedSubpopulation(cLineageTree& newtree,
 
 	r.fitness = starting_fitness;
 	r.unique_node_id = node_id;
-  w.fitness = starting_fitness;
+    w.fitness = starting_fitness;
 	w.unique_node_id = (node_id+1);
 	
 	//Start building the tree
@@ -438,9 +438,9 @@ void cPopulation::NewMutate(gsl_rng * randgen,
 void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > frequencies) {
 	Cout << "Done with round... Here's the Output:" << Endl << Endl;
 	
-	for (int i = 0; i<frequencies.size(); i++) {
+	for (u_int64_t i = 0; i<frequencies.size(); i++) {
 		double total_freqs = 0;
-		for (int j = 0; j<frequencies[i].size(); j++) {
+		for (u_int64_t j = 0; j<frequencies[i].size(); j++) {
 			//@agm set up a minimum frequency to report the print out the number so it isn't overwhelming.
 			if (frequencies[i][j].frequency > 0.001) {
 				Cout << "Frequency of mutation # " << (frequencies[i][j]).unique_node_id << " at time " << i << " is: " << (frequencies[i][j]).frequency << Endl;
@@ -469,10 +469,10 @@ void cPopulation::PrintOut(const std::string& output_file_name,
 	}*/
 	//int width = 20;
     
-	for (int i = 0; i<frequencies.size(); ++i) {
+	for (u_int64_t i = 0; i<frequencies.size(); ++i) {
         //output_file.setf(std::ios::left);
         output_file << i;
-		for (int j = 0; j<frequencies[i].size(); ++j) {
+		for (u_int64_t j = 0; j<frequencies[i].size(); ++j) {
 			if (j == 0 || j == 1) {
                 output_file << " " << frequencies[i][j].frequency;
             }

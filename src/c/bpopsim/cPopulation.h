@@ -1,16 +1,7 @@
 #ifndef cPopulation_h
 #define cPopulation_h
 
-#include <vector>
-#include <cmath>
-#include <iostream>
-#include <fstream>
 #include "cSubpopulation.h"
-#include <algorithm>
-#include <iomanip> 
-
-// Boost
-#include <boost/program_options.hpp>
 
 using namespace boost::program_options;
 
@@ -25,11 +16,11 @@ private:
   
   // we calculate the population size on demand
   uint64_t m_population_size;
+  uint64_t m_transfers;
   bool m_population_size_stale;
 
   int m_total_mutations;
   int m_total_subpopulations_lost;
-  int m_transfers;
   int m_number_of_subpopulations;  
   int m_verbose;
   int m_replicates;
@@ -37,7 +28,7 @@ private:
   int m_total_transfers;
   int m_transfer_interval_to_print;
   int m_lineage;
-	int m_seed;
+  int m_seed;
 
   std::vector<cSubpopulation> m_populations;
   std::vector<int> m_divided_lineages;
@@ -94,10 +85,10 @@ public:
   const long double GetRatio() { return m_ratio; }
   
   const uint64_t GetPopulationSize(); // calculated on demand
+  const uint64_t GetTransfers() { return m_transfers; }
   
   const int GetTotalMutations() { return m_total_mutations; }
   const int GetTotalSubpopulationsLost() { return m_total_subpopulations_lost; }
-  const int GetTransfers() { return m_transfers; }
   const int GetNumberOfSubpopulations() { return m_number_of_subpopulations; }
   const int GetVerbose() { return m_verbose; }
   const int GetTransferIntervalToPrint() { return m_transfer_interval_to_print; }
@@ -128,7 +119,7 @@ public:
   const double GetAverageMutationS() {return m_average_mutation_s; }
   const double GetGrowthPhaseGenerations() { return m_growth_phase_generations; }
 	
-	const long GetSeed() { return m_seed; }
+  const long GetSeed() { return m_seed; }
 
   std::vector<cSubpopulation> GetPopulation() { return m_populations; }
 
@@ -148,7 +139,7 @@ public:
   //SETTERS
   void SetTotalMutations(int in_total_mutations) { m_total_mutations = in_total_mutations; }
   void SetTotalSubpopulationsLost(int in_total_subpopulations_lost) { m_total_subpopulations_lost=in_total_subpopulations_lost; }
-  void SetTransfers(int in_transfers) { m_transfers = in_transfers; }
+  void SetTransfers(u_int64_t in_transfers) { m_transfers = in_transfers; }
   void SetDivisionsUntilMutation(int64_t in_divisions_until_mutation){ m_divisions_until_mutation = in_divisions_until_mutation; }  //!@JEB - keep
   void SetNumberOfSubpopulations(int in_number_of_subpopulations){ m_number_of_subpopulations = in_number_of_subpopulations; }
   void SetCompletedDivisions(int in_completed_divisions) {m_completed_divisions = in_completed_divisions; }
@@ -173,35 +164,38 @@ public:
   void SetGrowthPhaseGenerations(double in_growth_phase_generations) { m_growth_phase_generations= in_growth_phase_generations; }
   void SetBeneficialMutationDistribution(char in_beneficial_mutation_distribution) { m_beneficial_mutation_distribution = in_beneficial_mutation_distribution; }
   void SetLineageTree(int in_lineage) { m_lineage = in_lineage; }
-	void SetSeedParams(long seed_type) { m_seed = seed_type; }
+  void SetSeedParams(long seed_type) { m_seed = seed_type; }
 
   //METHODS
 	//@agm To keep the lines of manageable length, if a method has multiple variables, each variable got a new line
     
-  //! Move time forward by this increment, growing all subpopulations
+  void SetParameters(const variables_map &options);
+	
+	//! Move time forward by this increment, growing all subpopulations
   void UpdateSubpopulations(long double update_time);
 
   //! Calculate the time until the next subpopulation divides (passes a whole number of cells)
   long double TimeToNextWholeCell();
 
-	void FrequenciesPerTransferPerNode(tree<cGenotype> newtree, 
-																		 std::vector< std::vector<cGenotypeFrequency> >& frequencies);
+  void FrequenciesPerTransferPerNode(tree<cGenotype> newtree, 
+									   std::vector< std::vector<cGenotypeFrequency> >& frequencies);
   void Resample(gsl_rng * randomgenerator);
   void PushBackRuns();
-  void PrintOut(const std::string& output_file_name);
+  void PrintOut(const std::string& output_file_name,
+                std::vector< std::vector<cGenotypeFrequency> > frequencies);
   void ClearRuns(cLineageTree& tree);
   void RunSummary();
   void ResetRunStats();
-  void SetParameters(const variables_map &options);
   void DisplayParameters();
   void CalculateDivisions();
-	void NewSeedSubpopulation(cLineageTree& newtree, 
-														unsigned int& node_id);
-	void AddSubpopulation(cSubpopulation& subpop,
-												unsigned int& node_id);
-	void NewMutate(gsl_rng * randomgenerator, 
-								 cLineageTree& newtree, 
-								 unsigned int& node_id);
+  void NewSeedSubpopulation(cLineageTree& newtree, 
+                            u_int64_t& node_id);
+  void AddSubpopulation(cSubpopulation& subpop,
+                        u_int64_t& node_id);
+  void NewMutate(gsl_rng * randomgenerator, 
+				 cLineageTree& newtree, 
+				 u_int64_t& node_id);
+  void PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > frequencies);
 };
 
 #endif

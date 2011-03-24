@@ -39,7 +39,7 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
                                          double averageselectioncoefficient, 
                                          char beneficialmutationdistribution, 
                                          tree<cGenotype> in_tree, 
-                                         u_int64_t node_id) 
+                                         uint64_t node_id) 
 {	
 	tree<cGenotype>::iterator_base new_geno_it;
 	// There is only one new one...
@@ -52,9 +52,9 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 	
 	cGenotype new_genotype;
 	new_genotype.fitness = ancestor.MutantFitness(ancestor.GetFitness(), 
-                                                  averageselectioncoefficient, 
-                                                  beneficialmutationdistribution, 
-                                                  randomgenerator);
+                                                averageselectioncoefficient, 
+                                                beneficialmutationdistribution, 
+                                                randomgenerator);
 	new_genotype.unique_node_id = node_id;
 	
 	/* @agm I'm checking to see if the new fitness is the same as the old fitness.
@@ -71,9 +71,9 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 void cSubpopulation::Transfer(long double success_prob, 
                               gsl_rng * randomgenerator) {
 		
-	u_int64_t random_gsl_int = gsl_ran_binomial(randomgenerator, 
-                                          success_prob, 
-                                          u_int64_t(GetNumber()));
+	uint64_t random_gsl_int = gsl_ran_binomial(randomgenerator, 
+                                             success_prob, 
+                                             uint64_t(GetNumber()));
 	
 
 	//if ( random_gsl_int > 10 ) std::cout << std::endl << "This is gsl out: " << " " << 

@@ -9,17 +9,17 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
   ("help,h", "produce this help message")
   ("generations-per-transfer,T", value<double>(), "Generations per transfer")
   ("population-size-after-transfer,N", value<uint64_t>(), "Population size after transfer")
-	("number-of-transfers,n", value<uint64_t>(), "Max number of transfer to replicate")
+  ("number-of-transfers,n", value<uint64_t>(), "Max number of transfer to replicate")
   ("output-file,o", value<std::string>(), "Output file")
   ("mutation-rate-per-division,u", value<double>(), "Mutation rate per division")
   ("average-selection-coefficient,s", value<double>(), "Average selection coefficient")
-  ("time-interval,i", value<int>(), "Time interval")
-  ("replicates,r", value<int>(), "Replicates")
-  ("marker-divergence,m", value<int>(), "Max divergence factor")
+  ("time-interval,i", value<u_int64_t>(), "Time interval")
+  ("replicates,r", value<u_int64_t>(), "Replicates")
+  ("marker-divergence,m", value<u_int64_t>(), "Max divergence factor")
   ("type-of-mutations,f", value<char>(), "Type of mutations")
   ("verbose,v", value<int>(), "Verbose")
   ("lineage-tree,l", value<int>(), "Lineage Tree")
-	("seed,d", value<long>(), "Seed for random number generator")
+  ("seed,d", value<long>(), "Seed for random number generator")
   ;
 
 /* Need to add these as options...
@@ -76,20 +76,20 @@ int main(int argc, char* argv[])
 	
 	 std::vector< std::vector<cGenotypeFrequency> > frequencies;
 	 
-   for (int on_run=0; on_run < population.GetReplicates(); on_run++)
+   for (u_int64_t on_run=0; on_run < population.GetReplicates(); on_run++)
    {
-		  population.ClearRuns(newtree);
+      population.ClearRuns(newtree);
 		 
-		  int count(0);
+      u_int64_t count(0);
       std::cout << "Replicate " << on_run+1;   
 		 
-		  population.NewSeedSubpopulation(newtree, node_id);
+      population.NewSeedSubpopulation(newtree, node_id);
 		  //std::cout << node_id << std::endl;
 		 
-		  population.ResetRunStats();
+      population.ResetRunStats();
 		 
       while( (population.GetTransfers() < population.GetTotalTransfers()) && 
-						 population.GetKeepTransferring() ) 
+              population.GetKeepTransferring() ) 
 			{
 				
          // Calculate the number of divisions until the next mutation 
@@ -100,8 +100,8 @@ int main(int argc, char* argv[])
 					std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl; }
          
 			 	 while( population.GetDivisionsUntilMutation() > 0 && 
-								population.GetTransfers() < population.GetTotalTransfers() && 
-								population.GetKeepTransferring() ) 
+						population.GetTransfers() < population.GetTotalTransfers() && 
+						population.GetKeepTransferring() ) 
 				 {
 					 population.CalculateDivisions();
 					 

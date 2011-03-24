@@ -379,7 +379,7 @@ void cPopulation::NewSeedSubpopulation(cLineageTree& newtree,
 
 	r.fitness = starting_fitness;
 	r.unique_node_id = node_id;
-    w.fitness = starting_fitness;
+  w.fitness = starting_fitness;
 	w.unique_node_id = (node_id+1);
 	
 	//Start building the tree
@@ -454,7 +454,7 @@ void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFre
 		double total_freqs = 0;
     for ( std::vector<cGenotypeFrequency>::iterator it = frequencies[i].begin(); it!=frequencies[i].end(); ++it) {
     //@agm set up a minimum frequency to report the print out the number so it isn't overwhelming.
-      if ((*it).frequency > 0.001) {
+      if ((*it).frequency > 0.05) {
         Cout << "Frequency of mutation # " << std::right << std::setw(6) << (*it).unique_node_id << " at time " << std::right << std::setw(4) << i << " is: " << std::left << std::setw(10) << (*it).frequency << Endl;
       }
       total_freqs += (*it).frequency;
@@ -467,28 +467,41 @@ void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFre
 } 
 
 //@agm I comandeered this function to print stuff out in the manner I see fit
+//@agm I basically do a non-human readable raw dump because it's easier for R to deal with
+//     If you want human readable use the PrintToScreen function
+
 void cPopulation::PrintOut(const std::string& output_file_name, 
                            std::vector< std::vector<cGenotypeFrequency> > frequencies)
 {  
+  uint64_t last_time(frequencies.size()-1);
+  
+  std::vector<bool> ColsToPrint(frequencies[last_time].size(),false);
+  for (int i = 0; i<frequencies.size(); i++) {
+    uint64_t count(0);
+    for (std::vector<cGenotypeFrequency>::iterator it = frequencies[i].begin(); it!=frequencies[i].end(); ++it) {
+      if ( (*it).frequency > .05 ) ColsToPrint[count] = true;
+      count++;
+    }
+  }
+  
 	//Print everything out
 	std::ofstream output_file;
 	output_file.open(output_file_name.c_str(),std::ios_base::app);
-	
-	//int last_time(frequencies.size()-1);
-
-	/*for (int i = 0; i<frequencies[last_time].size(); i++) { 
-		if (frequencies[last_time][i].frequency > .0001) output_file << std::setw(15) << frequencies[last_time][i].unique_node_id;
-	}*/
+  
+  
+	for (uint64_t i = 0; i<frequencies[last_time].size(); i++) { 
+    if ( ColsToPrint[i] == true ) output_file << frequencies[last_time][i].unique_node_id << " ";
+	}
 	//int width = 20;
-    
+  output_file << "\n";
+  
 	for (uint64_t i = 0; i<frequencies.size(); i++) {
-    output_file << std::left << std::setw(10) << i;
+    uint64_t count(0);
     for ( std::vector<cGenotypeFrequency>::iterator it = frequencies[i].begin(); it!=frequencies[i].end(); ++it) {
-			if ((*it).frequency > 0.01) {
-        output_file << std::left << std::setw(10) << (*it).frequency;
-        }
+      if ( ColsToPrint[count] == true ) output_file << (*it).frequency << " ";
+      count++;
 		}
-        output_file << "\n";
+    output_file << "\n";
 	}
 }
 

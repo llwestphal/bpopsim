@@ -38,7 +38,7 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
                                          cSubpopulation &ancestor, 
                                          double averageselectioncoefficient, 
                                          char beneficialmutationdistribution, 
-                                         tree<cGenotype> in_tree, 
+                                         tree<cGenotype>* in_tree, 
                                          uint32_t node_id) 
 {	
 	tree<cGenotype>::iterator_base new_geno_it;
@@ -62,7 +62,7 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 	        Either way, the new genotype will not be added to the list if it has the 
 		      same fitness as its parent... at least that's what I think it's doing. */
 	
-    new_geno_it = in_tree.append_child(ancestor.m_genotype, new_genotype); 
+    new_geno_it = in_tree->append_child(ancestor.m_genotype, new_genotype); 
 
 	SetGenotype(new_geno_it);
 	

@@ -56,13 +56,18 @@ int main(int argc, char* argv[])
    get_cmdline_options(cmdline_options, argc, argv);
    std::string output_file = cmdline_options["output-file"].as<std::string>();
 	
+   //Initialize Tree object 
+   cLineageTree newtree;
+  
    //Initialize Population object
 	 cPopulation population;
+  
+   //Set cli options
    population.SetParameters(cmdline_options);
    population.DisplayParameters();
 	
 	 //create generator and seed
-	 //@agm defaults to system time seed
+	 //@agm defaults to system time seed if not specified at cli
 	 const gsl_rng_type *T;
 	 gsl_rng * randgen;
 	 T = gsl_rng_mt19937;
@@ -71,22 +76,19 @@ int main(int argc, char* argv[])
 	 else { seed = population.GetSeed(); }
 	 gsl_rng_set(randgen, seed);
 	
-	 //Initialize Tree object 
-	 cLineageTree newtree;
-	
 	 std::vector< std::vector<cGenotypeFrequency> > frequencies;
    Cout << Endl << population.fast_log(5) << Endl;
    Cout << Endl << population.Logarithm(5) << Endl;
-   for (uint32_t on_run=0; on_run < population.GetReplicates(); on_run++)
+   for (int on_run=0; on_run < population.GetReplicates(); on_run++)
    {
-      population.ClearRuns(newtree);
+      population.ClearRuns(&newtree);
 		 
       uint32_t count(0);
       std::cout << "Replicate " << on_run+1;   
 		 
       //Check to see if the user wants the red/white lineages included
-      if (population.GetRedWhiteOnly() == 't') population.SeedSubpopulationForRedWhite(newtree, node_id);
-      if (population.GetRedWhiteOnly() == 'f') population.SeedPopulationWithOneColony(newtree, node_id);
+      if (population.GetRedWhiteOnly() == 't') population.SeedSubpopulationForRedWhite(&newtree, node_id);
+      if (population.GetRedWhiteOnly() == 'f') population.SeedPopulationWithOneColony(&newtree, node_id);
 		  //std::cout << node_id << std::endl;
 		 
       population.ResetRunStats();
@@ -105,10 +107,10 @@ int main(int argc, char* argv[])
 				 {
 					 population.CalculateDivisions();
 					 
-					 if( population.GetDivisionsUntilMutation() <= 0) { population.NewMutate(randgen, newtree, node_id); }
+					 if( population.GetDivisionsUntilMutation() <= 0) { population.Mutate(randgen, &newtree, node_id); }
 					 
 					 if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
-						 population.FrequenciesPerTransferPerNode(newtree, frequencies);
+						 population.FrequenciesPerTransferPerNode(&newtree, frequencies);
 						 population.Resample(randgen); 
 						 count++;
 						 Cout << Endl << "Passing.... " << count << Endl;

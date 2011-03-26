@@ -135,7 +135,7 @@ double cPopulation::TimeToNextWholeCell()
 
 //@agm Now the information is stored in a vector and passed back to the main function for final printing.
 
-void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree, 
+void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype>* newtree, 
                                                 std::vector< std::vector<cGenotypeFrequency> >& frequencies)
 {
 	tree<cGenotype>::iterator update_location;
@@ -146,8 +146,8 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree,
 		total_cells += it -> GetNumber();
 	}
 	
-	std::vector<cGenotypeFrequency> freq_per_node(newtree.size());
-	std::vector<uint32_t> number_per_subpop (newtree.size(),0);
+	std::vector<cGenotypeFrequency> freq_per_node(newtree->size());
+	std::vector<uint32_t> number_per_subpop (newtree->size(),0);
   
 	
 	for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
@@ -156,7 +156,7 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree,
     //Cout << Endl;
 		while(update_location != NULL) {
 			number_per_subpop[(*update_location).unique_node_id] += it -> GetNumber();
-      update_location = newtree.parent(update_location);
+      update_location = newtree->parent(update_location);
 		}
 	}
   
@@ -267,11 +267,11 @@ void cPopulation::PushBackRuns()
    m_runs.push_back(m_this_run);
 }
 
-void cPopulation::ClearRuns(cLineageTree& newtree)
+void cPopulation::ClearRuns(cLineageTree* newtree)
 {
    m_this_run.clear();
    m_populations.clear();
-   newtree.clear();
+   newtree->clear();
 }
 
 void cPopulation::RunSummary()
@@ -371,7 +371,7 @@ void cPopulation::CalculateDivisions()
        I thought the best way to do this was to comment out all of the previous code in both this file
        and the associated header so it would be clear where stuff was changed. */
 
-void cPopulation::SeedSubpopulationForRedWhite(cLineageTree& newtree, 
+void cPopulation::SeedSubpopulationForRedWhite(cLineageTree* newtree, 
                                                uint32_t &node_id) 
 {	
 	cGenotype r, w;
@@ -390,8 +390,8 @@ void cPopulation::SeedSubpopulationForRedWhite(cLineageTree& newtree,
 	w.unique_node_id = (node_id+1);
 	
 	//Start building the tree
-	red_side = newtree.insert(newtree.begin(), r);
-	white_side = newtree.insert(newtree.begin(), w);
+	red_side = newtree->insert(newtree->begin(), r);
+	white_side = newtree->insert(newtree->begin(), w);
 	
 	red.SetNumber(GetInitialPopulationSize()/2);
 	red.SetGenotype(red_side);
@@ -408,7 +408,7 @@ void cPopulation::SeedSubpopulationForRedWhite(cLineageTree& newtree,
 //@agm This function seeds the population with only one colony to avoid the red/white problem
 //     when possible.  For this to work properly, I need to get rid of victory conditions.
 
-void cPopulation::SeedPopulationWithOneColony(cLineageTree& newtree, 
+void cPopulation::SeedPopulationWithOneColony(cLineageTree* newtree, 
                                               uint32_t &node_id) {
   cGenotype neutral;
   tree<cGenotype>::iterator start_position;
@@ -420,7 +420,7 @@ void cPopulation::SeedPopulationWithOneColony(cLineageTree& newtree,
   neutral.fitness = starting_fitness;
   neutral.unique_node_id = node_id;
   
-  start_position = newtree.insert(newtree.begin(), neutral);
+  start_position = newtree->insert(newtree->begin(), neutral);
   
   begin_here.SetNumber(GetInitialPopulationSize());
   begin_here.SetGenotype(start_position);
@@ -440,9 +440,9 @@ void cPopulation::AddSubpopulation(cSubpopulation& subpop,
 	//std::cout << subpop.GetNode_id() << " " << subpop.GetFitness() << std::endl;
 }
 
-void cPopulation::NewMutate(gsl_rng * randgen, 
-							cLineageTree& newtree, 
-							uint32_t& node_id) 
+void cPopulation::Mutate(gsl_rng * randgen, 
+                            cLineageTree* newtree, 
+                            uint32_t& node_id) 
 {	
 	m_total_mutations++;
 	

@@ -177,7 +177,7 @@ public:
 
   //! Calculate the time until the next subpopulation divides (passes a whole number of cells)
   double TimeToNextWholeCell();
-  void FrequenciesPerTransferPerNode(tree<cGenotype> newtree, 
+  void FrequenciesPerTransferPerNode(tree<cGenotype> *newtree, 
                                      std::vector< std::vector<cGenotypeFrequency> >& frequencies);
   void FrequenciesOfSubpops(tree<cGenotype> newtree,
                             std::vector< std::vector<cGenotypeFrequency> >& freqs_for_muller);
@@ -185,20 +185,20 @@ public:
   void PushBackRuns();
   void PrintOut(const std::string& output_file_name,
                 std::vector< std::vector<cGenotypeFrequency> > frequencies);
-  void ClearRuns(cLineageTree& tree);
+  void ClearRuns(cLineageTree* tree);
   void RunSummary();
   void ResetRunStats();
   void DisplayParameters();
   void CalculateDivisions();
-  void SeedSubpopulationForRedWhite(cLineageTree& newtree, 
+  void SeedSubpopulationForRedWhite(cLineageTree* newtree, 
                                     uint32_t& node_id);
-  void SeedPopulationWithOneColony(cLineageTree& newtree,
+  void SeedPopulationWithOneColony(cLineageTree* newtree,
                                    uint32_t& node_id);
   void AddSubpopulation(cSubpopulation& subpop,
                         uint32_t& node_id);
-  void NewMutate(gsl_rng * randomgenerator, 
-                 cLineageTree& newtree, 
-                 uint32_t& node_id);
+  void Mutate(gsl_rng * randomgenerator, 
+              cLineageTree* newtree, 
+              uint32_t& node_id);
   void PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > frequencies);
   float Logarithm(float mantissa);
   float fast_log(float val);

@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 					 if( population.GetDivisionsUntilMutation() <= 0) { population.Mutate(randgen, &newtree, node_id); }
 					 
 					 if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
-						 population.FrequenciesPerTransferPerNode(&newtree, frequencies);
+						 population.FrequenciesPerTransferPerNode(&newtree, &frequencies);
 						 population.Resample(randgen); 
 						 count++;
 						 Cout << Endl << "Passing.... " << count << Endl;

@@ -15,10 +15,10 @@ cSubpopulation::cSubpopulation(const cSubpopulation& in)
    m_genotype = in.m_genotype;
 }
 
-long double cSubpopulation::MutantFitness(long double in_fitness, 
-                                          double in_average_mutation_s, 
-                                          char in_type_of_mutation, 
-                                          gsl_rng * randomgenerator) 
+double cSubpopulation::MutantFitness(double in_fitness, 
+                                     double in_average_mutation_s, 
+                                     char in_type_of_mutation, 
+                                     gsl_rng * randomgenerator) 
 {
    if(in_type_of_mutation=='e')
    {
@@ -68,7 +68,7 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 	
 }
 
-void cSubpopulation::Transfer(long double success_prob, 
+void cSubpopulation::Transfer(double success_prob, 
                               gsl_rng * randomgenerator) {
 		
 	uint32_t random_gsl_int = gsl_ran_binomial(randomgenerator, 

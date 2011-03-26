@@ -25,27 +25,27 @@ void cPopulation::SetParameters(const variables_map &options)
 		);  
   SetTransferIntervalToPrint(
 		options.count("transfer-interval-to-print") ?
-	  options["transfer-interval-to-print"].as<int>() : 1
+	  options["transfer-interval-to-print"].as<uint16_t>() : 1
 		);  
   SetVerbose(
 		options.count("verbose") ?
-		options["verbose"].as<int>() : 0
+		options["verbose"].as<uint16_t>() : 0
 		);  
   SetTotalTransfers(
 		options.count("number-of-transfers") ?
-		options["number-of-transfers"].as<int>() : 50
+		options["number-of-transfers"].as<uint16_t>() : 50
 		);  
   SetMaxDivergenceFactor(
 		options.count("marker-divergence") ?
-		options["marker-divergence"].as<int>() : 100
+		options["marker-divergence"].as<uint16_t>() : 100
 		);  
   SetReplicates(
 		options.count("replicates") ?
-		options["replicates"].as<int>() : 10
+		options["replicates"].as<uint16_t>() : 10
 		);  
   SetMinimumPrinted(
 		options.count("minimum-printed") ?
-		options["minimum-printed"].as<int>() : 8
+		options["minimum-printed"].as<uint16_t>() : 8
 		);
   SetBeneficialMutationDistribution(
 		options.count("type-of-mutations") ?
@@ -53,11 +53,11 @@ void cPopulation::SetParameters(const variables_map &options)
 		);
   SetLineageTree(
 		options.count("lineage-tree") ?
-		options["lineage-tree"].as<int>() : 1
+		options["lineage-tree"].as<uint16_t>() : 1
 		);
 	SetSeedParams(
 		options.count("seed") ?
-		options["seed"].as<long>() : 0
+		options["seed"].as<uint16_t>() : 0
 		);
   SetRedWhiteOnly(
     options.count("redwhite-only") ?
@@ -72,7 +72,7 @@ void cPopulation::SetParameters(const variables_map &options)
   SetBinomialSamplingThreshold(1000);
 }
 
-void cPopulation::UpdateSubpopulations(long double update_time) 
+void cPopulation::UpdateSubpopulations(double update_time) 
 {
   // @JEB note that m_divided_lineages is only valid when we assume our 
   // chunking is good such that each subpop can divide only once when mutation is happening
@@ -107,19 +107,19 @@ const uint32_t cPopulation::GetPopulationSize()
   return m_population_size;
 }
 
-long double cPopulation::TimeToNextWholeCell() 
+double cPopulation::TimeToNextWholeCell() 
 {
-   long double time_to_next_whole_cell = -1;
+   double time_to_next_whole_cell = -1;
    for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) { 
    
       if(it->GetNumber() == 0) continue;
 
       //what is the time to get to the next whole number of cells?     
-      long double current_cells = it->GetNumber();
-      long double next_whole_cells = static_cast<uint32_t>(it->GetNumber());
+      double current_cells = it->GetNumber();
+      double next_whole_cells = static_cast<uint32_t>(it->GetNumber());
       
       // N = No * exp(log(2) * growth_rate * t) 
-      long double this_time_to_next_whole_cell = (log(next_whole_cells / current_cells) / (it->GetFitness())) / log(2);   
+      double this_time_to_next_whole_cell = (log(next_whole_cells / current_cells) / (it->GetFitness())) / log(2);   
 
       if ( time_to_next_whole_cell == -1 || (this_time_to_next_whole_cell < time_to_next_whole_cell) ) {
         time_to_next_whole_cell = this_time_to_next_whole_cell;
@@ -174,7 +174,7 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> newtree,
 		cGenotypeFrequency this_node;
     
     this_node.unique_node_id = count;
-    this_node.frequency = (long double) number_per_subpop[this_node.unique_node_id]/total_cells;
+    this_node.frequency = (double) number_per_subpop[this_node.unique_node_id]/total_cells;
 		
 		freq_per_node[this_node.unique_node_id] = this_node;
 		total_freqs += this_node.frequency;
@@ -317,7 +317,7 @@ void cPopulation::CalculateDivisions()
 
   // We would like to move forward by as many divisions as it takes to
   // get to either (1) the next mutation OR (2) the next transfer.
-  long double desired_divisions = GetDivisionsUntilMutation();
+  double desired_divisions = GetDivisionsUntilMutation();
   if (desired_divisions + GetPopulationSize() > GetPopSizeBeforeDilution()) {
      desired_divisions = GetPopSizeBeforeDilution() - GetPopulationSize();
   }
@@ -340,12 +340,12 @@ void cPopulation::CalculateDivisions()
       
   // How much time would we like to pass to achieve the desired number of divisions?
   // (Assuming the entire population has the maximum fitness, makes us underestimate by a few)
-  long double update_time = log((desired_divisions+(double)GetPopulationSize()) / (double)GetPopulationSize()) / (GetMaxW());
+  double update_time = log((desired_divisions+(double)GetPopulationSize()) / (double)GetPopulationSize()) / (GetMaxW());
 
   // At a minumum, we want to make sure that one cell division took place
 
   // What is the minimum time required to get a single division?
-  long double time_to_next_whole_cell = TimeToNextWholeCell();
+  double time_to_next_whole_cell = TimeToNextWholeCell();
 
   if (time_to_next_whole_cell > update_time) {
      if (GetVerbose())std::cout << "Time to next whole cell greater than update time: " << 
@@ -376,7 +376,7 @@ void cPopulation::SeedSubpopulationForRedWhite(cLineageTree& newtree,
 {	
 	cGenotype r, w;
 	tree<cGenotype>::iterator top, red_side, white_side;
-	long double starting_fitness = 1.0;
+	double starting_fitness = 1.0;
 	
 	//initialize object of cSubpopulation type
 	cSubpopulation red, white;
@@ -412,7 +412,7 @@ void cPopulation::SeedPopulationWithOneColony(cLineageTree& newtree,
                                               uint32_t &node_id) {
   cGenotype neutral;
   tree<cGenotype>::iterator start_position;
-  long double starting_fitness(1.0);
+  double starting_fitness(1.0);
   
   cSubpopulation begin_here;
   node_id = 0;
@@ -508,7 +508,7 @@ void cPopulation::PrintOut(const std::string& output_file_name,
   uint32_t last_time(frequencies.size()-1);
   
   std::vector<bool> ColsToPrint(frequencies[last_time].size(),false);
-  for (int i = 0; i<frequencies.size(); i++) {
+  for (uint16_t i = 0; i<frequencies.size(); i++) {
     uint32_t count(0);
     for (std::vector<cGenotypeFrequency>::iterator it = frequencies[i].begin(); it!=frequencies[i].end(); ++it) {
       if ( (*it).frequency > .1 ) ColsToPrint[count] = true;
@@ -554,8 +554,8 @@ float cPopulation::Logarithm(float mantissa) {
 float cPopulation::fast_log(float val)
 {
   register int *const     exp_ptr = ((int*)&val);
-  register int            x = *exp_ptr;
-  register const int      log_2 = ((x >> 23) & 255) - 128;
+  register uint16_t            x = *exp_ptr;
+  register const uint16_t      log_2 = ((x >> 23) & 255) - 128;
   x &= ~(255 << 23);
   x += 127 << 23;
   *exp_ptr = x;

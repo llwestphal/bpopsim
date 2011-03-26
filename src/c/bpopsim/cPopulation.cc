@@ -135,8 +135,8 @@ double cPopulation::TimeToNextWholeCell()
 
 //@agm Now the information is stored in a vector and passed back to the main function for final printing.
 
-void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype>* newtree, 
-                                                std::vector< std::vector<cGenotypeFrequency> >& frequencies)
+void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> * newtree, 
+                                                std::vector< std::vector<cGenotypeFrequency> > * frequencies)
 {
 	tree<cGenotype>::iterator update_location;
 	double total_freqs(0);
@@ -186,13 +186,13 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype>* newtree,
 
 	//@agm Printing sum of frequencies and building the doubly deep vector
 	//Cout << Endl << "Sum of all freqs: " << total_freqs << Endl;
-	frequencies.push_back(freq_per_node);
+	frequencies->push_back(freq_per_node);
 }
 
 //@agm Here I want to calculate the frequencies of subpopulations rather than mutations
 //     It's not yet clear to me how to do that.
 
-void cPopulation::FrequenciesOfSubpops(tree<cGenotype> newtree, std::vector<std::vector<cGenotypeFrequency> > &freqs_for_muller) {
+void cPopulation::FrequenciesOfSubpops(tree<cGenotype> newtree, std::vector<std::vector<cGenotypeFrequency> > & freqs_for_muller) {
   tree<cGenotype>::iterator update_location;
 }
 
@@ -441,8 +441,8 @@ void cPopulation::AddSubpopulation(cSubpopulation& subpop,
 }
 
 void cPopulation::Mutate(gsl_rng * randgen, 
-                            cLineageTree* newtree, 
-                            uint32_t& node_id) 
+                            cLineageTree * newtree, 
+                            uint32_t & node_id) 
 {	
 	m_total_mutations++;
 	

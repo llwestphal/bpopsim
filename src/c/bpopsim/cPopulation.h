@@ -170,17 +170,17 @@ public:
   //METHODS
 	//@agm To keep the lines of manageable length, if a method has multiple variables, each variable got a new line
     
-  void SetParameters(const variables_map &options);
+  void SetParameters(const variables_map & options);
 	
 	//! Move time forward by this increment, growing all subpopulations
   void UpdateSubpopulations(double update_time);
 
   //! Calculate the time until the next subpopulation divides (passes a whole number of cells)
   double TimeToNextWholeCell();
-  void FrequenciesPerTransferPerNode(tree<cGenotype> *newtree, 
-                                     std::vector< std::vector<cGenotypeFrequency> >& frequencies);
+  void FrequenciesPerTransferPerNode(tree<cGenotype> * newtree, 
+                                     std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   void FrequenciesOfSubpops(tree<cGenotype> newtree,
-                            std::vector< std::vector<cGenotypeFrequency> >& freqs_for_muller);
+                            std::vector< std::vector<cGenotypeFrequency> > & freqs_for_muller);
   void Resample(gsl_rng * randomgenerator);
   void PushBackRuns();
   void PrintOut(const std::string& output_file_name,
@@ -190,14 +190,14 @@ public:
   void ResetRunStats();
   void DisplayParameters();
   void CalculateDivisions();
-  void SeedSubpopulationForRedWhite(cLineageTree* newtree, 
-                                    uint32_t& node_id);
-  void SeedPopulationWithOneColony(cLineageTree* newtree,
-                                   uint32_t& node_id);
+  void SeedSubpopulationForRedWhite(cLineageTree * newtree, 
+                                    uint32_t & node_id);
+  void SeedPopulationWithOneColony(cLineageTree * newtree,
+                                   uint32_t & node_id);
   void AddSubpopulation(cSubpopulation& subpop,
-                        uint32_t& node_id);
+                        uint32_t & node_id);
   void Mutate(gsl_rng * randomgenerator, 
-              cLineageTree* newtree, 
+              cLineageTree * newtree, 
               uint32_t& node_id);
   void PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > frequencies);
   float Logarithm(float mantissa);

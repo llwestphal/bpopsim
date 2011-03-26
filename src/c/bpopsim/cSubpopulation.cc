@@ -39,7 +39,7 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
                                          double averageselectioncoefficient, 
                                          char beneficialmutationdistribution, 
                                          tree<cGenotype> in_tree, 
-                                         uint64_t node_id) 
+                                         uint32_t node_id) 
 {	
 	tree<cGenotype>::iterator_base new_geno_it;
 	// There is only one new one...
@@ -71,9 +71,9 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
 void cSubpopulation::Transfer(long double success_prob, 
                               gsl_rng * randomgenerator) {
 		
-	uint64_t random_gsl_int = gsl_ran_binomial(randomgenerator, 
+	uint32_t random_gsl_int = gsl_ran_binomial(randomgenerator, 
                                              success_prob, 
-                                             uint64_t(GetNumber()));
+                                             uint32_t(GetNumber()));
 	
 
 	//if ( random_gsl_int > 10 ) std::cout << std::endl << "This is gsl out: " << " " << 

@@ -7,7 +7,7 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
   cmdline_options.add_options()
   ("help,h", "produce this help message")
   ("generations-per-transfer,T", value<double>(), "Generations per transfer")
-  ("population-size-after-transfer,N", value<uint64_t>(), "Population size after transfer")
+  ("population-size-after-transfer,N", value<uint32_t>(), "Population size after transfer")
   ("number-of-transfers,n", value<int>(), "Max number of transfer to replicate")
   ("output-file,o", value<std::string>(), "Output file")
   ("mutation-rate-per-division,u", value<double>(), "Mutation rate per division")
@@ -19,6 +19,7 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
   ("verbose,v", value<int>(), "Verbose")
   ("lineage-tree,l", value<int>(), "Lineage Tree")
   ("seed,d", value<long>(), "Seed for random number generator")
+  ("redwhite-only,w", value<char>(), "Only care about red/white lineages")
   ;
 
 /* Need to add these as options...
@@ -47,7 +48,7 @@ void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
 int main(int argc, char* argv[])
 {
 	 tree<cGenotype>::iterator_base loc;
-	 u_int64_t node_id;
+	 uint32_t node_id;
 	 long seed;
 	
    //set up command line options
@@ -74,21 +75,23 @@ int main(int argc, char* argv[])
 	 cLineageTree newtree;
 	
 	 std::vector< std::vector<cGenotypeFrequency> > frequencies;
-	 
-   for (u_int64_t on_run=0; on_run < population.GetReplicates(); on_run++)
+   Cout << Endl << population.fast_log(5) << Endl;
+   Cout << Endl << population.Logarithm(5) << Endl;
+   for (uint32_t on_run=0; on_run < population.GetReplicates(); on_run++)
    {
       population.ClearRuns(newtree);
 		 
-      u_int64_t count(0);
+      uint32_t count(0);
       std::cout << "Replicate " << on_run+1;   
 		 
-      population.NewSeedSubpopulation(newtree, node_id);
+      //Check to see if the user wants the red/white lineages included
+      if (population.GetRedWhiteOnly() == 't') population.SeedSubpopulationForRedWhite(newtree, node_id);
+      if (population.GetRedWhiteOnly() == 'f') population.SeedPopulationWithOneColony(newtree, node_id);
 		  //std::cout << node_id << std::endl;
 		 
       population.ResetRunStats();
 		 
-      while( (population.GetTransfers() < population.GetTotalTransfers()) && 
-              population.GetKeepTransferring() ) 
+      while( (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring()) 
 			{
 				
          // Calculate the number of divisions until the next mutation 
@@ -98,9 +101,7 @@ int main(int argc, char* argv[])
 				if (population.GetVerbose()) { 
 					std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl; }
          
-			 	 while( population.GetDivisionsUntilMutation() > 0 && 
-						population.GetTransfers() < population.GetTotalTransfers() && 
-						population.GetKeepTransferring() ) 
+			 	 while( population.GetDivisionsUntilMutation() > 0 && population.GetKeepTransferring()) 
 				 {
 					 population.CalculateDivisions();
 					 
@@ -111,16 +112,18 @@ int main(int argc, char* argv[])
 						 population.Resample(randgen); 
 						 count++;
 						 Cout << Endl << "Passing.... " << count << Endl;
-					 }
-                 }
-            }
-      Cout << Endl << Endl;
-      population.RunSummary();
-      population.PushBackRuns();
-      //kptree::print_tree_bracketed(newtree);
-      Cout << Endl << Endl << "Printing to screen.... " << Endl;
-      population.PrintFrequenciesToScreen(frequencies);
-      population.PrintOut(output_file, frequencies);
+           }
+           //If the user does not want the red/white lineages included then KeepTransferring should always be set to true
+           if( population.GetRedWhiteOnly() == 'f' ) population.SetKeepTransferring(true);
+         }
+       }
+       Cout << Endl << Endl;
+       population.RunSummary();
+       population.PushBackRuns();
+       //kptree::print_tree_bracketed(newtree);
+       Cout << Endl << Endl << "Printing to screen.... " << Endl;
+       population.PrintFrequenciesToScreen(frequencies);
+       population.PrintOut(output_file, frequencies);
    }
 	 
    //population.PrintOut(output_file, frequencies);

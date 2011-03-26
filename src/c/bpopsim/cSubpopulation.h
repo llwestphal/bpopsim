@@ -26,7 +26,7 @@
        since the cGenotype type will not have any methods either way. */
 
 struct cGenotype{
- uint64_t unique_node_id;
+ uint32_t unique_node_id;
  long double fitness;
  };
 
@@ -35,12 +35,12 @@ struct cGenotype{
 
 /*class cGenotype{
   public:
-    uint64 unique_node_id;
+    uint32_t unique_node_id;
     long double fitness;
  };*/
 
 struct cGenotypeFrequency{
-	uint64_t unique_node_id;
+	uint32_t unique_node_id;
 	long double frequency;
 };
 
@@ -58,7 +58,7 @@ public:
 
   const long double GetFitness() { return (*m_genotype).fitness; }
   tree<cGenotype>::iterator GetGenotypeIter() { return m_genotype; }
-  const uint64_t GetNode_id() { return (*m_genotype).unique_node_id; }
+  const uint32_t GetNode_id() { return (*m_genotype).unique_node_id; }
   const long double GetNumber() { return m_number; }
   const char GetMarker() { return m_marker; }
   
@@ -75,7 +75,7 @@ public:
                                    double averageselectioncoefficient, 
                                    char beneficialmutationdistribution, 
                                    tree<cGenotype> in_tree, 
-                                   uint64_t node_id);
+                                   uint32_t node_id);
 
 };
 #endif

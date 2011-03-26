@@ -12,7 +12,7 @@ class cPopulation {
 
 private:
 
-  long double m_ratio;
+  double m_ratio;
   
   // we calculate the population size on demand
   uint32_t m_population_size;
@@ -24,18 +24,18 @@ private:
     
   bool m_population_size_stale;
 
-  int m_verbose;
-  int m_replicates;
-  int m_minimum_printed;
-  int m_transfer_interval_to_print;
-  int m_lineage;
+  uint16_t m_verbose;
+  uint16_t m_replicates;
+  uint16_t m_minimum_printed;
+  uint16_t m_transfer_interval_to_print;
+  uint16_t m_lineage;
 
   std::vector<cSubpopulation> m_populations;
   std::vector<uint32_t> m_divided_lineages;
   std::vector< std::vector<double> > m_runs;
   std::vector<double> m_this_run;
 
-  // @JEB: An int rather than a uint because this can go negative by a few cells
+  // @JEB: An uint16_t rather than a uint because this can go negative by a few cells
   //       when cells (usually the ancestors) divide simultaneously.
   int64_t m_divisions_until_mutation; 
   
@@ -61,7 +61,7 @@ private:
   // Simulation parameters that should be arguments
   uint32_t m_initial_population_size;
   uint32_t m_pop_size_after_dilution;             // N sub 0 --int is to get rid of warning
-  int m_seed;
+  uint16_t m_seed;
   double m_mutation_rate_per_division;            // mu
   double m_average_mutation_s;                    // s
   double m_growth_phase_generations;
@@ -84,7 +84,7 @@ public:
   virtual ~cPopulation() { ; };
   
   //GETTERS
-  const long double GetRatio() { return m_ratio; }
+  const double GetRatio() { return m_ratio; }
   
   const uint32_t GetPopulationSize(); // calculated on demand
   const uint32_t GetTransfers() { return m_transfers; }
@@ -93,11 +93,11 @@ public:
   const uint32_t GetNumberOfSubpopulations() { return m_number_of_subpopulations; }
   const int32_t GetTotalTransfers() { return m_total_transfers; }
   
-  const int GetVerbose() { return m_verbose; }
-  const int GetTransferIntervalToPrint() { return m_transfer_interval_to_print; }
-  const int GetReplicates() { return m_replicates; }
-  const int GetMinimumPrinted() { return m_minimum_printed; }
-  const int GetLineageTree() { return m_lineage; }
+  const uint16_t GetVerbose() { return m_verbose; }
+  const uint16_t GetTransferIntervalToPrint() { return m_transfer_interval_to_print; }
+  const uint16_t GetReplicates() { return m_replicates; }
+  const uint16_t GetMinimumPrinted() { return m_minimum_printed; }
+  const uint16_t GetLineageTree() { return m_lineage; }
 
   const int64_t GetDivisionsUntilMutation() { return m_divisions_until_mutation; }   //!@JEB - keep
   const double GetCompletedDivisions() { return m_completed_divisions; }
@@ -119,7 +119,7 @@ public:
   const double GetAverageMutationS() {return m_average_mutation_s; }
   const double GetGrowthPhaseGenerations() { return m_growth_phase_generations; }
 	
-  const long GetSeed() { return m_seed; }
+  const uint16_t GetSeed() { return m_seed; }
 
   std::vector<cSubpopulation> GetPopulation() { return m_populations; }
 
@@ -151,11 +151,11 @@ public:
   void SetLambda(double in_lambda) { m_lambda = in_lambda; }
   void SetKeepTransferring(bool in_keep_transferring) { m_keep_transferring = in_keep_transferring; }
   void SetRedWhiteOnly(char in_red_white_only) { m_red_white_only = in_red_white_only; }
-  void SetRatio(long double in_ratio) { m_ratio = in_ratio; }
+  void SetRatio(double in_ratio) { m_ratio = in_ratio; }
   void SetTransferIntervalToPrint(int in_transfer_interval_to_print) { m_transfer_interval_to_print = in_transfer_interval_to_print; }
   void SetTotalTransfers(uint32_t in_total_transfers) { m_total_transfers = in_total_transfers; }
   void SetMaxDivergenceFactor( double in_max_divergence_factor) { m_max_divergence_factor = in_max_divergence_factor; }
-  void SetReplicates ( int in_replicates) { m_replicates = in_replicates; }
+  void SetReplicates ( uint16_t in_replicates) { m_replicates = in_replicates; }
   void SetMinimumPrinted (int in_minimum_printed) { m_minimum_printed = in_minimum_printed; }
   void SetBinomialSamplingThreshold (double in_binomial_sampling_threshold) { m_binomial_sampling_threshold = in_binomial_sampling_threshold; }
   void SetInitialPopulationSize(uint32_t in_initial_population_size) {m_initial_population_size =in_initial_population_size; }
@@ -165,7 +165,7 @@ public:
   void SetGrowthPhaseGenerations(double in_growth_phase_generations) { m_growth_phase_generations= in_growth_phase_generations; }
   void SetBeneficialMutationDistribution(char in_beneficial_mutation_distribution) { m_beneficial_mutation_distribution = in_beneficial_mutation_distribution; }
   void SetLineageTree(int in_lineage) { m_lineage = in_lineage; }
-  void SetSeedParams(long seed_type) { m_seed = seed_type; }
+  void SetSeedParams(uint16_t seed_type) { m_seed = seed_type; }
 
   //METHODS
 	//@agm To keep the lines of manageable length, if a method has multiple variables, each variable got a new line
@@ -173,10 +173,10 @@ public:
   void SetParameters(const variables_map &options);
 	
 	//! Move time forward by this increment, growing all subpopulations
-  void UpdateSubpopulations(long double update_time);
+  void UpdateSubpopulations(double update_time);
 
   //! Calculate the time until the next subpopulation divides (passes a whole number of cells)
-  long double TimeToNextWholeCell();
+  double TimeToNextWholeCell();
   void FrequenciesPerTransferPerNode(tree<cGenotype> newtree, 
                                      std::vector< std::vector<cGenotypeFrequency> >& frequencies);
   void FrequenciesOfSubpops(tree<cGenotype> newtree,

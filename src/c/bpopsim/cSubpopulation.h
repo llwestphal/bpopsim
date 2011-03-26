@@ -27,7 +27,7 @@
 
 struct cGenotype{
  uint32_t unique_node_id;
- long double fitness;
+ double fitness;
  };
 
 //@agm I put this in class form as well, just in case we need to add methods one day.
@@ -36,18 +36,18 @@ struct cGenotype{
 /*class cGenotype{
   public:
     uint32_t unique_node_id;
-    long double fitness;
+    double fitness;
  };*/
 
 struct cGenotypeFrequency{
 	uint32_t unique_node_id;
-	long double frequency;
+	double frequency;
 };
 
 class cSubpopulation {
 
 private:
-  long double m_number;
+  double m_number;
   char m_marker;
   tree<cGenotype>::iterator m_genotype;
 
@@ -56,17 +56,17 @@ public:
   cSubpopulation(const cSubpopulation& in); // Copy constructor
   virtual ~cSubpopulation() { ; }; 
 
-  const long double GetFitness() { return (*m_genotype).fitness; }
+  const double GetFitness() { return (*m_genotype).fitness; }
   tree<cGenotype>::iterator GetGenotypeIter() { return m_genotype; }
   const uint32_t GetNode_id() { return (*m_genotype).unique_node_id; }
-  const long double GetNumber() { return m_number; }
+  const double GetNumber() { return m_number; }
   const char GetMarker() { return m_marker; }
   
   void SetGenotype(tree<cGenotype>::iterator location) { m_genotype = location; }
-  void SetNumber(const long double in_number) { m_number = in_number; }
+  void SetNumber(const double in_number) { m_number = in_number; }
   void SetMarker(const char in_marker) { m_marker = in_marker; } 
-  void Transfer(long double success_prob, gsl_rng * randomgenerator);
-  long double MutantFitness(long double in_fitness, 
+  void Transfer(double success_prob, gsl_rng * randomgenerator);
+  double MutantFitness(double in_fitness, 
                             double in_average_mutation_s, 
                             char in_type_of_mutation, 
                             gsl_rng * randomgenerator);  

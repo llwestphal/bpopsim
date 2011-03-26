@@ -1,24 +1,24 @@
 #include "cPopulation.h"
 
 // setup and parse configuration options:
-void get_cmdline_options(variables_map &options, int argc, char* argv[]) {
+void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
 
   options_description cmdline_options("Allowed options");
   cmdline_options.add_options()
   ("help,h", "produce this help message")
   ("generations-per-transfer,T", value<double>(), "Generations per transfer")
   ("population-size-after-transfer,N", value<uint32_t>(), "Population size after transfer")
-  ("number-of-transfers,n", value<int>(), "Max number of transfer to replicate")
+  ("number-of-transfers,n", value<uint16_t>(), "Max number of transfer to replicate")
   ("output-file,o", value<std::string>(), "Output file")
   ("mutation-rate-per-division,u", value<double>(), "Mutation rate per division")
   ("average-selection-coefficient,s", value<double>(), "Average selection coefficient")
-  ("time-interval,i", value<int>(), "Time interval")
-  ("replicates,r", value<int>(), "Replicates")
-  ("marker-divergence,m", value<int>(), "Max divergence factor")
+  ("time-interval,i", value<uint16_t>(), "Time interval")
+  ("replicates,r", value<uint16_t>(), "Replicates")
+  ("marker-divergence,m", value<uint16_t>(), "Max divergence factor")
   ("type-of-mutations,f", value<char>(), "Type of mutations")
-  ("verbose,v", value<int>(), "Verbose")
-  ("lineage-tree,l", value<int>(), "Lineage Tree")
-  ("seed,d", value<long>(), "Seed for random number generator")
+  ("verbose,v", value<uint16_t>(), "Verbose")
+  ("lineage-tree,l", value<uint16_t>(), "Lineage Tree")
+  ("seed,d", value<uint16_t>(), "Seed for random number generator")
   ("redwhite-only,w", value<char>(), "Only care about red/white lineages")
   ;
 
@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 {
 	 tree<cGenotype>::iterator_base loc;
 	 uint32_t node_id;
-	 long seed;
+	 uint16_t seed;
 	
    //set up command line options
    variables_map cmdline_options;

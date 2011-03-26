@@ -74,7 +74,7 @@ public:
                                    cSubpopulation &ancestor, 
                                    double averageselectioncoefficient, 
                                    char beneficialmutationdistribution, 
-                                   tree<cGenotype> in_tree, 
+                                   tree<cGenotype>* in_tree, 
                                    uint32_t node_id);
 
 };

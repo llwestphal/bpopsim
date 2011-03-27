@@ -94,6 +94,7 @@ void cPopulation::UpdateSubpopulations(double update_time)
     if (it->GetNumber() == 0) continue;
 
     // N = No * exp(log(2)*growth_rate * t) 
+    //@agm This is the slow use of the log and exp functions
     double new_number = it->GetNumber() * exp(ReturnLog(2) * update_time * it->GetFitness());     
     if (static_cast<uint32_t>(new_number) - static_cast<uint32_t>(it->GetNumber()) >= 1) {
       m_divided_lineages.push_back(i);

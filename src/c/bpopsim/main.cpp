@@ -20,6 +20,8 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
   ("lineage-tree,l", value<uint16_t>(), "Lineage Tree")
   ("seed,d", value<uint16_t>(), "Seed for random number generator")
   ("redwhite-only,w", value<char>(), "Only care about red/white lineages")
+  ("log-approximation,a", value<char>(), "Less precise/faster approximation")
+  ("log-approximation-value,v", value<int>(), "Precise-ness of log approximation")
   ;
 
 /* Need to add these as options...
@@ -64,7 +66,7 @@ int main(int argc, char* argv[])
   
    //Build lookup table for logs 
    //Currently it is the the 15th, I should take it as a command line option
-   population.ConstructLookUpTable(14);
+   population.ConstructLookUpTable();
   
    //Set cli options
    population.SetParameters(cmdline_options);
@@ -82,7 +84,7 @@ int main(int argc, char* argv[])
   
 	 std::vector< std::vector<cGenotypeFrequency> > frequencies;
    //Cout << Endl << population.ReturnLog(5) << Endl;
-   Cout << Endl << log(2) << Endl;
+  
    for (int on_run=0; on_run < population.GetReplicates(); on_run++)
    {
       population.ClearRuns(&newtree);

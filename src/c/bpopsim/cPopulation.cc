@@ -63,6 +63,14 @@ void cPopulation::SetParameters(const variables_map &options)
     options.count("redwhite-only") ?
     options["redwhite-only"].as<char>() : 'f'
     );
+  SetLogApproximation(
+    options.count("log-approximation") ?
+    options["log-approximation"].as<char>() : 'f'
+    );
+  SetLogApproximationValue(
+    options.count("log-approximation-value") ?
+    options["log-approximation-value"].as<int>() : 14
+    );
   
   // Simulation parameters that are pre-calculated
   SetDilutionFactor(exp(log(2)*GetGrowthPhaseGenerations()));
@@ -86,7 +94,7 @@ void cPopulation::UpdateSubpopulations(double update_time)
     if (it->GetNumber() == 0) continue;
 
     // N = No * exp(log(2)*growth_rate * t) 
-    double new_number = it->GetNumber() * exp(log(2) * update_time * it->GetFitness());     
+    double new_number = it->GetNumber() * exp(ReturnLog(2) * update_time * it->GetFitness());     
     if (static_cast<uint32_t>(new_number) - static_cast<uint32_t>(it->GetNumber()) >= 1) {
       m_divided_lineages.push_back(i);
     }
@@ -340,6 +348,7 @@ void cPopulation::CalculateDivisions()
       
   // How much time would we like to pass to achieve the desired number of divisions?
   // (Assuming the entire population has the maximum fitness, makes us underestimate by a few)
+  // Can't change this log to ReturnLog with log table or nothing works
   double update_time = log((desired_divisions+(double)GetPopulationSize()) / (double)GetPopulationSize()) / (GetMaxW());
 
   // At a minumum, we want to make sure that one cell division took place
@@ -537,6 +546,11 @@ void cPopulation::PrintOut(const std::string& output_file_name,
 	}
 }
 
+double cPopulation::ReturnLog(double num) {
+  if( m_approx_bool == 't' || m_approx_bool == 'T') return icsi_log_v2(num, m_lookuptable, m_N);
+  else if( m_approx_bool == 'f' || m_approx_bool == 'F' ) return log(num);
+}
+
 float cPopulation::Logarithm(float mantissa) {
   float value(0), num, topower;
   uint8_t iterations(2);
@@ -550,8 +564,7 @@ float cPopulation::Logarithm(float mantissa) {
   return 2*value;
 }
 
-void cPopulation::ConstructLookUpTable(int N) {
-  m_N = N;
+void cPopulation::ConstructLookUpTable() {
   m_lookuptable = (float*) malloc(((int) std::pow(exp(1),m_N))*sizeof(float));
   fill_icsi_log_table2(m_N, m_lookuptable);
 }
@@ -570,8 +583,4 @@ void cPopulation::fill_icsi_log_table2(const unsigned precision, float* const   
     
     oneToTwo += 1.0f / (float)( 1 << precision );
   }
-}
-
-float cPopulation::ReturnLog(float num) {
-  return icsi_log_v2(num, m_lookuptable, m_N);
 }

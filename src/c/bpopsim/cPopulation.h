@@ -15,22 +15,14 @@ private:
   double m_ratio;
   
   // we calculate the population size on demand
-  uint32_t m_population_size;
-  uint32_t m_transfers;
-  uint32_t m_total_mutations;
-  uint32_t m_total_subpopulations_lost;
-  uint32_t m_number_of_subpopulations;
-  uint32_t m_total_transfers;
+  uint32_t m_population_size, m_transfers, m_total_mutations, m_total_subpopulations_lost, m_number_of_subpopulations, m_total_transfers;
     
   bool m_population_size_stale;
 
-  uint16_t m_verbose;
-  uint16_t m_replicates;
-  uint16_t m_minimum_printed;
-  uint16_t m_transfer_interval_to_print;
-  uint16_t m_lineage;
+  uint16_t m_verbose, m_replicates, m_minimum_printed, m_transfer_interval_to_print, m_lineage;
   
-  int m_N;
+  int m_N, m_approx_value;
+  
 
   std::vector<cSubpopulation> m_populations;
   std::vector<uint32_t> m_divided_lineages;
@@ -43,32 +35,18 @@ private:
   
   float *m_lookuptable;
   
-  double m_desired_divisions;
-  double m_completed_divisions;
-  double m_update_time;
-  double m_this_time_to_next_whole_cell;
-  double m_time_to_next_whole_cell;
-  double m_max_w;
-  double m_pop_size_before_dilution;
-  double m_dilution_factor;
-  double m_transfer_binomial_sampling_p;
-  double m_lambda;
-  double m_by_color[2];
-  double m_max_divergence_factor;
-  double m_binomial_sampling_threshold;
+  double m_desired_divisions, m_mutation_rate_per_division, m_average_mutation_s, m_growth_phase_generations;
+  double m_update_time, m_this_time_to_next_whole_cell, m_time_to_next_whole_cell, m_max_w, m_pop_size_before_dilution, m_dilution_factor;
+  double m_transfer_binomial_sampling_p, m_lambda, m_by_color[2], m_max_divergence_factor, m_binomial_sampling_threshold, m_completed_divisions;
 
   bool m_keep_transferring;
 
-  char m_beneficial_mutation_distribution;
-  char m_red_white_only;
+  char m_beneficial_mutation_distribution, m_red_white_only, m_approx_bool;
 
   // Simulation parameters that should be arguments
   uint32_t m_initial_population_size;
   uint32_t m_pop_size_after_dilution;             // N sub 0 --int is to get rid of warning
   uint16_t m_seed;
-  double m_mutation_rate_per_division;            // mu
-  double m_average_mutation_s;                    // s
-  double m_growth_phase_generations;
   
 public:
 
@@ -170,6 +148,8 @@ public:
   void SetBeneficialMutationDistribution(char in_beneficial_mutation_distribution) { m_beneficial_mutation_distribution = in_beneficial_mutation_distribution; }
   void SetLineageTree(int in_lineage) { m_lineage = in_lineage; }
   void SetSeedParams(uint16_t seed_type) { m_seed = seed_type; }
+  void SetLogApproximation( char approx_bool ) { m_approx_bool = approx_bool; }
+  void SetLogApproximationValue( int approx_val ) { m_N = approx_val; }
 
   //METHODS
 	//@agm To keep the lines of manageable length, if a method has multiple variables, each variable got a new line
@@ -205,9 +185,9 @@ public:
               uint32_t& node_id);
   void PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > frequencies);
   float Logarithm(float mantissa);
-  void ConstructLookUpTable(int N);
+  void ConstructLookUpTable();
   void fill_icsi_log_table2(const unsigned precision, float* const   pTable);
-  float ReturnLog(float num);
+  double ReturnLog(double num);
 };
 
 #endif

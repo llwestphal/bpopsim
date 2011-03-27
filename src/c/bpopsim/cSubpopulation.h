@@ -18,6 +18,7 @@
 #include <time.h>
 #include "tree.hh"
 #include "tree_util.hh"
+#include "icsilog.h"
 
 #include <boost/program_options.hpp>
 

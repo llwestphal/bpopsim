@@ -119,7 +119,7 @@ double cPopulation::TimeToNextWholeCell()
       double next_whole_cells = static_cast<uint32_t>(it->GetNumber());
       
       // N = No * exp(log(2) * growth_rate * t) 
-      double this_time_to_next_whole_cell = (log(next_whole_cells / current_cells) / (it->GetFitness())) / log(2);   
+      double this_time_to_next_whole_cell = (ReturnLog(next_whole_cells / current_cells) / (it->GetFitness())) / ReturnLog(2);   
 
       if ( time_to_next_whole_cell == -1 || (this_time_to_next_whole_cell < time_to_next_whole_cell) ) {
         time_to_next_whole_cell = this_time_to_next_whole_cell;
@@ -550,17 +550,28 @@ float cPopulation::Logarithm(float mantissa) {
   return 2*value;
 }
 
-/*Taylor (deg 3) implementation of the log: http://www.flipcode.com/cgi-bin/fcarticles.cgi?show=63828*/
-float cPopulation::fast_log(float val)
+void cPopulation::ConstructLookUpTable(int N) {
+  m_N = N;
+  m_lookuptable = (float*) malloc(((int) std::pow(exp(1),m_N))*sizeof(float));
+  fill_icsi_log_table2(m_N, m_lookuptable);
+}
+
+/* ICSIlog V 2.0 */
+void cPopulation::fill_icsi_log_table2(const unsigned precision, float* const   pTable)
 {
-  register int *const     exp_ptr = ((int*)&val);
-  register uint16_t            x = *exp_ptr;
-  register const uint16_t      log_2 = ((x >> 23) & 255) - 128;
-  x &= ~(255 << 23);
-  x += 127 << 23;
-  *exp_ptr = x;
-  
-  val = ((-1.0f/3) * val + 2) * val - 2.0f/3;
-  
-  return ((val + log_2)* 0.69314718);
+  /* step along table elements and x-axis positions
+   (start with extra half increment, so the steps intersect at their midpoints.) */
+  float oneToTwo = 1.0f + (1.0f / (float)( 1 <<(precision + 1) ));
+  int i;
+  for(i = 0;  i < (1 << precision);  ++i )
+  {
+    // make y-axis value for table element
+    pTable[i] = logf(oneToTwo) / log(2);
+    
+    oneToTwo += 1.0f / (float)( 1 << precision );
+  }
+}
+
+float cPopulation::ReturnLog(float num) {
+  return icsi_log_v2(num, m_lookuptable, m_N);
 }

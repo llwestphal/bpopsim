@@ -55,12 +55,16 @@ int main(int argc, char* argv[])
    variables_map cmdline_options;
    get_cmdline_options(cmdline_options, argc, argv);
    std::string output_file = cmdline_options["output-file"].as<std::string>();
-	
+  
    //Initialize Tree object 
    cLineageTree newtree;
   
    //Initialize Population object
 	 cPopulation population;
+  
+   //Build lookup table for logs 
+   //Currently it is the the 15th, I should take it as a command line option
+   population.ConstructLookUpTable(14);
   
    //Set cli options
    population.SetParameters(cmdline_options);
@@ -75,10 +79,10 @@ int main(int argc, char* argv[])
 	 if ( population.GetSeed() == 0 ) { seed = time (NULL) * getpid(); }
 	 else { seed = population.GetSeed(); }
 	 gsl_rng_set(randgen, seed);
-	
+  
 	 std::vector< std::vector<cGenotypeFrequency> > frequencies;
-   Cout << Endl << population.fast_log(5) << Endl;
-   Cout << Endl << population.Logarithm(5) << Endl;
+   //Cout << Endl << population.ReturnLog(5) << Endl;
+   Cout << Endl << log(2) << Endl;
    for (int on_run=0; on_run < population.GetReplicates(); on_run++)
    {
       population.ClearRuns(&newtree);
@@ -125,8 +129,9 @@ int main(int argc, char* argv[])
        //kptree::print_tree_bracketed(newtree);
        Cout << Endl << Endl << "Printing to screen.... " << Endl;
        population.PrintFrequenciesToScreen(frequencies);
+       Cout << Endl << Endl << "Printing to screen.... " << Endl;
        population.PrintOut(output_file, frequencies);
-   }
+     }
 	 
    //population.PrintOut(output_file, frequencies);
 }

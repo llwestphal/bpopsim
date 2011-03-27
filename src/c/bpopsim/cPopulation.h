@@ -29,6 +29,8 @@ private:
   uint16_t m_minimum_printed;
   uint16_t m_transfer_interval_to_print;
   uint16_t m_lineage;
+  
+  int m_N;
 
   std::vector<cSubpopulation> m_populations;
   std::vector<uint32_t> m_divided_lineages;
@@ -38,6 +40,8 @@ private:
   // @JEB: An uint16_t rather than a uint because this can go negative by a few cells
   //       when cells (usually the ancestors) divide simultaneously.
   int64_t m_divisions_until_mutation; 
+  
+  float *m_lookuptable;
   
   double m_desired_divisions;
   double m_completed_divisions;
@@ -201,7 +205,9 @@ public:
               uint32_t& node_id);
   void PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > frequencies);
   float Logarithm(float mantissa);
-  float fast_log(float val);
+  void ConstructLookUpTable(int N);
+  void fill_icsi_log_table2(const unsigned precision, float* const   pTable);
+  float ReturnLog(float num);
 };
 
 #endif

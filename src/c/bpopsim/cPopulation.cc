@@ -276,13 +276,6 @@ void cPopulation::PushBackRuns()
    m_runs.push_back(m_this_run);
 }
 
-void cPopulation::ClearRuns(cLineageTree* newtree)
-{
-   m_this_run.clear();
-   m_populations.clear();
-   newtree->clear();
-}
-
 void cPopulation::RunSummary()
 {
    std::cout << "Total mutations: " << GetTotalMutations() << std::endl;
@@ -486,15 +479,55 @@ void cPopulation::Mutate(gsl_rng * randgen,
 	
 }
 
+//Utilities Section
+
+//@agm I comandeered this function to print stuff out in the manner I see fit
+//@agm I basically do a non-human readable raw dump because it's easier for R to deal with
+//     If you want human readable use the PrintToScreen function
+
+void cPopulation::PrintOut(const std::string& output_file_name, 
+                           std::vector< std::vector<cGenotypeFrequency> > * frequencies)
+{  
+  std::vector<bool> ColsToPrint = MutationAboveThreshold(&(*frequencies), .99);
+  
+	//Print everything out
+	std::ofstream output_file;
+	output_file.open(output_file_name.c_str(),std::ios_base::app);
+  
+  uint32_t last_time((*frequencies).size()-1);
+  
+	for (uint32_t i = 0; i<(*frequencies)[last_time].size(); i++) { 
+    if ( ColsToPrint[i] == true ) output_file << (*frequencies)[last_time][i].unique_node_id << " ";
+	}
+	//int width = 20;
+  output_file << "\n";
+  
+	for (uint32_t i = 0; i<(*frequencies).size(); i++) {
+    uint32_t count(0);
+    for ( std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[i].begin(); it!=(*frequencies)[i].end(); ++it) {
+      if ( ColsToPrint[count] == true ) output_file << (*it).frequency << " ";
+      count++;
+		}
+    output_file << "\n";
+	}
+}
+
+void cPopulation::ClearRuns(cLineageTree* newtree)
+{
+  m_this_run.clear();
+  m_populations.clear();
+  newtree->clear();
+}
+
 //@agm As the function name implies, this prints the frequnecies above some threshold to screen at whatever
 //     time it is called and passed the frequencies vector
 
-void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > frequencies) {
+void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
 	Cout << "Done with round... Here's the Output:" << Endl << Endl;
 	
-	for (uint32_t i = 0; i<frequencies.size(); i++) {
+	for (uint32_t i = 0; i<(*frequencies).size(); i++) {
 		double total_freqs = 0;
-    for ( std::vector<cGenotypeFrequency>::iterator it = frequencies[i].begin(); it!=frequencies[i].end(); ++it) {
+    for ( std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[i].begin(); it!=(*frequencies)[i].end(); ++it) {
     //@agm set up a minimum frequency to report the print out the number so it isn't overwhelming.
       if ((*it).frequency > 0.1) {
         Cout << "Frequency of mutation # " << std::right << std::setw(6) << (*it).unique_node_id << " at time " << std::right << std::setw(4) << i << " is: " << std::left << std::setw(10) << (*it).frequency << Endl;
@@ -508,48 +541,50 @@ void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFre
 	Cout << "------------------------------------------------" << Endl << Endl;
 } 
 
-//@agm I comandeered this function to print stuff out in the manner I see fit
-//@agm I basically do a non-human readable raw dump because it's easier for R to deal with
-//     If you want human readable use the PrintToScreen function
-
-void cPopulation::PrintOut(const std::string& output_file_name, 
-                           std::vector< std::vector<cGenotypeFrequency> > frequencies)
-{  
-  uint32_t last_time(frequencies.size()-1);
+void cPopulation::CalculateSimilarity(std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
+  std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .99));
+  std::vector< std::vector<cGenotypeFrequency> > only_relevant_mutations;
+  int counter(0);
   
-  std::vector<bool> ColsToPrint(frequencies[last_time].size(),false);
-  for (uint16_t i = 0; i<frequencies.size(); i++) {
+  for (uint32_t i = 0; i<(*frequencies).size(); i++) {
+    std::vector<cGenotypeFrequency> relevant_mutations_per_time(relevant_mutations.size());
     uint32_t count(0);
-    for (std::vector<cGenotypeFrequency>::iterator it = frequencies[i].begin(); it!=frequencies[i].end(); ++it) {
-      if ( (*it).frequency > .1 ) ColsToPrint[count] = true;
+    counter = 0;
+    for ( std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[i].begin(); it!=(*frequencies)[i].end(); ++it) {
+      if ( relevant_mutations[count] == true ) {
+        relevant_mutations_per_time[counter] = (*it);
+        counter++;
+      }
+      count++;
+		}
+    only_relevant_mutations.push_back(relevant_mutations_per_time);
+	}
+  
+  std::vector<float> max_diff(counter, 0);
+  float current_diff;
+  
+  for (int i = 0 ; i < counter; i++) {
+    for (int time = 0; time < only_relevant_mutations.size(); time++) {
+      current_diff = fabs(only_relevant_mutations[time][i].frequency - only_relevant_mutations[time][i+1].frequency);
+      if( max_diff[i] < current_diff ) max_diff[i] = current_diff;
+    }
+  }
+  for (int i = 0; i<max_diff.size(); i++) std::cout << std::endl << i << " " << max_diff[i] << std::endl;
+}
+
+std::vector<bool> cPopulation::MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > * frequencies, float threshold) {
+  uint32_t last_time((*frequencies).size()-1);
+  
+  std::vector<bool> Fixed((*frequencies)[last_time].size(),false);
+  
+  for (uint16_t i = 0; i<(*frequencies).size(); i++) {
+    uint32_t count(0);
+    for (std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[i].begin(); it!=(*frequencies)[i].end(); ++it) {
+      if ( (*it).frequency >= threshold ) Fixed[count] = true;
       count++;
     }
   }
-  
-	//Print everything out
-	std::ofstream output_file;
-	output_file.open(output_file_name.c_str(),std::ios_base::app);
-  
-  
-	for (uint32_t i = 0; i<frequencies[last_time].size(); i++) { 
-    if ( ColsToPrint[i] == true ) output_file << frequencies[last_time][i].unique_node_id << " ";
-	}
-	//int width = 20;
-  output_file << "\n";
-  
-	for (uint32_t i = 0; i<frequencies.size(); i++) {
-    uint32_t count(0);
-    for ( std::vector<cGenotypeFrequency>::iterator it = frequencies[i].begin(); it!=frequencies[i].end(); ++it) {
-      if ( ColsToPrint[count] == true ) output_file << (*it).frequency << " ";
-      count++;
-		}
-    output_file << "\n";
-	}
-}
-
-double cPopulation::ReturnLog(double num) {
-  if( m_approx_bool == 't' || m_approx_bool == 'T') return icsi_log_v2(num, m_lookuptable, m_N);
-  else if( m_approx_bool == 'f' || m_approx_bool == 'F' ) return log(num);
+  return Fixed;
 }
 
 float cPopulation::Logarithm(float mantissa) {
@@ -584,4 +619,9 @@ void cPopulation::fill_icsi_log_table2(const unsigned precision, float* const   
     
     oneToTwo += 1.0f / (float)( 1 << precision );
   }
+}
+
+double cPopulation::ReturnLog(double num) {
+  if( m_approx_bool == 't' || m_approx_bool == 'T') return icsi_log_v2(num, m_lookuptable, m_N);
+  else return log(num);
 }

@@ -167,9 +167,6 @@ public:
                             std::vector< std::vector<cGenotypeFrequency> > & freqs_for_muller);
   void Resample(gsl_rng * randomgenerator);
   void PushBackRuns();
-  void PrintOut(const std::string& output_file_name,
-                std::vector< std::vector<cGenotypeFrequency> > frequencies);
-  void ClearRuns(cLineageTree* tree);
   void RunSummary();
   void ResetRunStats();
   void DisplayParameters();
@@ -183,7 +180,14 @@ public:
   void Mutate(gsl_rng * randomgenerator, 
               cLineageTree * newtree, 
               uint32_t& node_id);
-  void PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > frequencies);
+  
+  //utilities
+  void PrintOut(const std::string& output_file_name,
+                std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+  void ClearRuns(cLineageTree * tree);
+  void PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+  std::vector<bool> MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > * frequencies, float threshold);
+  void CalculateSimilarity(std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   float Logarithm(float mantissa);
   void ConstructLookUpTable();
   void fill_icsi_log_table2(const unsigned precision, float* const   pTable);

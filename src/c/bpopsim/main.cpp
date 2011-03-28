@@ -73,10 +73,12 @@ int main(int argc, char* argv[])
    population.DisplayParameters();
 	
 	 //create generator and seed
-	 //@agm defaults to system time seed if not specified at cli
+	 //@agm Program defaults to system time seed if not specified at cli
+   //     Changed generator to taus2 because it's a little faster and still "simulation quality"
 	 const gsl_rng_type *T;
 	 gsl_rng * randgen;
-	 T = gsl_rng_mt19937;
+   gsl_rng_env_setup();
+   T = gsl_rng_taus2;
 	 randgen = gsl_rng_alloc (T);
 	 if ( population.GetSeed() == 0 ) { seed = time (NULL) * getpid(); }
 	 else { seed = population.GetSeed(); }
@@ -130,9 +132,11 @@ int main(int argc, char* argv[])
        population.PushBackRuns();
        //kptree::print_tree_bracketed(newtree);
        Cout << Endl << Endl << "Printing to screen.... " << Endl;
-       population.PrintFrequenciesToScreen(frequencies);
-       Cout << Endl << Endl << "Printing to screen.... " << Endl;
-       population.PrintOut(output_file, frequencies);
+     //population.PrintFrequenciesToScreen(&frequencies);
+       Cout << Endl << Endl << "Printing to file.... " << Endl;
+       population.PrintOut(output_file, &frequencies);
+       std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
+       population.CalculateSimilarity(&frequencies);
      }
 	 
    //population.PrintOut(output_file, frequencies);

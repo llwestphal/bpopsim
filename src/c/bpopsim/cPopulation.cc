@@ -138,9 +138,9 @@ double cPopulation::TimeToNextWholeCell()
   return time_to_next_whole_cell;
 }
 
-//@agm Here I try to iterate through the populations in m_populations, request the size of 
-//     each node, and divide the size of each node (subpopulation) by the total population size
-//     This should give the relative frequency of a given unique_node_id in the population.
+//@agm Here I try to iterate through the populations in m_populations, build a vector to store the values 
+//     for the sizes of each node by iterating up, and divide the size of each node (subpopulation) by the total 
+//     population size. This should give the relative frequency of a given unique_node_id in the population.
 
 //@agm Now the information is stored in a vector and passed back to the main function for later use.
 
@@ -175,7 +175,9 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> * newtree,
   
 	
   //@agm It is critical to iterate over the number_per_subpop vector here rather than the m_populations
-  //     for some reason iterating over m_populations will cause you to lose populations after 350 or so transfers
+  //     iterating over m_populations will cause you to lose populations after 350 or so transfers
+  //     This is necessary because eventually there are no cells left who ONLY have red or white causing
+  //     them to be dropped.
   
   uint32_t count(0);
   
@@ -370,9 +372,7 @@ void cPopulation::CalculateDivisions()
   SetDivisionsUntilMutation(GetDivisionsUntilMutation() - GetCompletedDivisions());
 }
 
-/*@agm The functions below should build a new tree using the tree.h header
-       I thought the best way to do this was to comment out all of the previous code in both this file
-       and the associated header so it would be clear where stuff was changed. */
+/*@agm The functions below should build a new tree using the tree.h header */
 
 void cPopulation::SeedSubpopulationForRedWhite(cLineageTree* newtree, 
                                                uint32_t &node_id) 
@@ -410,6 +410,9 @@ void cPopulation::SeedSubpopulationForRedWhite(cLineageTree* newtree,
 
 //@agm This function seeds the population with only one colony to avoid the red/white problem
 //     when possible. For this to work properly, I need to get rid of victory conditions.
+
+//update: Victory conditions are now a command line option.  If no set to false the simulation
+//        will run to the max number of iterations.
 
 void cPopulation::SeedPopulationWithOneColony(cLineageTree* newtree, 
                                               uint32_t &node_id) {
@@ -488,7 +491,7 @@ void cPopulation::Mutate(gsl_rng * randgen,
 
 /***** Important for post-hoc use with R ******
     The output file will have a header and it
-    will be the size of largest number of rows.
+    will have the largest number of columns in file.
     Thus, in R, you can simply set header to 
     true, and fill NA spaces as the read.table
     function allows. */
@@ -549,8 +552,8 @@ void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFre
 	Cout << "------------------------------------------------" << Endl << Endl;
 } 
 
-//@agm This function determines the maximum difference in genotype frequency betweening a mutation
-//     and it's predecessor that got above the threshold passed to the threshold function below
+//@agm This function determines the maximum difference in genotype frequency between a mutation
+//     and its predecessor if they got above the threshold passed to the threshold function below
 
 void cPopulation::CalculateSimilarity(std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
   std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .99));

@@ -51,15 +51,24 @@ private:
 public:
 
   //CONSTRUCTOR  
-  cPopulation()
+  cPopulation(const int transfers = 0, const int verbose = 0, const int max_w = 1, const int num_o_subpops = 0,
+              const int total_mutes = 0, const int num_subpops_lost = 0, const bool population_size_stale = true)
   {
-     m_transfers = 0;
-     m_verbose = 0;
-     m_max_w = 1;
-     m_number_of_subpopulations = 0;
-     m_total_mutations = 0;
-     m_total_subpopulations_lost = 0;
-     m_population_size_stale = true;
+    /*m_transfers = 0;
+    m_verbose = 0;
+    m_max_w = 1;
+    m_number_of_subpopulations = 0;
+    m_total_mutations = 0;
+    m_total_subpopulations_lost = 0;
+    m_population_size_stale = true;*/
+    
+    m_transfers = transfers;
+    m_verbose = verbose;
+    m_max_w = max_w;
+    m_number_of_subpopulations = num_o_subpops;
+    m_total_mutations = total_mutes;
+    m_total_subpopulations_lost = num_subpops_lost;
+    m_population_size_stale = population_size_stale;
   }
 	
   //DESTRUCTOR
@@ -190,7 +199,7 @@ public:
   void CalculateSimilarity(std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   float Logarithm(float mantissa);
   void ConstructLookUpTable();
-  void fill_icsi_log_table2(const unsigned precision, float* const   pTable);
+  void fill_icsi_log_table2(const unsigned precision, float* const pTable);
   double ReturnLog(double num);
 };
 

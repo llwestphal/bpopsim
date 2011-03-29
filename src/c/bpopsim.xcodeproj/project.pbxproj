@@ -11,7 +11,6 @@
 		701E92841201406800653784 /* libboost_program_options-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 701E92831201406800653784 /* libboost_program_options-mt.a */; };
 		70307F1D11F7E39E00BEFD1F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 70307F1C11F7E39E00BEFD1F /* main.cpp */; };
 		70684A92120A007300BE96CA /* cPopulation.cc in Sources */ = {isa = PBXBuildFile; fileRef = 70684A90120A007300BE96CA /* cPopulation.cc */; };
-		8DD76F6A0486A84900D96B5E /* popsim.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C6859E8B029090EE04C91782 /* popsim.1 */; };
 		D9CD9D04132996F4006E387E /* libgsl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9CD9D03132996F4006E387E /* libgsl.a */; };
 /* End PBXBuildFile section */
 
@@ -22,7 +21,6 @@
 			dstPath = /usr/share/man/man1/;
 			dstSubfolderSpec = 0;
 			files = (
-				8DD76F6A0486A84900D96B5E /* popsim.1 in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
@@ -36,7 +34,6 @@
 		70684A90120A007300BE96CA /* cPopulation.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cPopulation.cc; path = bpopsim/cPopulation.cc; sourceTree = "<group>"; wrapsLines = 0; };
 		70684A91120A007300BE96CA /* cPopulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cPopulation.h; path = bpopsim/cPopulation.h; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* popsim */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = popsim; sourceTree = BUILT_PRODUCTS_DIR; };
-		C6859E8B029090EE04C91782 /* popsim.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = popsim.1; sourceTree = "<group>"; };
 		D952741B132EE0CB009223FC /* tree.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = tree.hh; path = bpopsim/tree.hh; sourceTree = "<group>"; };
 		D952741C132EE0D4009223FC /* tree_util.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = tree_util.hh; path = bpopsim/tree_util.hh; sourceTree = "<group>"; };
 		D9CD9D03132996F4006E387E /* libgsl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgsl.a; path = /opt/local/lib/libgsl.a; sourceTree = "<absolute>"; };
@@ -118,7 +115,6 @@
 		C6859E8C029090F304C91782 /* Documentation */ = {
 			isa = PBXGroup;
 			children = (
-				C6859E8B029090EE04C91782 /* popsim.1 */,
 			);
 			name = Documentation;
 			sourceTree = "<group>";

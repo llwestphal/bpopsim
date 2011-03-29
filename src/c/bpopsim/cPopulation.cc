@@ -140,9 +140,9 @@ double cPopulation::TimeToNextWholeCell()
 
 //@agm Here I try to iterate through the populations in m_populations, request the size of 
 //     each node, and divide the size of each node (subpopulation) by the total population size
-//     This should give the relative frequence of a given unique_node_id in the population.
+//     This should give the relative frequency of a given unique_node_id in the population.
 
-//@agm Now the information is stored in a vector and passed back to the main function for final printing.
+//@agm Now the information is stored in a vector and passed back to the main function for later use.
 
 void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> * newtree, 
                                                 std::vector< std::vector<cGenotypeFrequency> > * frequencies)
@@ -409,7 +409,7 @@ void cPopulation::SeedSubpopulationForRedWhite(cLineageTree* newtree,
 }
 
 //@agm This function seeds the population with only one colony to avoid the red/white problem
-//     when possible.  For this to work properly, I need to get rid of victory conditions.
+//     when possible. For this to work properly, I need to get rid of victory conditions.
 
 void cPopulation::SeedPopulationWithOneColony(cLineageTree* newtree, 
                                               uint32_t &node_id) {
@@ -443,6 +443,7 @@ void cPopulation::AddSubpopulation(cSubpopulation& subpop,
 	//std::cout << subpop.GetNode_id() << " " << subpop.GetFitness() << std::endl;
 }
 
+//Generates new mutant and adds it to the tree
 void cPopulation::Mutate(gsl_rng * randgen, 
                             cLineageTree * newtree, 
                             uint32_t & node_id) 
@@ -485,6 +486,13 @@ void cPopulation::Mutate(gsl_rng * randgen,
 //@agm I basically do a non-human readable raw dump because it's easier for R to deal with
 //     If you want human readable use the PrintToScreen function
 
+/***** Important for post-hoc use with R ******
+    The output file will have a header and it
+    will be the size of largest number of rows.
+    Thus, in R, you can simply set header to 
+    true, and fill NA spaces as the read.table
+    function allows. */
+
 void cPopulation::PrintOut(const std::string& output_file_name, 
                            std::vector< std::vector<cGenotypeFrequency> > * frequencies)
 {  
@@ -519,7 +527,7 @@ void cPopulation::ClearRuns(cLineageTree* newtree)
   newtree->clear();
 }
 
-//@agm As the function name implies, this prints the frequnecies above some threshold to screen at whatever
+//@agm As the function name implies, this prints the frequencies above some threshold to screen at whatever
 //     time it is called and passed the frequencies vector
 
 void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
@@ -540,6 +548,9 @@ void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFre
 	Cout << Endl << "Number of cells after dilution: " << GetPopulationSize() << Endl << Endl;
 	Cout << "------------------------------------------------" << Endl << Endl;
 } 
+
+//@agm This function determines the maximum difference in genotype frequency betweening a mutation
+//     and it's predecessor that got above the threshold passed to the threshold function below
 
 void cPopulation::CalculateSimilarity(std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
   std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .99));
@@ -572,6 +583,9 @@ void cPopulation::CalculateSimilarity(std::vector< std::vector<cGenotypeFrequenc
   for (int i = 0; i<max_diff.size(); i++) std::cout << std::endl << i << " " << max_diff[i] << std::endl;
 }
 
+//@agm This function takes the frequency pointer and returns a boolean vector
+//     The boolean vector contains a true in the mutations that got above the passed threshold
+
 std::vector<bool> cPopulation::MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > * frequencies, float threshold) {
   uint32_t last_time((*frequencies).size()-1);
   
@@ -587,6 +601,11 @@ std::vector<bool> cPopulation::MutationAboveThreshold(std::vector< std::vector<c
   return Fixed;
 }
 
+//@agm I wrote this based on the taylor series expansion... aren't we impressed
+//     unfortunately it is significantly slower than the built in log function
+//     I kept it around to test the effect of various precisions on the simulation
+//     To get better precision change the iterations to whatever number you like
+
 float cPopulation::Logarithm(float mantissa) {
   float value(0), num, topower;
   uint8_t iterations(2);
@@ -600,6 +619,7 @@ float cPopulation::Logarithm(float mantissa) {
   return 2*value;
 }
 
+//Building lookup table for use with icsilog
 void cPopulation::ConstructLookUpTable() {
   m_lookuptable = (float*) malloc(((int) std::pow(exp(1),m_N))*sizeof(float));
   fill_icsi_log_table2(m_N, m_lookuptable);

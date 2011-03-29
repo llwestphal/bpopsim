@@ -15,6 +15,7 @@ syntax: glob
 *~
 *.mode1v3
 *.pbxuser
+*.orig
 
 ## These are for Perl modules in general
 _build
@@ -34,5 +35,8 @@ syntax: regexp
 ^extern/Bio-SamTools-1.19/Build$
 ^src/perl/MarkerDivergence/Build$
 
-src/c/breseq.xcodeproj/.+\.mode1v3$
-src/c/breseq.xcodeproj/.+\.pbxuser$
+breseq.xcodeproj/.+\.mode1v3$
+breseq.xcodeproj/.+\.pbxuser$
+bpopsim.xcodeproj/project.xcworkspace
+bpopsim.xcodeproj/xcuserdata
+^src/c/bpopsim/bpopsim$

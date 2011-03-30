@@ -151,18 +151,13 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> * newtree,
 	double total_freqs(0);
 	uint32_t total_cells(0);
 	
-	for(std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
-		total_cells += it -> GetNumber();
-	}
-	
 	std::vector<cGenotypeFrequency> freq_per_node(newtree->size());
 	std::vector<uint32_t> number_per_subpop (newtree->size(),0);
   
 	
 	for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
 		update_location = it -> GetGenotypeIter();
-  
-    //Cout << Endl;
+
 		while(update_location != NULL) {
 			number_per_subpop[(*update_location).unique_node_id] += it -> GetNumber();
       update_location = newtree->parent(update_location);
@@ -185,7 +180,7 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> * newtree,
 		cGenotypeFrequency this_node;
     
     this_node.unique_node_id = count;
-    this_node.frequency = (double) number_per_subpop[this_node.unique_node_id]/total_cells;
+    this_node.frequency = (double) number_per_subpop[this_node.unique_node_id]/number_per_subpop[0];
 		
 		freq_per_node[this_node.unique_node_id] = this_node;
 		total_freqs += this_node.frequency;
@@ -203,8 +198,8 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> * newtree,
 //@agm Here I want to calculate the frequencies of subpopulations rather than mutations
 //     It's not yet clear to me how to do that.
 
-void cPopulation::FrequenciesOfSubpops(tree<cGenotype> newtree, std::vector<std::vector<cGenotypeFrequency> > & freqs_for_muller) {
-  tree<cGenotype>::iterator update_location;
+void cPopulation::DrawMullerMatrix(tree<cGenotype> * newtree, gsl_matrix_long * muller_matrix, std::vector< std::vector<cGenotypeFrequency> > * frequencies){
+  std::cout << "blah\n";
 }
 
 
@@ -374,7 +369,7 @@ void cPopulation::CalculateDivisions()
 
 /*@agm The functions below should build a new tree using the tree.h header */
 
-void cPopulation::SeedSubpopulationForRedWhite(cLineageTree* newtree, 
+void cPopulation::SeedSubpopulationForRedWhite(tree<cGenotype>* newtree, 
                                                uint32_t &node_id) 
 {	
 	cGenotype r, w;
@@ -414,7 +409,7 @@ void cPopulation::SeedSubpopulationForRedWhite(cLineageTree* newtree,
 //update: Victory conditions are now a command line option.  If no set to false the simulation
 //        will run to the max number of iterations.
 
-void cPopulation::SeedPopulationWithOneColony(cLineageTree* newtree, 
+void cPopulation::SeedPopulationWithOneColony(tree<cGenotype>* newtree, 
                                               uint32_t &node_id) {
   cGenotype neutral;
   tree<cGenotype>::iterator start_position;
@@ -448,7 +443,7 @@ void cPopulation::AddSubpopulation(cSubpopulation& subpop,
 
 //Generates new mutant and adds it to the tree
 void cPopulation::Mutate(gsl_rng * randgen, 
-                            cLineageTree * newtree, 
+                            tree<cGenotype> * newtree, 
                             uint32_t & node_id) 
 {	
 	m_total_mutations++;
@@ -499,7 +494,7 @@ void cPopulation::Mutate(gsl_rng * randgen,
 void cPopulation::PrintOut(const std::string& output_file_name, 
                            std::vector< std::vector<cGenotypeFrequency> > * frequencies)
 {  
-  std::vector<bool> ColsToPrint = MutationAboveThreshold(&(*frequencies), .99);
+  std::vector<bool> ColsToPrint = MutationAboveThreshold(&(*frequencies), .1);
   
 	//Print everything out
 	std::ofstream output_file;
@@ -523,7 +518,7 @@ void cPopulation::PrintOut(const std::string& output_file_name,
 	}
 }
 
-void cPopulation::ClearRuns(cLineageTree* newtree)
+void cPopulation::ClearRuns(tree<cGenotype>* newtree)
 {
   m_this_run.clear();
   m_populations.clear();
@@ -556,7 +551,7 @@ void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFre
 //     and its predecessor if they got above the threshold passed to the threshold function below
 
 void cPopulation::CalculateSimilarity(std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
-  std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .99));
+  std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .1));
   std::vector< std::vector<cGenotypeFrequency> > only_relevant_mutations;
   int counter(0);
   

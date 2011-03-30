@@ -53,15 +53,7 @@ public:
   //CONSTRUCTOR  
   cPopulation(const int transfers = 0, const int verbose = 0, const int max_w = 1, const int num_o_subpops = 0,
               const int total_mutes = 0, const int num_subpops_lost = 0, const bool population_size_stale = true)
-  {
-    /*m_transfers = 0;
-    m_verbose = 0;
-    m_max_w = 1;
-    m_number_of_subpopulations = 0;
-    m_total_mutations = 0;
-    m_total_subpopulations_lost = 0;
-    m_population_size_stale = true;*/
-    
+  {    
     m_transfers = transfers;
     m_verbose = verbose;
     m_max_w = max_w;
@@ -172,28 +164,29 @@ public:
   double TimeToNextWholeCell();
   void FrequenciesPerTransferPerNode(tree<cGenotype> * newtree, 
                                      std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  void FrequenciesOfSubpops(tree<cGenotype> newtree,
-                            std::vector< std::vector<cGenotypeFrequency> > & freqs_for_muller);
+  void DrawMullerMatrix(tree<cGenotype> * newtree,
+                        gsl_matrix_long * muller_matrix,
+                        std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   void Resample(gsl_rng * randomgenerator);
   void PushBackRuns();
   void RunSummary();
   void ResetRunStats();
   void DisplayParameters();
   void CalculateDivisions();
-  void SeedSubpopulationForRedWhite(cLineageTree * newtree, 
+  void SeedSubpopulationForRedWhite(tree<cGenotype> * newtree, 
                                     uint32_t & node_id);
-  void SeedPopulationWithOneColony(cLineageTree * newtree,
+  void SeedPopulationWithOneColony(tree<cGenotype> * newtree,
                                    uint32_t & node_id);
   void AddSubpopulation(cSubpopulation& subpop,
                         uint32_t & node_id);
   void Mutate(gsl_rng * randomgenerator, 
-              cLineageTree * newtree, 
+              tree<cGenotype> * newtree, 
               uint32_t& node_id);
   
   //utilities
   void PrintOut(const std::string& output_file_name,
                 std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  void ClearRuns(cLineageTree * tree);
+  void ClearRuns(tree<cGenotype> * tree);
   void PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   std::vector<bool> MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > * frequencies, float threshold);
   void CalculateSimilarity(std::vector< std::vector<cGenotypeFrequency> > * frequencies);

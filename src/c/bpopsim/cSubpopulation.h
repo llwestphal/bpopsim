@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <iomanip> 
 #include <gsl/gsl_randist.h>
+#include <gsl/gsl_matrix.h>
 #include <stdint.h>
 #include <time.h>
 #include "tree.hh"

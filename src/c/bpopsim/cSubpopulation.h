@@ -49,6 +49,11 @@ struct cGenotypeFrequency{
 	double frequency;
 };
 
+struct cChildFrequency {
+  double child_low;
+  double child_high;
+};
+
 class cSubpopulation {
 
 private:

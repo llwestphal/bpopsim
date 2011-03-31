@@ -131,10 +131,10 @@ int main(int argc, char* argv[])
        population.RunSummary();
        population.PushBackRuns();
        //kptree::print_tree_bracketed(newtree);
-       Cout << Endl << Endl << "Printing to screen.... " << Endl;
-       population.PrintFrequenciesToScreen(&frequencies);
-       Cout << Endl << Endl << "Printing to file.... " << Endl;
-       population.PrintOut(output_file, &frequencies);
+       //Cout << Endl << Endl << "Printing to screen.... " << Endl;
+       //population.PrintFrequenciesToScreen(&frequencies);
+       //Cout << Endl << Endl << "Printing to file.... " << Endl;
+       //population.PrintOut(output_file, &frequencies);
        //std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
        //population.CalculateSimilarity(&frequencies);
        std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;

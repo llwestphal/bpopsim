@@ -167,9 +167,18 @@ public:
   //void KeepSubPops(
   void FrequenciesPerTransferPerNode(tree<cGenotype> * newtree, 
                                      std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+  
+  void AssignChildFreq(tree<cGenotype>::sibling_iterator child_node,
+                       std::vector<cGenotypeFrequency> * frequencies,
+                       tree<cGenotype> * newtree,
+                       double parent_low,
+                       double parent_high,
+                       std::vector<cChildFrequency> * child_freqs);
+  
   void DrawMullerMatrix(tree<cGenotype> * newtree,
                         std::vector< std::vector<int> > muller_matrix,
                         std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+  
   void Resample(gsl_rng * randomgenerator);
   void PushBackRuns();
   void RunSummary();

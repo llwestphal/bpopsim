@@ -223,8 +223,6 @@ void cPopulation::DrawMullerMatrix(tree<cGenotype> * newtree, std::vector< std::
     
     //Iterator horror!!!!!!!!!
     for (std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[time].begin(); it!=(*frequencies)[time].end(); ++it) {
-      //normalized_frequencies_with_node_ids[(*it).unique_node_id].unique_node_id = (*it).unique_node_id;
-      //normalized_frequencies_with_node_ids[(*it).unique_node_id].frequency = (*it).frequency/total_frequency_per_time;
       double portion; 
       portion = (double) (*it).subpop_size / total_cells_per_time;
       int number_of_spots (int(portion*this_time_point.size()));

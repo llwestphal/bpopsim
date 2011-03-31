@@ -152,13 +152,14 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> * newtree,
   double total_freqs;
 	
 	std::vector<cGenotypeFrequency> freq_per_node(newtree->size());
-	std::vector<uint32_t> number_per_subpop(newtree->size(),0);
+	std::vector<uint32_t> number_per_subpop(newtree->size(),0), node_ids(newtree->size(),0);
   std::vector<int> subpops(newtree->size(),0);
   
   for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
     update_location = it -> GetGenotypeIter();
     
     subpops[(*update_location).unique_node_id] = it->GetNumber();
+    node_ids[(*update_location).unique_node_id] = (*update_location).unique_node_id;
     
     total_cells += it->GetNumber();
   
@@ -183,12 +184,12 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> * newtree,
   //for (std::vector<cGenotypeFrequency>::iterator it = freq_per_node.begin(); it!=freq_per_node.end(); ++it) total_cells += (*it).subpop_size;
   //std::cout << total_cells << " " << number_per_subpop[0] << std::endl;
   int count(0);
-	for (std::vector<uint32_t>::iterator it = number_per_subpop.begin(); it!=number_per_subpop.end(); ++it) {
+	for (std::vector<uint32_t>::iterator it = node_ids.begin(); it!=node_ids.end(); ++it) {
 		cGenotypeFrequency this_node;
     
-    this_node.unique_node_id = count;
-    this_node.frequency = (double) number_per_subpop[this_node.unique_node_id]/total_cells;
-    freq_per_node[this_node.unique_node_id] = this_node;
+    this_node.unique_node_id = (*it);
+    this_node.frequency = (double) number_per_subpop[(*it)]/number_per_subpop[0];
+    freq_per_node[(*it)] = this_node;
 		
 		total_freqs += this_node.frequency;
     //Cout << Endl << this_node.unique_node_id << "  " << this_node.frequency;
@@ -220,13 +221,12 @@ void cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator child_node,
   (*child_freqs)[(*child_node).unique_node_id].child_high = child_high;
   (*child_freqs)[(*child_node).unique_node_id].child_low = child_low;
   
-  std::cout << (*child_node).unique_node_id << " " << child_high << " " << child_low << std::endl;
+  //std::cout << (*child_node).unique_node_id << " " << child_high << " " << child_low << std::endl;
   
   for (tree<cGenotype>::sibling_iterator node = (*newtree).begin(child_node); node!=(*newtree).end(child_node); ++node) {
     AssignChildFreq(node, frequencies, newtree, child_low, child_high, child_freqs);
     child_low = child_high;
   }
-  
   //std::cout << (*child_node).unique_node_id << " " << child_high << " " << child_low << std::endl;
   
 }
@@ -237,8 +237,8 @@ void cPopulation::DrawMullerMatrix(tree<cGenotype> * newtree,
   
   std::vector< tree<cGenotype>::iterator > where(newtree->size());
   
-  double threshold(.025);
-  std::vector<bool> relevant_columns(newtree->size(), true);
+  //double threshold(.025);
+  //std::vector<bool> relevant_columns(newtree->size(), true);
   
   //Build vector called where to store all iterator in tree for parental recal later
   for (tree<cGenotype>::iterator node_loc = (*newtree).begin(); node_loc != (*newtree).end(); node_loc++)
@@ -250,7 +250,7 @@ void cPopulation::DrawMullerMatrix(tree<cGenotype> * newtree,
   //step through simulation time
   for (uint32_t time=0; time<(*frequencies).size(); time++) {
     //int total_cells_per_time(m_total_cells[time]);
-    std::vector<int> this_time_point(1/threshold, 0);
+    //std::vector<int> this_time_point(1/threshold, 0);
     
     //int count(0), mutation_counter(0);
     
@@ -259,7 +259,7 @@ void cPopulation::DrawMullerMatrix(tree<cGenotype> * newtree,
     tree<cGenotype>::sibling_iterator location;
     location = (*newtree).begin();
     
-    AssignChildFreq(location, &((*frequencies)[time]), newtree, 0, 1, &child_freqs);
+    AssignChildFreq(location, &((*frequencies)[time]), newtree, 0, (*frequencies)[time][0].frequency, &child_freqs);
     
     //Iterator and pointer horror!!!!!!!!!
     /*for (std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[time].begin(); it!=(*frequencies)[time].end(); ++it) {
@@ -297,12 +297,12 @@ void cPopulation::DrawMullerMatrix(tree<cGenotype> * newtree,
     }*/
     
     skip_zeros:
-    //std::cout << time << std::endl;
+    std::cout << time << std::endl;
     for(int i=0; i<child_freqs.size(); i++) {
-      if( child_freqs[i].child_high != 0 ) std::cout << std::left << std::setw(5) << child_freqs[i].child_low << std::setw(5) << child_freqs[i].child_high;
+      if( ((child_freqs[i].child_high) - (child_freqs[i].child_low)) > .01 ) output_handle << std::left << std::setw(8) << child_freqs[i].child_low << std::setw(8) << child_freqs[i].child_high << std::endl;
     }
-    //std::cout << std::endl;
-    muller_matrix.push_back(this_time_point);
+    output_handle << std::endl;
+    //muller_matrix.push_back(this_time_point);
   }
 }
 

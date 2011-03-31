@@ -20,6 +20,9 @@
 #include "tree.hh"
 #include "tree_util.hh"
 #include "icsilog.h"
+#include <functional>
+#include <list>
+#include <utility>
 
 #include <boost/program_options.hpp>
 
@@ -43,6 +46,7 @@ struct cGenotype{
 
 struct cGenotypeFrequency{
 	uint32_t unique_node_id;
+  uint32_t subpop_size;
 	double frequency;
 };
 

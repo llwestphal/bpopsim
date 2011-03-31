@@ -50,7 +50,6 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
 int main(int argc, char* argv[])
 {
 	 tree<cGenotype>::iterator_base loc;
-   gsl_matrix_long muller_matrix;
 	 uint32_t node_id;
 	 uint16_t seed;
 	
@@ -85,7 +84,7 @@ int main(int argc, char* argv[])
 	 else { seed = population.GetSeed(); }
 	 gsl_rng_set(randgen, seed);
   
-	 std::vector< std::vector<cGenotypeFrequency> > frequencies;
+	 std::vector< std::vector<cGenotypeFrequency> > frequencies, subpops;
    //Cout << Endl << population.ReturnLog(5) << Endl;
   
    for (int on_run=0; on_run < population.GetReplicates(); on_run++)
@@ -133,13 +132,14 @@ int main(int argc, char* argv[])
        population.PushBackRuns();
        //kptree::print_tree_bracketed(newtree);
        Cout << Endl << Endl << "Printing to screen.... " << Endl;
-       //population.PrintFrequenciesToScreen(&frequencies);
+       population.PrintFrequenciesToScreen(&frequencies);
        Cout << Endl << Endl << "Printing to file.... " << Endl;
        population.PrintOut(output_file, &frequencies);
        //std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
        //population.CalculateSimilarity(&frequencies);
        std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
-       population.DrawMullerMatrix(&newtree, &muller_matrix, &frequencies);
+       std::vector< std::vector<int> > muller_matrix;
+       population.DrawMullerMatrix(&newtree, muller_matrix, &frequencies);
      }
 	 
    //population.PrintOut(output_file, frequencies);

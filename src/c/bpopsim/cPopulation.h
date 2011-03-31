@@ -28,6 +28,8 @@ private:
   std::vector<uint32_t> m_divided_lineages;
   std::vector< std::vector<double> > m_runs;
   std::vector<double> m_this_run;
+  std::vector<int> m_total_cells;
+  std::vector< std::vector<int> > m_subpops;
 
   // @JEB: An uint16_t rather than a uint because this can go negative by a few cells
   //       when cells (usually the ancestors) divide simultaneously.

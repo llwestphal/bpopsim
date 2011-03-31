@@ -138,7 +138,7 @@ double cPopulation::TimeToNextWholeCell()
   return time_to_next_whole_cell;
 }
 
-//@agm Here I try to iterate through the populations in m_populations, build a vector to store the values 
+//@agm Here I iterate through the populations in m_populations, build a vector to store the values 
 //     for the sizes of each node by iterating up, and divide the size of each node (subpopulation) by the total 
 //     population size. This should give the relative frequency of a given unique_node_id in the population.
 
@@ -149,15 +149,24 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> * newtree,
 {
 	tree<cGenotype>::iterator update_location;
 	double total_freqs(0);
-	uint32_t total_cells(0);
 	
-	std::vector<cGenotypeFrequency> freq_per_node(newtree->size());
+	std::vector<cGenotypeFrequency> freq_per_node(newtree->size()), subpops_per_node(newtree->size());
 	std::vector<uint32_t> number_per_subpop (newtree->size(),0);
   
-	
-	for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
+	/*for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
+		update_location = it -> GetGenotypeIter();*/
+    // do later
+  
+  for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
 		update_location = it -> GetGenotypeIter();
-
+    
+    cGenotypeFrequency this_node;
+    
+    this_node.unique_node_id = (*update_location).unique_node_id;
+    this_node.subpop_size = it -> GetNumber();
+    
+    subpops_per_node[(*update_location).unique_node_id] = this_node;
+    
 		while(update_location != NULL) {
 			number_per_subpop[(*update_location).unique_node_id] += it -> GetNumber();
       update_location = newtree->parent(update_location);
@@ -174,18 +183,16 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> * newtree,
   //     This is necessary because eventually there are no cells left who ONLY have red or white causing
   //     them to be dropped.
   
-  uint32_t count(0);
-  
-	for (std::vector<uint32_t>::iterator it = number_per_subpop.begin(); it!=number_per_subpop.end(); ++it) {
+	for (std::vector<cGenotypeFrequency>::iterator it = subpops_per_node.begin(); it!=subpops_per_node.end(); ++it) {
 		cGenotypeFrequency this_node;
     
-    this_node.unique_node_id = count;
+    this_node.unique_node_id = (*it).unique_node_id;
+    this_node.subpop_size = (*it).subpop_size;
     this_node.frequency = (double) number_per_subpop[this_node.unique_node_id]/number_per_subpop[0];
+    freq_per_node[(*it).unique_node_id] = this_node;
 		
-		freq_per_node[this_node.unique_node_id] = this_node;
 		total_freqs += this_node.frequency;
     //Cout << Endl << this_node.unique_node_id << "  " << this_node.frequency;
-    count++;
 	}
 	
 	//Cout << Endl << "There are " << total_cells << " cells, in " << newtree.size() << " nodes."<< Endl;
@@ -198,8 +205,58 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> * newtree,
 //@agm Here I want to calculate the frequencies of subpopulations rather than mutations
 //     It's not yet clear to me how to do that.
 
-void cPopulation::DrawMullerMatrix(tree<cGenotype> * newtree, gsl_matrix_long * muller_matrix, std::vector< std::vector<cGenotypeFrequency> > * frequencies){
-  std::cout << "blah\n";
+void cPopulation::DrawMullerMatrix(tree<cGenotype> * newtree, std::vector< std::vector<int> > muller_matrix, std::vector< std::vector<cGenotypeFrequency> > * frequencies){
+  int total_cells_per_time;
+  
+  std::string filename = "/Users/austin/Desktop/test_muller.out";
+  std::ofstream output_handle(filename.c_str());
+  
+  //step through simulation time
+  for (uint32_t time=0; time<(*frequencies).size(); time++) {
+    std::vector<int> this_time_point(1000, 0);
+    total_cells_per_time = 0;
+    for (std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[time].begin(); it!=(*frequencies)[time].end(); ++it) {
+      total_cells_per_time += (*it).subpop_size;
+    }
+    
+    std::vector<cGenotypeFrequency> normalized_frequencies((*frequencies)[time].size());
+    
+    //Iterator horror!!!!!!!!!
+    for (std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[time].begin(); it!=(*frequencies)[time].end(); ++it) {
+      //normalized_frequencies_with_node_ids[(*it).unique_node_id].unique_node_id = (*it).unique_node_id;
+      //normalized_frequencies_with_node_ids[(*it).unique_node_id].frequency = (*it).frequency/total_frequency_per_time;
+      double portion; 
+      portion = (double) (*it).subpop_size / total_cells_per_time;
+      int number_of_spots (int(portion*this_time_point.size()));
+    
+      //find parent of it
+      cGenotype node_parent;
+      //node_parent = ( *(newtree->parent((*it).unique_node_iterator)) );
+      
+      for (tree<cGenotype>::iterator node_loc = (*newtree).begin(); node_loc != (*newtree).end(); node_loc++) {
+        if( (*node_loc).unique_node_id == (*it).unique_node_id && newtree->parent(node_loc) != NULL) {
+          node_parent = (*(newtree->parent(node_loc)));
+        }
+      }
+    
+      //std::cout << (*it).unique_node_id << " " << portion << " " << (*it).subpop_size << " " << total_cells_per_time << " " << node_parent.unique_node_id << std::endl;
+    
+      for (int j=0; j<number_of_spots; j++) {
+        for (int i=0; i<this_time_point.size(); i++) {
+          if( node_parent.unique_node_id == this_time_point[i] ) {
+            this_time_point[i] = (*it).unique_node_id;
+            break;
+          }
+        }
+      }
+    }
+    std::cout << time << std::endl;
+    for(int i=0; i<this_time_point.size(); i++) {
+      output_handle << std::left << std::setw(5) << this_time_point[i];
+    }
+    output_handle << std::endl;
+    muller_matrix.push_back(this_time_point);
+  }
 }
 
 
@@ -503,7 +560,7 @@ void cPopulation::PrintOut(const std::string& output_file_name,
   uint32_t last_time((*frequencies).size()-1);
   
 	for (uint32_t i = 0; i<(*frequencies)[last_time].size(); i++) { 
-    if ( ColsToPrint[i] == true ) output_file << (*frequencies)[last_time][i].unique_node_id << " ";
+    if ( ColsToPrint[i] == true ) output_file << i << " ";
 	}
 	//int width = 20;
   output_file << "\n";
@@ -530,15 +587,18 @@ void cPopulation::ClearRuns(tree<cGenotype>* newtree)
 
 void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
 	Cout << "Done with round... Here's the Output:" << Endl << Endl;
-	
+  
+  int count(0);
+  
 	for (uint32_t i = 0; i<(*frequencies).size(); i++) {
 		double total_freqs = 0;
     for ( std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[i].begin(); it!=(*frequencies)[i].end(); ++it) {
     //@agm set up a minimum frequency to report the print out the number so it isn't overwhelming.
-      if ((*it).frequency > 0.1) {
-        Cout << "Frequency of mutation # " << std::right << std::setw(6) << (*it).unique_node_id << " at time " << std::right << std::setw(4) << i << " is: " << std::left << std::setw(10) << (*it).frequency << Endl;
+      if ((*it).frequency > 0.001) {
+        Cout << "Frequency of mutation # " << std::right << std::setw(6) << count << " at time " << std::right << std::setw(4) << i << " is: " << std::left << std::setw(10) << (*it).frequency << Endl;
       }
       total_freqs += (*it).frequency;
+      count++;
     }
 		Cout << Endl << "Round # " << i << " sum of frequencies is: " << total_freqs << Endl << Endl;
 	}

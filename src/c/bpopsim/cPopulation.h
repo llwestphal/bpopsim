@@ -162,10 +162,11 @@ public:
 
   //! Calculate the time until the next subpopulation divides (passes a whole number of cells)
   double TimeToNextWholeCell();
+  //void KeepSubPops(
   void FrequenciesPerTransferPerNode(tree<cGenotype> * newtree, 
                                      std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   void DrawMullerMatrix(tree<cGenotype> * newtree,
-                        gsl_matrix_long * muller_matrix,
+                        std::vector< std::vector<int> > muller_matrix,
                         std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   void Resample(gsl_rng * randomgenerator);
   void PushBackRuns();

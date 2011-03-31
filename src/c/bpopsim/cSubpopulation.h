@@ -46,7 +46,6 @@ struct cGenotype{
 
 struct cGenotypeFrequency{
 	uint32_t unique_node_id;
-  uint32_t subpop_size;
 	double frequency;
 };
 

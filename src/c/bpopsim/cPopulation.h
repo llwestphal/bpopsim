@@ -169,7 +169,7 @@ public:
                                      std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   
   void AssignChildFreq(tree<cGenotype>::sibling_iterator child_node,
-                       std::vector<cGenotypeFrequency> * frequencies,
+                       int time,
                        tree<cGenotype> * newtree,
                        double parent_low,
                        double parent_high,

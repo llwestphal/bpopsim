@@ -1,4 +1,19 @@
+#include "common.h"
 #include "cPopulation.h"
+
+cPopulation::cPopulation( const int transfers, 
+                          const int verbose, 
+                          const int max_w, 
+                          const int total_mutes, 
+                          const int num_subpops_lost
+                        )
+{
+  m_transfers = transfers;
+  m_max_w = max_w;
+  m_total_mutations = total_mutes;
+  m_total_subpopulations_lost = num_subpops_lost;
+  m_genotype_count = 0;
+}
 
 void cPopulation::SetParameters(const variables_map &options)
 {
@@ -26,11 +41,7 @@ void cPopulation::SetParameters(const variables_map &options)
   SetTransferIntervalToPrint(
 		options.count("transfer-interval-to-print") ?
 	  options["transfer-interval-to-print"].as<uint16_t>() : 1
-		);  
-  SetVerbose(
-		options.count("verbose") ?
-		options["verbose"].as<uint16_t>() : 0
-		);  
+		);   
   SetTotalTransfers(
 		options.count("number-of-transfers") ?
 		options["number-of-transfers"].as<uint16_t>() : 50
@@ -55,13 +66,8 @@ void cPopulation::SetParameters(const variables_map &options)
 		options.count("lineage-tree") ?
 		options["lineage-tree"].as<uint16_t>() : 1
 		);
-	SetSeedParams(
-		options.count("seed") ?
-		options["seed"].as<uint16_t>() : 0
-		);
   SetRedWhiteOnly(
-    options.count("redwhite-only") ?
-    options["redwhite-only"].as<char>() : 'f'
+    options.count("red-white")
     );
   SetLogApproximation(
     options.count("log-approximation") ?
@@ -86,9 +92,8 @@ void cPopulation::UpdateSubpopulations(double update_time)
   // chunking is good such that each subpop can divide only once when mutation is happening
   m_divided_lineages.clear();
   
-  m_population_size_stale = true; // we are changind the size of the population here.
-  
   uint32_t i=-1;
+  m_population_size = 0; // Update the population size.
   for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
     i++; // must advance iterator before continue statement
     if (it->GetNumber() == 0) continue;
@@ -100,20 +105,19 @@ void cPopulation::UpdateSubpopulations(double update_time)
       m_divided_lineages.push_back(i);
     }
     it->SetNumber(new_number);
+    m_population_size += static_cast<uint32_t>(new_number);
   }
 }
 
-// @JEB for efficiency, we only recalculate this if it has been marked stale
-const uint32_t cPopulation::GetPopulationSize() 
+// @JEB Calculates the total population size by iterating over subpops. 
+// This is for checking the code only. Normally, use GetPopulationSize().
+const uint32_t cPopulation::CalculatePopulationSize() 
 {
-  if (!m_population_size_stale) return m_population_size;
-
-  m_population_size = 0;
+  uint32_t calculated_population_size = 0;
   for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
-     m_population_size += static_cast<uint32_t>(it->GetNumber());
+     calculated_population_size += static_cast<uint32_t>(it->GetNumber());
   }  
-  m_population_size_stale = false;
-  return m_population_size;
+  return calculated_population_size;
 }
 
 double cPopulation::TimeToNextWholeCell() 
@@ -144,32 +148,43 @@ double cPopulation::TimeToNextWholeCell()
 
 //@agm Now the information is stored in a vector and passed back to the main function for later use.
 
-void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> * newtree, 
-                                                std::vector< std::vector<cGenotypeFrequency> > * frequencies)
-{
+void cPopulation::FrequenciesPerTransferPerNode(std::vector< std::vector<cGenotypeFrequency> > * frequencies)
+{	
+  //  Debug: this checks to see if our population size was correct.
+  //  Please leave commented out and don't remove.
+  //uint32_t current_population_size = GetPopulationSize();
+  //uint32_t calculated_population_size = CalculatePopulationSize();
+  //assert(current_population_size == calculated_population_size);
+  
+  // There should be one node in the tree for each assigned genotype id.
+  // Since these are the same size, use the one that doesn't require the
+  // tree to calculate its size for speed (m_genotype_count). @JEB
+  assert(m_tree.size() == m_genotype_count);
+  
+  // Genotype frequencies (mutations at each node of tree)
+	std::vector<cGenotypeFrequency> freq_per_node(m_genotype_count);
+  
+  // Genotype number (mutations at each node of tree)
+	std::vector<uint32_t> number_with_genotype(m_genotype_count,0);
+  
+  std::vector<uint32_t> subpops(m_genotype_count,0);
+  
 	tree<cGenotype>::iterator update_location;
-	uint32_t total_cells(0);
-  double total_freqs;
-	
-	std::vector<cGenotypeFrequency> freq_per_node(newtree->size());
-	std::vector<uint32_t> number_per_subpop(newtree->size(),0), node_ids(newtree->size(),0);
-  std::vector<int> subpops(newtree->size(),0);
-  
   for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
+    
     update_location = it -> GetGenotypeIter();
-    
-    subpops[(*update_location).unique_node_id] = it->GetNumber();
-    node_ids[(*update_location).unique_node_id] = (*update_location).unique_node_id;
-    
-    total_cells += it->GetNumber();
-  
+
+    subpops[update_location->unique_node_id] = it->GetNumber();
+      
+    // traverse up the tree to the first ancestor, adding the number in
+    // this subpopulation to every mutational node along the way
 		while(update_location != NULL) {
-			number_per_subpop[(*update_location).unique_node_id] += it -> GetNumber();
-      update_location = newtree->parent(update_location);
+			number_with_genotype[update_location->unique_node_id] += it->GetNumber();
+      update_location = m_tree.parent(update_location);
 		}
 	}
   
-  m_total_cells.push_back(total_cells);
+  m_total_cells.push_back(m_population_size); // shouldn't need to save this, remove later @JEB
   m_subpops.push_back(subpops);
   
   /*for (std::vector<uint32_t>::iterator it = number_per_subpop.begin(); it!=number_per_subpop.end(); ++it) {
@@ -184,19 +199,20 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> * newtree,
   //for (std::vector<cGenotypeFrequency>::iterator it = freq_per_node.begin(); it!=freq_per_node.end(); ++it) total_cells += (*it).subpop_size;
   //std::cout << total_cells << " " << number_per_subpop[0] << std::endl;
   int count(0);
-	for (std::vector<uint32_t>::iterator it = node_ids.begin(); it!=node_ids.end(); ++it) {
+  double total_freqs(0);
+	for (uint32_t i=0; i< subpops.size(); i++) {
 		cGenotypeFrequency this_node;
     
-    this_node.unique_node_id = (*it);
-    this_node.frequency = (double) number_per_subpop[(*it)]/number_per_subpop[0];
-    freq_per_node[(*it)] = this_node;
+    this_node.unique_node_id = i;
+    this_node.frequency = (double)number_with_genotype[i]/m_population_size;
+    freq_per_node[i] = this_node;
 		
 		total_freqs += this_node.frequency;
-    //Cout << Endl << this_node.unique_node_id << "  " << this_node.frequency;
+    // /*if (g_verbose) */std::cout << this_node.unique_node_id << "  " << this_node.frequency << std::endl;
     count++;
 	}
 
-	//Cout << Endl << "There are " << total_cells << " cells, in " << newtree.size() << " nodes."<< Endl;
+  if (g_verbose) std::cout << std::endl << "There are " << m_population_size << " cells, in " << m_genotype_count << " nodes."<< std::endl;
 
 	//@agm Printing sum of frequencies and building the doubly deep vector
 	//Cout << Endl << "Sum of all freqs: " << total_freqs << Endl;
@@ -206,48 +222,70 @@ void cPopulation::FrequenciesPerTransferPerNode(tree<cGenotype> * newtree,
 //@agm Here I want to calculate the frequencies of subpopulations rather than mutations
 //     It's not yet clear to me how to do that.
 
-void cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator child_node,
-                                  int time,
-                                  tree<cGenotype> * newtree,
-                                  double parent_low,
-                                  double parent_high,
-                                  std::vector<cChildFrequency> * child_freqs) {
+
+// @JEB function returns the high frequency of the tallest child
+//      (to tell the parent where to put its low frequency)
+double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
+                                  uint32_t time,
+                                  double in_low,
+                                  double in_high,
+                                  std::vector<cFrequencySlice> * child_freqs,
+                                  std::vector<cGenotypeFrequency> * frequencies) {
   
   //kptree::print_tree_bracketed(*newtree);
-  double child_low(parent_low), child_high;
   
-  child_high = child_low + ((double) m_subpops[time][(*child_node).unique_node_id] / m_total_cells[time]);
-  
-  (*child_freqs)[(*child_node).unique_node_id].child_high = child_high;
-  (*child_freqs)[(*child_node).unique_node_id].child_low = child_low;
+  //The low for this mutation should be the low of the input interval
+  double this_low = in_low;
+  double this_high = this_low + ((*frequencies)[this_node->unique_node_id]).frequency;
   
   //increment parent low up to account for child_high... currently no worky
-  tree<cGenotype>::iterator change_parent((*newtree).parent(tree<cGenotype>::iterator(child_node)));
+  //tree<cGenotype>::iterator change_parent(m_tree.parent(tree<cGenotype>::iterator(child_node)));
   //std::cout << (*change_parent).unique_node_id << " ";
   //(*child_freqs)[(*change_parent).unique_node_id].child_low = child_high;
-    
-  for (tree<cGenotype>::sibling_iterator node = (*newtree).begin(child_node); node!=(*newtree).end(child_node); ++node) {
-    if( (*node).unique_node_id < m_subpops[time].size() )
-      AssignChildFreq(node, time, newtree, child_low, child_high, child_freqs);
-    child_low = child_high;
+  
+  // The swath for this mutation may shrink on the bottom
+  // due to its children taking a bite out of it.  
+  double last_assigned_child_high = 0;
+  for (tree<cGenotype>::sibling_iterator it_node = m_tree.begin(this_node); it_node!=m_tree.end(this_node); ++it_node) {
+
+    // is a frequency assigned for this child (it may have happened later)
+    if (it_node->unique_node_id < frequencies->size()) {
+      // is the frequency > 0 (it may have gone extinct, in which case it is a waste to keep going down the tree)
+      if( ((*frequencies)[it_node->unique_node_id]).frequency > 0 ) {
+        last_assigned_child_high = AssignChildFreq(it_node, time, this_low, this_high, child_freqs, frequencies);
+      }
+    }
+    // Our new low is the last high assigned to a child
+    this_low = last_assigned_child_high;
   }
+  
+  // At this point we know the top and bottom of this node...
+  // This is where we would want to paint into a bitmap between them!!
+  // Draw between this_low and this_high ... rounding to only paint whole numbers ...
+  
+  // save the final values for the low and high of this swath
+  (*child_freqs)[this_node->unique_node_id].low = this_low;
+  (*child_freqs)[this_node->unique_node_id].high = this_high;
+
+  return this_high;
+  
   //std::cout << (*child_node).unique_node_id << " " << m_subpops[time][(*child_node).unique_node_id] << " " << child_high << " " << child_low << std::endl;
 }
 
-void cPopulation::DrawMullerMatrix(tree<cGenotype> * newtree, 
+void cPopulation::DrawMullerMatrix(std::string filename,
                                    std::vector< std::vector<int> > muller_matrix, 
                                    std::vector< std::vector<cGenotypeFrequency> > * frequencies){
   
-  std::vector< tree<cGenotype>::iterator > where(newtree->size());
+  std::vector< tree<cGenotype>::iterator > where(m_tree.size());
   
   //double threshold(.025);
   //std::vector<bool> relevant_columns(newtree->size(), true);
   
-  //Build vector called where to store all iterator in tree for parental recal later
-  for (tree<cGenotype>::iterator node_loc = (*newtree).begin(); node_loc != (*newtree).end(); node_loc++)
+  //Build vector called where to store all iterator in tree for parental recall later
+  //@JEB should we store this iterator in cGenotypeFrequency?
+  for (tree<cGenotype>::iterator node_loc = m_tree.begin(); node_loc != m_tree.end(); node_loc++)
     where[(*node_loc).unique_node_id] = node_loc;
   
-  std::string filename = "/Users/austin/Desktop/test_muller.out";
   std::ofstream output_handle(filename.c_str());
   
   //step through simulation time
@@ -259,12 +297,12 @@ void cPopulation::DrawMullerMatrix(tree<cGenotype> * newtree,
     
     //int count(0), mutation_counter(0);
     
-    std::vector<cChildFrequency> child_freqs((*newtree).size());
+    std::vector<cFrequencySlice> child_freqs(m_tree.size(), cFrequencySlice(0,0));
     
     tree<cGenotype>::sibling_iterator location;
-    location = (*newtree).begin();
+    location = m_tree.begin();
     
-    AssignChildFreq(location, time, newtree, 0, 1, &child_freqs);
+    AssignChildFreq(location, time, 0, 1, &child_freqs, &((*frequencies)[time]));
     std::cout << std::endl;
     
     //Iterator and pointer horror!!!!!!!!!
@@ -305,7 +343,7 @@ void cPopulation::DrawMullerMatrix(tree<cGenotype> * newtree,
     skip_zeros:
     std::cout << time << std::endl;
     for(int i=0; i<child_freqs.size(); i++) {
-      if( ((child_freqs[i].child_high) - (child_freqs[i].child_low)) > .01 ) output_handle << std::left << std::setw(15) << child_freqs[i].child_low << std::setw(15) << child_freqs[i].child_high << std::endl;
+      if( ((child_freqs[i].high) != (child_freqs[i].low)) )  output_handle << std::setw(8) << i << " " << std::left << std::setw(15) << child_freqs[i].low << std::setw(15) << child_freqs[i].high << std::endl;
     }
     output_handle << std::endl;
     //muller_matrix.push_back(this_time_point);
@@ -313,69 +351,78 @@ void cPopulation::DrawMullerMatrix(tree<cGenotype> * newtree,
 }
 
 
-void cPopulation::Resample(gsl_rng * randgen) 
+void cPopulation::Resample() 
 {
   //When it is time for a transfer, resample population
+  assert(m_rng);
   
   uint32_t population_size_before_transfer = m_population_size;
-  m_population_size_stale = true; // we are changind the size of the population here.
  
-	 if (GetVerbose()) std::cout << ">> Transfer!" << std::endl;
-	 //Is there an exists() in C++?
-	 m_by_color[RED] = 0;
-	 m_by_color[WHITE] = 0;
+  if (g_verbose) std::cout << ">> Transfer!" << std::endl;
+  //Is there an exists() in C++?
+  m_by_color[RED] = 0;
+  m_by_color[WHITE] = 0;
 	
-	 for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
-			// Perform accurate binomial sampling only if below a certain population size
-			if (it->GetNumber() < GetBinomialSamplingThreshold()) {
-				 if (GetVerbose()) std::cout << "binomial " << it->GetNumber() << std::endl;
-				 it->Transfer(GetTransferBinomialSamplingP(), randgen);
-			}
-			// Otherwise, treat as deterministic and take expectation...
-			else {
-				 it->SetNumber(it->GetNumber() * GetTransferBinomialSamplingP());
-			}
-					 
-		  if (GetVerbose()) { 
-				std::cout << it->GetMarker() << std::endl;
-			  std::cout << it->GetNumber() << std::endl;
-			  std::cout << it->GetFitness() << std::endl;
-			}	
-			if (it->GetMarker() == 'r') m_by_color[RED] += it->GetNumber();
-			else m_by_color[WHITE] += it->GetNumber();
-		  if (it->GetNumber() == 0) {
-				SetTotalSubpopulationsLost(GetTotalSubpopulationsLost()+1);
-				it = m_populations.erase(it);
-				it--;
-			}
-	 }
-	 //One color was lost, bail  
-	 if ( (m_by_color[RED] == 0) || (m_by_color[WHITE] == 0) ) {
-			SetKeepTransferring(false);
-	 }     
-	 if (GetVerbose()) std::cout << "Colors: " << m_by_color[RED] << " / " << m_by_color[WHITE] << std::endl;
-	 SetRatio(m_by_color[RED] / m_by_color[WHITE]);
-	 SetTransfers(GetTransfers()+1);
+  m_population_size = 0; // recalculate population size
+  for (std::vector<cSubpopulation>::iterator it = m_populations.begin(); it!=m_populations.end(); ++it) {
+    // Perform accurate binomial sampling only if below a certain population size
+    if (it->GetNumber() < GetBinomialSamplingThreshold()) {
+      if (g_verbose) std::cout << "binomial " << it->GetNumber() << std::endl;
+      it->Transfer(GetTransferBinomialSamplingP(), m_rng);
+    }
+    // Otherwise, treat as deterministic and take expectation...
+    else {
+      it->SetNumber(it->GetNumber() * GetTransferBinomialSamplingP());
+    }
+         
+    if (g_verbose) { 
+      std::cout << it->GetMarker() << std::endl;
+      std::cout << it->GetNumber() << std::endl;
+      std::cout << it->GetFitness() << std::endl;
+    }	
+    if (it->GetMarker() == 'r') m_by_color[RED] += it->GetNumber();
+    else m_by_color[WHITE] += it->GetNumber();
+    if (it->GetNumber() == 0) {
+      SetTotalSubpopulationsLost(GetTotalSubpopulationsLost()+1);
+      it = m_populations.erase(it);
+      it--;
+    }
+    m_population_size += static_cast<int>(it->GetNumber());
+  }
+    
+  if (g_verbose) std::cout << "Colors: " << m_by_color[RED] << " / " << m_by_color[WHITE] << std::endl;
+  SetRatio(m_by_color[RED] / m_by_color[WHITE]);
+  SetTransfers(GetTransfers()+1);
 
-	 if ( /*(GetTransfers() >= 0) && */(GetTransfers() % GetTransferIntervalToPrint() == 0) ) {  
-			m_this_run.push_back(GetRatio());
+  if ( /*(GetTransfers() >= 0) && */(GetTransfers() % GetTransferIntervalToPrint() == 0) ) {  
+    m_this_run.push_back(GetRatio());
 		 
-			if (GetVerbose() == 1) { 
-				 std::cout << "Transfer " << GetTransfers() << " : " << population_size_before_transfer << 
-				 "=>" << GetPopulationSize() << "  R/W Ratio: " << GetRatio() << std::endl;  
-				 std::cout << "Total mutations: " << GetTotalMutations() << " Maximum Fitness: " << GetMaxW() << std::endl;
-				 std::cout << "Size = " << m_this_run.size() << std::endl;
-			}
-	 }  
+    if (g_verbose == 1) { 
+      std::cout << "Transfer " << GetTransfers() << " : " << population_size_before_transfer << 
+      "=>" << GetPopulationSize() << "  R/W Ratio: " << GetRatio() << std::endl;  
+      std::cout << "Total mutations: " << GetTotalMutations() << " Maximum Fitness: " << GetMaxW() << std::endl;
+      std::cout << "Size = " << m_this_run.size() << std::endl;
+    }
+  }  
 
-	 if ( (uint32_t(m_this_run.size()) >= GetMinimumPrinted()) && 
-			 ((GetRatio() > GetMaxDivergenceFactor()) || 
-				(GetRatio() < 1/GetMaxDivergenceFactor())) )   
-	 {
-			if (GetVerbose()) std::cout << "DIVERGENCE CONDITION MET" << std::endl;
-			SetKeepTransferring(false);
-	 }  
-  
+  // Checks for stopping early if in marker divergence mode
+  if (GetRedWhiteOnly()) {
+    
+    // One color was lost -- bail
+    if ( (m_by_color[RED] == 0) || (m_by_color[WHITE] == 0) ) {
+      m_keep_transferring = false;
+    }
+    
+    // We have the minimum number of transfers to be printed and have diverged sufficiently -- bail
+    else if (uint32_t(m_this_run.size()) >= GetMinimumPrinted()) {
+      if  ( (GetRatio() > GetMaxDivergenceFactor()) || 
+            (GetRatio() < 1/GetMaxDivergenceFactor()) )   
+      {
+        if (g_verbose) std::cout << "DIVERGENCE CONDITION MET" << std::endl;
+        m_keep_transferring = false;
+      }  
+    }
+  }
 }
 
 void cPopulation::PushBackRuns()
@@ -393,18 +440,16 @@ void cPopulation::RunSummary()
 
 void cPopulation::ResetRunStats()
 {
-
    SetTotalMutations(0);    
    SetTotalSubpopulationsLost(0);
    SetTransfers(1);    
    SetDivisionsUntilMutation(0);
-   SetKeepTransferring(true);
-
+   m_keep_transferring = true;
 }
 
 void cPopulation::DisplayParameters()
 {
-  if (GetVerbose()==1) {
+  if (g_verbose) {
     std::cout << "u = " << GetMutationRatePerDivision() << std::endl;
     std::cout << "s = " << GetAverageMutationS() << std::endl;
     std::cout << "N = " << GetPopSizeAfterDilution() << std::endl;
@@ -431,7 +476,7 @@ void cPopulation::CalculateDivisions()
      desired_divisions = GetPopSizeBeforeDilution() - GetPopulationSize();
   }
   
-  if(GetVerbose() == 1) {
+  if(g_verbose) {
     std::cout << "Divisions before next mutation: " << GetDivisionsUntilMutation() <<std::endl;
   }
   
@@ -442,7 +487,7 @@ void cPopulation::CalculateDivisions()
      desired_divisions = 1;
   }
   
-  if (GetVerbose() == 1) {
+  if (g_verbose) {
      std::cout << "Total pop size: " << GetPopulationSize() <<std::endl;
      std::cout << "Desired divisions " << desired_divisions <<std::endl;
   }
@@ -458,12 +503,12 @@ void cPopulation::CalculateDivisions()
   double time_to_next_whole_cell = TimeToNextWholeCell();
 
   if (time_to_next_whole_cell > update_time) {
-     if (GetVerbose())std::cout << "Time to next whole cell greater than update time: " << 
+     if (g_verbose) std::cout << "Time to next whole cell greater than update time: " << 
 			 time_to_next_whole_cell << " < " << update_time <<std::endl;    
      update_time = time_to_next_whole_cell;
   }
 
-  if (GetVerbose() == 1) {
+  if (g_verbose) {
      std::cout << "Update time: " << update_time <<std::endl;    
   }
             
@@ -473,14 +518,13 @@ void cPopulation::CalculateDivisions()
   UpdateSubpopulations(update_time);
   SetCompletedDivisions(GetPopulationSize() - previous_population_size);
               
-  if (GetVerbose())std::cout << "Completed divisions: " << GetCompletedDivisions() <<std::endl;
+  if (g_verbose) std::cout << "Completed divisions: " << GetCompletedDivisions() <<std::endl;
   SetDivisionsUntilMutation(GetDivisionsUntilMutation() - GetCompletedDivisions());
 }
 
 /*@agm The functions below should build a new tree using the tree.h header */
 
-void cPopulation::SeedSubpopulationForRedWhite(tree<cGenotype>* newtree, 
-                                               uint32_t &node_id) 
+void cPopulation::SeedSubpopulationForRedWhite() 
 {	
 	cGenotype r, w;
 	tree<cGenotype>::iterator top, red_side, white_side;
@@ -488,18 +532,21 @@ void cPopulation::SeedSubpopulationForRedWhite(tree<cGenotype>* newtree,
 	
 	//initialize object of cSubpopulation type
 	cSubpopulation red, white;
-	node_id = 0;
 	
 	/*@agm The unique code and fitness is set. */
-
+  
+  /*@jeb note that we increment genotype count here.
+   It should really happen in AddSubpopulation?
+   */
+  
 	r.fitness = starting_fitness;
-	r.unique_node_id = node_id;
+	r.unique_node_id = m_genotype_count++;
   w.fitness = starting_fitness;
-	w.unique_node_id = (node_id+1);
+	w.unique_node_id = m_genotype_count++;
 	
 	//Start building the tree
-	red_side = newtree->insert(newtree->begin(), r);
-	white_side = newtree->insert(newtree->begin(), w);
+	red_side = m_tree.insert(m_tree.begin(), r);
+	white_side = m_tree.insert(m_tree.begin(), w);
 	
 	red.SetNumber(GetInitialPopulationSize()/2);
 	red.SetGenotype(red_side);
@@ -509,8 +556,8 @@ void cPopulation::SeedSubpopulationForRedWhite(tree<cGenotype>* newtree,
 	white.SetGenotype(white_side);
 	white.SetMarker('w');
 	
-	AddSubpopulation(red, r.unique_node_id);
-	AddSubpopulation(white, w.unique_node_id);	
+	AddSubpopulation(red);
+	AddSubpopulation(white);	
 }
 
 //@agm This function seeds the population with only one colony to avoid the red/white problem
@@ -519,46 +566,41 @@ void cPopulation::SeedSubpopulationForRedWhite(tree<cGenotype>* newtree,
 //update: Victory conditions are now a command line option.  If no set to false the simulation
 //        will run to the max number of iterations.
 
-void cPopulation::SeedPopulationWithOneColony(tree<cGenotype>* newtree, 
-                                              uint32_t &node_id) {
-  cGenotype neutral;
+void cPopulation::SeedPopulationWithOneColony() {
   tree<cGenotype>::iterator start_position;
   double starting_fitness(1.0);
   
-  cSubpopulation begin_here;
-  node_id = 0;
   
+  cGenotype neutral;
   neutral.fitness = starting_fitness;
-  neutral.unique_node_id = node_id;
+  neutral.unique_node_id = m_genotype_count++;
+  start_position = m_tree.insert(m_tree.begin(), neutral);
   
-  start_position = newtree->insert(newtree->begin(), neutral);
-  
+  cSubpopulation begin_here;
   begin_here.SetNumber(GetInitialPopulationSize());
   begin_here.SetGenotype(start_position);
   begin_here.SetMarker('n');
-  
-  AddSubpopulation(begin_here, neutral.unique_node_id);
+  AddSubpopulation(begin_here);
   
 }
 
-void cPopulation::AddSubpopulation(cSubpopulation& subpop, 
-                                   uint32_t& node_id) 
+void cPopulation::AddSubpopulation(cSubpopulation& subpop) 
 {
-  m_population_size_stale = true; // we have just changed the population size
+  m_population_size += subpop.GetNumber(); // we have just changed the population size
 	m_populations.push_back(subpop);
-	SetNumberOfSubpopulations(GetNumberOfSubpopulations()+1);
-	node_id++;
+
 	//std::cout << subpop.GetNode_id() << " " << subpop.GetFitness() << std::endl;
 }
 
 //Generates new mutant and adds it to the tree
-void cPopulation::Mutate(gsl_rng * randgen, 
-                            tree<cGenotype> * newtree, 
-                            uint32_t & node_id) 
+void cPopulation::Mutate() 
 {	
+  // we better have a random number generator
+  assert(m_rng);
+
 	m_total_mutations++;
 	
-	if (m_verbose) std::cout << "* Mutating!" << std::endl;
+	if (g_verbose) std::cout << "* Mutating!" << std::endl;
 	
 	//Mutation happened in the one that just divided
 	//Break ties randomly here.
@@ -569,17 +611,20 @@ void cPopulation::Mutate(gsl_rng * randgen,
   // There must be at least two cells for a mutation to have occurred...
   assert(ancestor.GetNumber() >= 2);
 	
-  new_subpop.NewCreateDescendant(randgen, 
+  new_subpop.CreateDescendant(   m_rng, 
                                  ancestor, 
                                  GetAverageMutationS(), 
-                                 GetBeneficialMutationDistribution(), 
-                                 newtree, 
-                                 node_id);
+                                 GetBeneficialMutationDistribution(),
+                                 m_tree,
+                                 m_genotype_count++
+                              );
+  
+  
+  
+	if (g_verbose) std::cout << "  Color: " << new_subpop.GetMarker() << std::endl;
+	if (g_verbose) std::cout << "  New Fitness: " << new_subpop.GetFitness() << std::endl;
 	
-	if (GetVerbose()) std::cout << "  Color: " << new_subpop.GetMarker() << std::endl;
-	if (GetVerbose()) std::cout << "  New Fitness: " << new_subpop.GetFitness() << std::endl;
-	
-	AddSubpopulation(new_subpop, node_id);
+	AddSubpopulation(new_subpop);
 	
 	if(new_subpop.GetFitness() > GetMaxW()) 
 	{
@@ -628,18 +673,19 @@ void cPopulation::PrintOut(const std::string& output_file_name,
 	}
 }
 
-void cPopulation::ClearRuns(tree<cGenotype>* newtree)
+void cPopulation::ClearRuns()
 {
   m_this_run.clear();
   m_populations.clear();
-  newtree->clear();
+  m_tree.clear();
+  m_genotype_count = 0;
 }
 
 //@agm As the function name implies, this prints the frequencies above some threshold to screen at whatever
 //     time it is called and passed the frequencies vector
 
 void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
-	Cout << "Done with round... Here's the Output:" << Endl << Endl;
+  std::cout << "Done with round... Here's the Output:" << std::endl << std::endl;
   
   int count(0);
   
@@ -648,16 +694,16 @@ void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFre
     for ( std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[i].begin(); it!=(*frequencies)[i].end(); ++it) {
     //@agm set up a minimum frequency to report the print out the number so it isn't overwhelming.
       if ((*it).frequency > 0.01) {
-        Cout << "Frequency of mutation # " << std::right << std::setw(6) << (*it).unique_node_id << " at time " << std::right << std::setw(4) << i << " is: " << std::left << std::setw(10) << (*it).frequency << Endl;
+        std::cout << "Frequency of mutation # " << std::right << std::setw(6) << (*it).unique_node_id << " at time " << std::right << std::setw(4) << i << " is: " << std::left << std::setw(10) << (*it).frequency << std::endl;
       }
       total_freqs += (*it).frequency;
       count++;
     }
-		Cout << Endl << "Round # " << i << " sum of frequencies is: " << total_freqs << Endl << Endl;
+		std::cout << std::endl << "Round # " << i << " sum of frequencies is: " << total_freqs << std::endl << std::endl;
 	}
-	Cout << "Number of cells before dilution: " << GetPopSizeBeforeDilution();
-	Cout << Endl << "Number of cells after dilution: " << GetPopulationSize() << Endl << Endl;
-	Cout << "------------------------------------------------" << Endl << Endl;
+	std::cout << "Number of cells before dilution: " << GetPopSizeBeforeDilution();
+	std::cout << std::endl << "Number of cells after dilution: " << GetPopulationSize() << std::endl << std::endl;
+	std::cout << "------------------------------------------------" << std::endl << std::endl;
 } 
 
 //@agm This function determines the maximum difference in genotype frequency between a mutation
@@ -755,4 +801,9 @@ void cPopulation::fill_icsi_log_table2(const unsigned precision, float* const   
 double cPopulation::ReturnLog(double num) {
   if( m_approx_bool == 't' || m_approx_bool == 'T') return icsi_log_v2(num, m_lookuptable, m_N);
   else return log(num);
+}
+
+void cPopulation::PrintTree() {
+  kptree::print_tree_bracketed(m_tree);
+  std::cout << std::endl;
 }

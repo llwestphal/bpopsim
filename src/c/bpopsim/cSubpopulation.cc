@@ -1,4 +1,7 @@
+#include "common.h"
 #include "cSubpopulation.h"
+
+using namespace std;
 
 /* */
 cSubpopulation::cSubpopulation()
@@ -34,13 +37,16 @@ double cSubpopulation::MutantFitness(double in_fitness,
 
 }
 
-void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator, 
-                                         cSubpopulation &ancestor, 
-                                         double averageselectioncoefficient, 
-                                         char beneficialmutationdistribution, 
-                                         tree<cGenotype>* in_tree, 
-                                         uint32_t node_id) 
+void cSubpopulation::CreateDescendant(  gsl_rng * randomgenerator, 
+                                        cSubpopulation &ancestor, 
+                                        double averageselectioncoefficient, 
+                                        char beneficialmutationdistribution, 
+                                        tree<cGenotype>& in_tree, 
+                                        uint32_t node_id
+                                      ) 
 {	
+  if (g_verbose) cout << "Creating descendant with node_id: " << node_id << endl;
+  
 	tree<cGenotype>::iterator_base new_geno_it;
 	// There is only one new one...
 	SetNumber(1);
@@ -56,14 +62,7 @@ void cSubpopulation::NewCreateDescendant(gsl_rng * randomgenerator,
                                                 beneficialmutationdistribution, 
                                                 randomgenerator);
 	new_genotype.unique_node_id = node_id;
-	
-	/* @agm I'm checking to see if the new fitness is the same as the old fitness.
-					Ostensibly this ought not be possible, but you never know.
-	        Either way, the new genotype will not be added to the list if it has the 
-		      same fitness as its parent... at least that's what I think it's doing. */
-	
-    new_geno_it = in_tree->append_child(ancestor.m_genotype, new_genotype); 
-
+  new_geno_it = in_tree.append_child(ancestor.m_genotype, new_genotype); 
 	SetGenotype(new_geno_it);
 	
 }

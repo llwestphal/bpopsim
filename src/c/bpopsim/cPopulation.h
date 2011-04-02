@@ -15,22 +15,24 @@ private:
   double m_ratio;
   
   // we calculate the population size on demand
-  uint32_t m_population_size, m_transfers, m_total_mutations, m_total_subpopulations_lost, m_number_of_subpopulations, m_total_transfers;
+  uint32_t m_population_size, m_transfers, m_total_mutations, m_total_subpopulations_lost, m_total_transfers;
     
-  bool m_population_size_stale;
-
-  uint16_t m_verbose, m_replicates, m_minimum_printed, m_transfer_interval_to_print, m_lineage;
+  uint16_t m_replicates, m_minimum_printed, m_transfer_interval_to_print, m_lineage;
   
   int m_N, m_approx_value;
-  
 
   std::vector<cSubpopulation> m_populations;
   std::vector<uint32_t> m_divided_lineages;
   std::vector< std::vector<double> > m_runs;
   std::vector<double> m_this_run;
   std::vector<int> m_total_cells;
-  std::vector< std::vector<int> > m_subpops;
-
+  std::vector< std::vector<uint32_t> > m_subpops;
+  
+  gsl_rng* m_rng;
+  
+  cLineageTree m_tree;
+  uint32_t m_genotype_count; //used to assign node ids in tree, should equal number of nodes
+  
   // @JEB: An uint16_t rather than a uint because this can go negative by a few cells
   //       when cells (usually the ancestors) divide simultaneously.
   int64_t m_divisions_until_mutation; 
@@ -53,17 +55,12 @@ private:
 public:
 
   //CONSTRUCTOR  
-  cPopulation(const int transfers = 0, const int verbose = 0, const int max_w = 1, const int num_o_subpops = 0,
-              const int total_mutes = 0, const int num_subpops_lost = 0, const bool population_size_stale = true)
-  {    
-    m_transfers = transfers;
-    m_verbose = verbose;
-    m_max_w = max_w;
-    m_number_of_subpopulations = num_o_subpops;
-    m_total_mutations = total_mutes;
-    m_total_subpopulations_lost = num_subpops_lost;
-    m_population_size_stale = population_size_stale;
-  }
+  cPopulation(const int transfers = 0, 
+              const int verbose = 0, 
+              const int max_w = 1, 
+              const int total_mutes = 0, 
+              const int num_subpops_lost = 0
+              );
 	
   //DESTRUCTOR
   virtual ~cPopulation() { ; };
@@ -71,20 +68,21 @@ public:
   //GETTERS
   const double GetRatio() { return m_ratio; }
   
-  const uint32_t GetPopulationSize(); // calculated on demand
+  const uint32_t GetPopulationSize() { return m_population_size; }; // don't delete @JEB
+  // "Calculate" the population size by iterating through subpops - slow, but to check if m_population_size is correct!
+  const uint32_t CalculatePopulationSize(); // don't delete this one @JEB
+  
   const uint32_t GetTransfers() { return m_transfers; }
   const uint32_t GetTotalMutations() { return m_total_mutations; }
   const uint32_t GetTotalSubpopulationsLost() { return m_total_subpopulations_lost; }
-  const uint32_t GetNumberOfSubpopulations() { return m_number_of_subpopulations; }
   const int32_t GetTotalTransfers() { return m_total_transfers; }
   
-  const uint16_t GetVerbose() { return m_verbose; }
   const uint16_t GetTransferIntervalToPrint() { return m_transfer_interval_to_print; }
   const uint16_t GetReplicates() { return m_replicates; }
   const uint16_t GetMinimumPrinted() { return m_minimum_printed; }
   const uint16_t GetLineageTree() { return m_lineage; }
 
-  const int64_t GetDivisionsUntilMutation() { return m_divisions_until_mutation; }   //!@JEB - keep
+  const int64_t GetDivisionsUntilMutation() { return m_divisions_until_mutation; }   //don't delete @JEB
   const double GetCompletedDivisions() { return m_completed_divisions; }
   const double GetMaxW() { return m_max_w; }
   const double GetPopSizeBeforeDilution() { return m_pop_size_before_dilution; }
@@ -96,7 +94,7 @@ public:
   
   const bool GetKeepTransferring() { return m_keep_transferring; }
   const char GetBeneficialMutationDistribution() { return m_beneficial_mutation_distribution; } 
-  const char GetRedWhiteOnly() { return m_red_white_only; }
+  const bool GetRedWhiteOnly() { return m_red_white_only; }
 
   const uint32_t GetInitialPopulationSize() {return m_initial_population_size; }
   const uint32_t GetPopSizeAfterDilution() {return m_pop_size_after_dilution; }
@@ -126,15 +124,12 @@ public:
   void SetTotalSubpopulationsLost(uint32_t in_total_subpopulations_lost) { m_total_subpopulations_lost=in_total_subpopulations_lost; }
   void SetTransfers(uint32_t in_transfers) { m_transfers = in_transfers; }
   void SetDivisionsUntilMutation(int64_t in_divisions_until_mutation){ m_divisions_until_mutation = in_divisions_until_mutation; }  //!@JEB - keep
-  void SetNumberOfSubpopulations(uint32_t in_number_of_subpopulations){ m_number_of_subpopulations = in_number_of_subpopulations; }
   void SetCompletedDivisions(uint32_t in_completed_divisions) {m_completed_divisions = in_completed_divisions; }
   void SetMaxW(double in_max_w) { m_max_w = in_max_w; }
-  void SetVerbose(int in_verbose) { m_verbose = in_verbose; }
   void SetPopSizeBeforeDilution(double in_pop_size_before_dilution) { m_pop_size_before_dilution = in_pop_size_before_dilution; }
   void SetDilutionFactor(double in_dilution_factor) { m_dilution_factor = in_dilution_factor; }
   void SetTransferBinomialSamplingP(double in_transfer_binomial_sampling_p) { m_transfer_binomial_sampling_p = in_transfer_binomial_sampling_p; }
   void SetLambda(double in_lambda) { m_lambda = in_lambda; }
-  void SetKeepTransferring(bool in_keep_transferring) { m_keep_transferring = in_keep_transferring; }
   void SetRedWhiteOnly(char in_red_white_only) { m_red_white_only = in_red_white_only; }
   void SetRatio(double in_ratio) { m_ratio = in_ratio; }
   void SetTransferIntervalToPrint(int in_transfer_interval_to_print) { m_transfer_interval_to_print = in_transfer_interval_to_print; }
@@ -153,6 +148,8 @@ public:
   void SetSeedParams(uint16_t seed_type) { m_seed = seed_type; }
   void SetLogApproximation( char approx_bool ) { m_approx_bool = approx_bool; }
   void SetLogApproximationValue( int approx_val ) { m_N = approx_val; }
+  
+  void SetRNG(gsl_rng * in_rng) { m_rng = in_rng; } //@JEB
 
   //METHODS
 	//@agm To keep the lines of manageable length, if a method has multiple variables, each variable got a new line
@@ -164,41 +161,38 @@ public:
 
   //! Calculate the time until the next subpopulation divides (passes a whole number of cells)
   double TimeToNextWholeCell();
-  //void KeepSubPops(
-  void FrequenciesPerTransferPerNode(tree<cGenotype> * newtree, 
-                                     std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  
-  void AssignChildFreq(tree<cGenotype>::sibling_iterator child_node,
-                       int time,
-                       tree<cGenotype> * newtree,
+
+  void FrequenciesPerTransferPerNode(std::vector< std::vector<cGenotypeFrequency> > * frequencies);  
+  double AssignChildFreq(tree<cGenotype>::sibling_iterator child_node,
+                       uint32_t time,
                        double parent_low,
                        double parent_high,
-                       std::vector<cChildFrequency> * child_freqs);
+                       std::vector<cFrequencySlice> * child_freqs, 
+                       std::vector<cGenotypeFrequency> * frequencies);
   
-  void DrawMullerMatrix(tree<cGenotype> * newtree,
+  void DrawMullerMatrix(std::string filename,
                         std::vector< std::vector<int> > muller_matrix,
                         std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   
-  void Resample(gsl_rng * randomgenerator);
+  void Resample();
   void PushBackRuns();
   void RunSummary();
   void ResetRunStats();
   void DisplayParameters();
   void CalculateDivisions();
-  void SeedSubpopulationForRedWhite(tree<cGenotype> * newtree, 
-                                    uint32_t & node_id);
-  void SeedPopulationWithOneColony(tree<cGenotype> * newtree,
-                                   uint32_t & node_id);
-  void AddSubpopulation(cSubpopulation& subpop,
-                        uint32_t & node_id);
-  void Mutate(gsl_rng * randomgenerator, 
-              tree<cGenotype> * newtree, 
-              uint32_t& node_id);
+  void SeedSubpopulationForRedWhite();
+  void SeedPopulationWithOneColony();
+  void AddSubpopulation(cSubpopulation& subpop);
+  void Mutate();
   
   //utilities
+  
+  // Prints a line with numbers in each existing subpopulation
+  void PrintCurrentNumbers();
+  
   void PrintOut(const std::string& output_file_name,
                 std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  void ClearRuns(tree<cGenotype> * tree);
+  void ClearRuns();
   void PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   std::vector<bool> MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > * frequencies, float threshold);
   void CalculateSimilarity(std::vector< std::vector<cGenotypeFrequency> > * frequencies);
@@ -206,6 +200,9 @@ public:
   void ConstructLookUpTable();
   void fill_icsi_log_table2(const unsigned precision, float* const pTable);
   double ReturnLog(double num);
+  
+  // Prints out the tree using bracket notation.
+  void PrintTree();
 };
 
 #endif

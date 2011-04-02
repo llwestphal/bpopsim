@@ -164,11 +164,11 @@ public:
 
   void FrequenciesPerTransferPerNode(std::vector< std::vector<cGenotypeFrequency> > * frequencies);  
   double AssignChildFreq(tree<cGenotype>::sibling_iterator child_node,
-                       uint32_t time,
-                       double parent_low,
-                       double parent_high,
-                       std::vector<cFrequencySlice> * child_freqs, 
-                       std::vector<cGenotypeFrequency> * frequencies);
+                         double parent_low,
+                         double parent_high,
+                         std::vector<cFrequencySlice> * child_freqs, 
+                         std::vector<cGenotypeFrequency> * frequencies,
+                         int depth = 0);
   
   void DrawMullerMatrix(std::string filename,
                         std::vector< std::vector<int> > muller_matrix,

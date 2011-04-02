@@ -1,12 +1,6 @@
 #ifndef cSubpopulation_h
 #define cSubpopulation_h
 
-//I added this macros section to avoid scoping for common function calls
-//Anything added here will be available throughout the program
-#define Endl std::endl
-#define Cout std::cout
-
-
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -49,9 +43,10 @@ struct cGenotypeFrequency{
 	double frequency;
 };
 
-struct cChildFrequency {
-  double child_low;
-  double child_high;
+struct cFrequencySlice {
+  cFrequencySlice(double in_low, double in_high) : low(in_low), high(in_high) {}
+  double low;
+  double high;
 };
 
 class cSubpopulation {
@@ -80,11 +75,11 @@ public:
                             double in_average_mutation_s, 
                             char in_type_of_mutation, 
                             gsl_rng * randomgenerator);  
-  virtual void NewCreateDescendant(gsl_rng * randomgenerator, 
+  virtual void CreateDescendant(gsl_rng * randomgenerator, 
                                    cSubpopulation &ancestor, 
                                    double averageselectioncoefficient, 
                                    char beneficialmutationdistribution, 
-                                   tree<cGenotype>* in_tree, 
+                                   tree<cGenotype>& in_tree, 
                                    uint32_t node_id);
 
 };

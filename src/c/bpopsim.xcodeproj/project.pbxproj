@@ -33,6 +33,7 @@
 		70307F1C11F7E39E00BEFD1F /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = bpopsim/main.cpp; sourceTree = "<group>"; };
 		70684A90120A007300BE96CA /* cPopulation.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cPopulation.cc; path = bpopsim/cPopulation.cc; sourceTree = "<group>"; wrapsLines = 0; };
 		70684A91120A007300BE96CA /* cPopulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cPopulation.h; path = bpopsim/cPopulation.h; sourceTree = "<group>"; };
+		708EE7B21346E8F400E33511 /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = common.h; path = bpopsim/common.h; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* popsim */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = popsim; sourceTree = BUILT_PRODUCTS_DIR; };
 		D952741B132EE0CB009223FC /* tree.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = tree.hh; path = bpopsim/tree.hh; sourceTree = "<group>"; };
 		D952741C132EE0D4009223FC /* tree_util.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = tree_util.hh; path = bpopsim/tree_util.hh; sourceTree = "<group>"; };
@@ -83,6 +84,7 @@
 		70307F0B11F7E2B500BEFD1F /* include */ = {
 			isa = PBXGroup;
 			children = (
+				708EE7B21346E8F400E33511 /* common.h */,
 				D9D66A11133E9C2900BBA1C3 /* icsilog.h */,
 				D952741C132EE0D4009223FC /* tree_util.hh */,
 				D952741B132EE0CB009223FC /* tree.hh */,

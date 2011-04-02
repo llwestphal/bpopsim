@@ -1,4 +1,10 @@
+#include "common.h"
 #include "cPopulation.h"
+
+#include <iostream>
+
+// Global variable for keeping track of verbosity
+bool g_verbose = false;
 
 // setup and parse configuration options:
 void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
@@ -16,12 +22,12 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
   ("replicates,r", value<uint16_t>(), "Replicates")
   ("marker-divergence,m", value<uint16_t>(), "Max divergence factor")
   ("type-of-mutations,f", value<char>(), "Type of mutations")
-  ("verbose,v", value<uint16_t>(), "Verbose")
+  ("verbose,v", "Verbose")
   ("lineage-tree,l", value<uint16_t>(), "Lineage Tree")
   ("seed,d", value<uint16_t>(), "Seed for random number generator")
-  ("redwhite-only,w", value<char>(), "Only care about red/white lineages")
+  ("red-white,m", value<bool>(), "Only care about red/white lineages. For marker divergence.")
   ("log-approximation,a", value<char>(), "Less precise/faster approximation")
-  ("log-approximation-value,v", value<int>(), "Precise-ness of log approximation")
+  ("log-approximation-value", value<int>(), "Precise-ness of log approximation")
   ;
 
 /* Need to add these as options...
@@ -31,7 +37,6 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
   'maximum-data-points|x=s' => \$maximum_data_points,
   'skip-generations|k=s' => \$skip_generations,
   'input_initial_w|0=s' => \$input_initial_w,
-  'drop_frequency|2=s' => \$drop_frequency,
   'multiplicative' => \$multiplicative_selection_coefficients
 */
 
@@ -45,102 +50,120 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
       std::cerr << cmdline_options << std::endl;
       exit(0);
   }
+  
+  if (options.count("verbose")) g_verbose = true;
 }
 
 int main(int argc, char* argv[])
 {
-	 tree<cGenotype>::iterator_base loc;
-	 uint32_t node_id;
-	 uint16_t seed;
+  tree<cGenotype>::iterator_base loc;
 	
-   //set up command line options
-   variables_map cmdline_options;
-   get_cmdline_options(cmdline_options, argc, argv);
-   std::string output_file = cmdline_options["output-file"].as<std::string>();
+  //set up command line options
+  variables_map cmdline_options;
+  get_cmdline_options(cmdline_options, argc, argv);
+  std::string output_file = cmdline_options["output-file"].as<std::string>();
   
-   //Initialize Tree object 
-   cLineageTree newtree;
+  //Initialize Population object
+  cPopulation population;
   
-   //Initialize Population object
-	 cPopulation population;
+  //Build lookup table for logs 
+  //Currently it is the the 15th, I should take it as a command line option
+  population.ConstructLookUpTable();
   
-   //Build lookup table for logs 
-   //Currently it is the the 15th, I should take it as a command line option
-   population.ConstructLookUpTable();
-  
-   //Set cli options
-   population.SetParameters(cmdline_options);
-   population.DisplayParameters();
+  //Set cli options
+  population.SetParameters(cmdline_options);
+  population.DisplayParameters();
 	
-	 //create generator and seed
-	 //@agm Program defaults to system time seed if not specified at cli
-   //     Changed generator to taus2 because it's a little faster and still "simulation quality"
-	 const gsl_rng_type *T;
-	 gsl_rng * randgen;
-   gsl_rng_env_setup();
-   T = gsl_rng_taus2;
-	 randgen = gsl_rng_alloc (T);
-	 if ( population.GetSeed() == 0 ) { seed = time (NULL) * getpid(); }
-	 else { seed = population.GetSeed(); }
-	 gsl_rng_set(randgen, seed);
+  //Create Random Number generator and Seed
+  //@agm Program defaults to system time seed if not specified at cli
+  //     Changed generator to taus2 because it's a little faster and still "simulation quality"
   
-	 std::vector< std::vector<cGenotypeFrequency> > frequencies, subpops;
-   //Cout << Endl << population.ReturnLog(5) << Endl;
+  // @JEB: use one main RNG (so we don't reset for each replicate)
+  // Let cPopulation store a copy of it.
+  const gsl_rng_type *T;
+  gsl_rng * randgen;
+  gsl_rng_env_setup();
+  T = gsl_rng_taus2;
+  randgen = gsl_rng_alloc(T);
   
-   for (int on_run=0; on_run < population.GetReplicates(); on_run++)
-   {
-      population.ClearRuns(&newtree);
+  uint16_t seed = 0;
+  if (cmdline_options.count("seed")) {
+    seed = cmdline_options["seed"].as<uint16_t>();
+  } else {
+    seed = time(NULL) * getpid();
+  }  
+  gsl_rng_set(randgen, seed);
+  population.SetRNG(randgen);
+  
+  std::vector< std::vector<cGenotypeFrequency> > frequencies, subpops;
+  
+  for (int on_run=1; on_run <= population.GetReplicates(); on_run++)
+  {
+    // Re-initialize the population for a new run 
+    // (should really clean up at end of loop, not beginning @jeb)
+    population.ClearRuns();
+    population.ResetRunStats();
+    
+    uint32_t count(0);
+    std::cout << "Replicate " << on_run << std::endl;   
 		 
-      uint32_t count(0);
-      std::cout << "Replicate " << on_run+1;   
+    //Initialize the population
+    if (population.GetRedWhiteOnly()) {
+      population.SeedSubpopulationForRedWhite(); 
+    } else {
+      population.SeedPopulationWithOneColony();
+    }
+    
+    // Print the initial tree
+    //if (g_verbose) population.PrintTree();
+    
+    //std::cout << node_id << std::endl;
 		 
-      //Check to see if the user wants the red/white lineages included
-      if (population.GetRedWhiteOnly() == 't') population.SeedSubpopulationForRedWhite(&newtree, node_id);
-      if (population.GetRedWhiteOnly() == 'f') population.SeedPopulationWithOneColony(&newtree, node_id);
-		  //std::cout << node_id << std::endl;
-		 
-      population.ResetRunStats();
-		 
-      while( (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring()) 
-			{
+    while( (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring() ) {
 				
-         // Calculate the number of divisions until the next mutation 
-				 population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + round(gsl_ran_exponential(randgen, population.GetLambda())));
+      // Calculate the number of divisions until the next mutation 
+      population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + round(gsl_ran_exponential(randgen, population.GetLambda())));
 				
-				 // 
-				if (population.GetVerbose()) { 
-					std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl; }
+      if (g_verbose) { 
+        std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl; 
+      }
          
-			 	 while( population.GetDivisionsUntilMutation() > 0 && population.GetKeepTransferring()) 
-				 {
-					 population.CalculateDivisions();
+      while( population.GetDivisionsUntilMutation() > 0 && population.GetKeepTransferring() ) 
+      {
+        population.CalculateDivisions();
 					 
-					 if( population.GetDivisionsUntilMutation() <= 0) { population.Mutate(randgen, &newtree, node_id); }
+        if( population.GetDivisionsUntilMutation() <= 0) { 
+          population.Mutate(); 
+        }
 					 
-					 if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
-						 population.FrequenciesPerTransferPerNode(&newtree, &frequencies);
-						 population.Resample(randgen); 
-						 count++;
-						 Cout << Endl << "Passing.... " << count << Endl;
-           }
-           //If the user does not want the red/white lineages included then KeepTransferring should always be set to true
-           if( population.GetRedWhiteOnly() == 'f' ) population.SetKeepTransferring(true);
-         }
-       }
-       Cout << Endl << Endl;
-       population.RunSummary();
-       population.PushBackRuns();
-       //kptree::print_tree_bracketed(newtree);
-       //Cout << Endl << Endl << "Printing to screen.... " << Endl;
-       //population.PrintFrequenciesToScreen(&frequencies);
-       //Cout << Endl << Endl << "Printing to file.... " << Endl;
-       //population.PrintOut(output_file, &frequencies);
-       //std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
-       //population.CalculateSimilarity(&frequencies);
-       std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
-       std::vector< std::vector<int> > muller_matrix;
-       population.DrawMullerMatrix(&newtree, muller_matrix, &frequencies);
-     }
+        if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
+          population.FrequenciesPerTransferPerNode(&frequencies);
+          population.Resample(); 
+          count++;
+          std::cout << std::endl << "Passing.... " << count << std::endl;
+        }
+        
+        //if (g_verbose) population.PrintTree();
+      }
+    }
+    std::cout << std::endl << std::endl;
+    population.RunSummary();
+    population.PushBackRuns();
+
+    if (g_verbose) {
+      population.PrintTree();
+    }
+     
+    //Cout << Endl << Endl << "Printing to screen.... " << Endl;
+    //population.PrintFrequenciesToScreen(&frequencies);
+    //Cout << Endl << Endl << "Printing to file.... " << Endl;
+    //population.PrintOut(output_file, &frequencies);
+    //std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
+    //population.CalculateSimilarity(&frequencies);
+    std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
+    std::vector< std::vector<int> > muller_matrix;
+    population.DrawMullerMatrix(output_file, muller_matrix, &frequencies);
+  }
 	 
    //population.PrintOut(output_file, frequencies);
 }

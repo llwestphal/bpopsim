@@ -226,11 +226,12 @@ void cPopulation::FrequenciesPerTransferPerNode(std::vector< std::vector<cGenoty
 // @JEB function returns the high frequency of the tallest child
 //      (to tell the parent where to put its low frequency)
 double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
-                                  uint32_t time,
                                   double in_low,
                                   double in_high,
                                   std::vector<cFrequencySlice> * child_freqs,
-                                  std::vector<cGenotypeFrequency> * frequencies) {
+                                  std::vector<cGenotypeFrequency> * frequencies, 
+                                  int depth)  // current depth in tree, defaults to zero
+{
   
   //kptree::print_tree_bracketed(*newtree);
   
@@ -238,21 +239,16 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
   double this_low = in_low;
   double this_high = this_low + ((*frequencies)[this_node->unique_node_id]).frequency;
   
-  //increment parent low up to account for child_high... currently no worky
-  //tree<cGenotype>::iterator change_parent(m_tree.parent(tree<cGenotype>::iterator(child_node)));
-  //std::cout << (*change_parent).unique_node_id << " ";
-  //(*child_freqs)[(*change_parent).unique_node_id].child_low = child_high;
-  
   // The swath for this mutation may shrink on the bottom
   // due to its children taking a bite out of it.  
-  double last_assigned_child_high = 0;
+  double last_assigned_child_high = this_low;
   for (tree<cGenotype>::sibling_iterator it_node = m_tree.begin(this_node); it_node!=m_tree.end(this_node); ++it_node) {
 
     // is a frequency assigned for this child (it may have happened later)
     if (it_node->unique_node_id < frequencies->size()) {
-      // is the frequency > 0 (it may have gone extinct, in which case it is a waste to keep going down the tree)
-      if( ((*frequencies)[it_node->unique_node_id]).frequency > 0 ) {
-        last_assigned_child_high = AssignChildFreq(it_node, time, this_low, this_high, child_freqs, frequencies);
+      // is the frequency > 0? (It may have gone extinct, in which case it is a waste to keep going down the tree!)
+      if( (*frequencies)[it_node->unique_node_id].frequency > 0 ) {
+        last_assigned_child_high = AssignChildFreq(it_node, this_low, this_high, child_freqs, frequencies, depth+1);
       }
     }
     // Our new low is the last high assigned to a child
@@ -267,9 +263,14 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
   (*child_freqs)[this_node->unique_node_id].low = this_low;
   (*child_freqs)[this_node->unique_node_id].high = this_high;
 
-  return this_high;
   
-  //std::cout << (*child_node).unique_node_id << " " << m_subpops[time][(*child_node).unique_node_id] << " " << child_high << " " << child_low << std::endl;
+  // print indented version
+  for (int i=0; i<depth; i++) {
+    std::cout << " ";
+  }
+  std::cout << " ID:" << this_node->unique_node_id << " Freq:" << (*frequencies)[this_node->unique_node_id].frequency << " [" << this_low << "," << this_high << "]" << std::endl;
+
+  return this_high;  
 }
 
 void cPopulation::DrawMullerMatrix(std::string filename,
@@ -302,7 +303,7 @@ void cPopulation::DrawMullerMatrix(std::string filename,
     tree<cGenotype>::sibling_iterator location;
     location = m_tree.begin();
     
-    AssignChildFreq(location, time, 0, 1, &child_freqs, &((*frequencies)[time]));
+    AssignChildFreq(location, 0, 1, &child_freqs, &((*frequencies)[time]));
     std::cout << std::endl;
     
     //Iterator and pointer horror!!!!!!!!!
@@ -343,7 +344,7 @@ void cPopulation::DrawMullerMatrix(std::string filename,
     skip_zeros:
     std::cout << time << std::endl;
     for(int i=0; i<child_freqs.size(); i++) {
-      if( ((child_freqs[i].high) != (child_freqs[i].low)) )  output_handle << std::setw(8) << i << " " << std::left << std::setw(15) << child_freqs[i].low << std::setw(15) << child_freqs[i].high << std::endl;
+      if( ((child_freqs[i].high) != (child_freqs[i].low)) )  output_handle << std::left << std::setw(8) << i << " " << std::left << std::setw(15) << child_freqs[i].low << std::setw(15) << child_freqs[i].high << std::endl;
     }
     output_handle << std::endl;
     //muller_matrix.push_back(this_time_point);

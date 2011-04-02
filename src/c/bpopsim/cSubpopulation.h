@@ -29,15 +29,6 @@ struct cGenotype{
  double fitness;
  };
 
-//@agm I put this in class form as well, just in case we need to add methods one day.
-//     For now, the struct works better.
-
-/*class cGenotype{
-  public:
-    uint32_t unique_node_id;
-    double fitness;
- };*/
-
 struct cGenotypeFrequency{
 	uint32_t unique_node_id;
 	double frequency;

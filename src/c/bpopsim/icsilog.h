@@ -36,7 +36,7 @@
 #define __ICSI_LOG__
 
 /* ICSIlog v2.0 */
-inline float icsi_log_v2(const float val, register float* const pTable, register const unsigned precision)
+inline double icsi_log_v2(const float val, register float* const pTable, register const unsigned precision)
 {
      /* get access to float bits */
      register const int* const pVal = (const int*)(&val);
@@ -46,7 +46,7 @@ inline float icsi_log_v2(const float val, register float* const pTable, register
      register const int man = (*pVal & 0x7FFFFF) >> (23 - precision);
 
      /* exponent plus lookup refinement */
-     return ((float)(exp) + pTable[man]) * 0.69314718055995f;
+     return ((double)(exp) + pTable[man]) * 0.69314718055995f;
 }
 
 #endif	

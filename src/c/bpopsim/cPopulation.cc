@@ -79,7 +79,7 @@ void cPopulation::SetParameters(const variables_map &options)
     );
   
   // Simulation parameters that are pre-calculated
-  SetDilutionFactor(exp(log(2)*GetGrowthPhaseGenerations()));
+  SetDilutionFactor(exp(0.69314718055994528622676398299518041312694549560546875*GetGrowthPhaseGenerations()));
   SetTransferBinomialSamplingP(1/GetDilutionFactor());
   SetPopSizeBeforeDilution(GetPopSizeAfterDilution() * GetDilutionFactor());
   SetLambda(1/GetMutationRatePerDivision());
@@ -219,10 +219,6 @@ void cPopulation::FrequenciesPerTransferPerNode(std::vector< std::vector<cGenoty
 	frequencies->push_back(freq_per_node);
 }
 
-//@agm Here I want to calculate the frequencies of subpopulations rather than mutations
-//     It's not yet clear to me how to do that.
-
-
 // @JEB function returns the high frequency of the tallest child
 //      (to tell the parent where to put its low frequency)
 double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
@@ -306,42 +302,6 @@ void cPopulation::DrawMullerMatrix(std::string filename,
     AssignChildFreq(location, 0, 1, &child_freqs, &((*frequencies)[time]));
     std::cout << std::endl;
     
-    //Iterator and pointer horror!!!!!!!!!
-    /*for (std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[time].begin(); it!=(*frequencies)[time].end(); ++it) {
-      //skip to end of this time step if most of this time point will be zeros
-      if( relevant_columns[(*it).unique_node_id] == true ) {
-        //std::cout << relevant_columns[(*it).unique_node_id] << std::endl;
-        if( (*it).unique_node_id == 0 ) {
-          double portion; 
-          portion = (double) m_subpops[time][count] / total_cells_per_time;
-          if( portion == 1 ) goto skip_zeros;
-        }
-        else {
-          double portion; 
-          portion = (double) m_subpops[time][count] / total_cells_per_time;
-          int number_of_spots (int(portion*this_time_point.size()));
-    
-          //find parent of it
-          cGenotype node_parent;
-          node_parent = ( *(newtree->parent(where[(*it).unique_node_id])) );
-        
-          //std::cout << (*it).unique_node_id << " " << portion << " " << (*it).subpop_size << " " << total_cells_per_time << " " << node_parent.unique_node_id << std::endl;
-          
-          for (int j=0; j<number_of_spots; j++) {
-            for (int i=0; i<this_time_point.size(); i++) {
-              if( node_parent.unique_node_id == this_time_point[i]) {
-                this_time_point[i] = mutation_counter;
-                break;
-              }
-            }
-          }
-          if( number_of_spots > 0 ) mutation_counter++;;
-        }
-      }
-      count++;
-    }*/
-    
-    skip_zeros:
     std::cout << time << std::endl;
     for(int i=0; i<child_freqs.size(); i++) {
       if( ((child_freqs[i].high) != (child_freqs[i].low)) )  output_handle << std::left << std::setw(8) << i << " " << std::left << std::setw(15) << child_freqs[i].low << std::setw(15) << child_freqs[i].high << std::endl;

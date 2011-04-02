@@ -79,7 +79,7 @@ void cPopulation::SetParameters(const variables_map &options)
     );
   
   // Simulation parameters that are pre-calculated
-  SetDilutionFactor(exp(0.69314718055994528622676398299518041312694549560546875*GetGrowthPhaseGenerations()));
+  SetDilutionFactor(exp(log(2)*GetGrowthPhaseGenerations()));
   SetTransferBinomialSamplingP(1/GetDilutionFactor());
   SetPopSizeBeforeDilution(GetPopSizeAfterDilution() * GetDilutionFactor());
   SetLambda(1/GetMutationRatePerDivision());

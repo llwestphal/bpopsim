@@ -301,17 +301,24 @@ void cPopulation::DrawMullerMatrix(std::string filename,
     location = m_tree.begin();
     
     AssignChildFreq(location, 0, 1, &child_freqs, &((*frequencies)[time]));
-    std::sort((&child_freqs)->begin(), (&child_freqs)->end(), cSortByLow());
-    std::cout << std::endl;
     
     std::cout << time << std::endl;
     
     int resolution(1000);
     double pixel_step;
     
+    //@agm Here I first iterate through the number of pixels
     for (int i=1; i<=resolution; i++) {
+      
+      //Determine the position of the current pixel_step
       pixel_step = (double) i/resolution;
+      
+      //iterate through the child_freqs vector
       for (int j=0; j<child_freqs.size(); j++) {
+        
+        //if the low value for some node is lower than the current pixel_step
+        //and the high value for the same node is higher than the current pixel_step
+        //then, print the node_id for that nodes
         if( child_freqs[j].low < pixel_step && child_freqs[j].high >= pixel_step ) {
           output_handle << std::left << std::setw(8) << child_freqs[j].unique_node_id;
           break;

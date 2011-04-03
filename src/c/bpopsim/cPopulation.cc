@@ -296,26 +296,32 @@ void cPopulation::DrawMullerMatrix(std::string filename,
     location = m_tree.begin();
     
     AssignChildFreq(location, 0, 1, &child_freqs, &((*frequencies)[time]));
+    std::sort(child_freqs.begin(), child_freqs.end(), cSortByLow());
     
-    int resolution(1000);
+    uint32_t resolution(1000), last_node_meeting_span;
     double pixel_step, span, min_step;
     min_step = (double) 1/resolution;
     
     //@agm Here I first iterate through the number of pixels
-    for (int i=1; i<=resolution; i++) {
+    for (uint32_t i=1; i<=resolution; i++) {
       
       //Determine the position of the current pixel_step
       pixel_step = (double) i/resolution;
       
       //iterate through the child_freqs vector
-      for (int j=0; j<child_freqs.size(); j++) {
+      for (uint32_t j=0; j<child_freqs.size(); j++) {
         span = child_freqs[j].high - child_freqs[j].low;
-        
         //if the low value for some node is lower than the current pixel_step
         //and the high value for the same node is higher than the current pixel_step
         //then, print the node_id for that nodes
-        if( child_freqs[j].low < pixel_step && child_freqs[j].high >= pixel_step && span > min_step) {
-          output_handle << std::left << std::setw(8) << child_freqs[j].unique_node_id;
+        if( child_freqs[j].high >= pixel_step ) {
+          if( span > min_step ) {
+            output_handle << std::left << std::setw(8) << child_freqs[j].unique_node_id;
+            last_node_meeting_span = child_freqs[j].unique_node_id;
+          }
+          else {
+            output_handle << std::left << std::setw(8) << last_node_meeting_span;
+          }
           break;
         }
       }

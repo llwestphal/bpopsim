@@ -256,6 +256,7 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
   // Draw between this_low and this_high ... rounding to only paint whole numbers ...
   
   // save the final values for the low and high of this swath
+  (*child_freqs)[this_node->unique_node_id].unique_node_id = this_node->unique_node_id;
   (*child_freqs)[this_node->unique_node_id].low = this_low;
   (*child_freqs)[this_node->unique_node_id].high = this_high;
 
@@ -264,7 +265,7 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
   for (int i=0; i<depth; i++) {
     std::cout << " ";
   }
-  std::cout << " ID:" << this_node->unique_node_id << " Freq:" << (*frequencies)[this_node->unique_node_id].frequency << " [" << this_low << "," << this_high << "]" << std::endl;
+  //std::cout << " ID:" << this_node->unique_node_id << " Freq:" << (*frequencies)[this_node->unique_node_id].frequency << " [" << this_low << "," << this_high << "]" << std::endl;
 
   return this_high;  
 }
@@ -294,18 +295,34 @@ void cPopulation::DrawMullerMatrix(std::string filename,
     
     //int count(0), mutation_counter(0);
     
-    std::vector<cFrequencySlice> child_freqs(m_tree.size(), cFrequencySlice(0,0));
+    std::vector<cFrequencySlice> child_freqs(m_tree.size(), cFrequencySlice(NULL,0,0));
     
     tree<cGenotype>::sibling_iterator location;
     location = m_tree.begin();
     
     AssignChildFreq(location, 0, 1, &child_freqs, &((*frequencies)[time]));
+    std::sort((&child_freqs)->begin(), (&child_freqs)->end(), cSortByLow());
     std::cout << std::endl;
     
     std::cout << time << std::endl;
+    
+    int resolution(1000);
+    double pixel_step;
+    
+    for (int i=1; i<=resolution; i++) {
+      pixel_step = (double) i/resolution;
+      for (int j=0; j<child_freqs.size(); j++) {
+        if( child_freqs[j].low < pixel_step && child_freqs[j].high >= pixel_step ) {
+          output_handle << std::left << std::setw(8) << child_freqs[j].unique_node_id;
+          break;
+        }
+      }
+    }
+    /*
+    
     for(int i=0; i<child_freqs.size(); i++) {
       if( ((child_freqs[i].high) != (child_freqs[i].low)) )  output_handle << std::left << std::setw(8) << i << " " << std::left << std::setw(15) << child_freqs[i].low << std::setw(15) << child_freqs[i].high << std::endl;
-    }
+    }*/
     output_handle << std::endl;
     //muller_matrix.push_back(this_time_point);
   }

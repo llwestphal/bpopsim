@@ -156,13 +156,13 @@ int main(int argc, char* argv[])
      
     //Cout << Endl << Endl << "Printing to screen.... " << Endl;
     //population.PrintFrequenciesToScreen(&frequencies);
-    std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
-    population.PrintOut(output_file, &frequencies);
+    //std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
+    //population.PrintOut(output_file, &frequencies);
     //std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
     //population.CalculateSimilarity(&frequencies);
-    //std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
-    //std::vector< std::vector<int> > muller_matrix;
-    //population.DrawMullerMatrix(output_file, muller_matrix, &frequencies);
+    std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
+    std::vector< std::vector<int> > muller_matrix;
+    population.DrawMullerMatrix(output_file, muller_matrix, &frequencies);
   }
 	 
    //population.PrintOut(output_file, frequencies);

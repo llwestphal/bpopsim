@@ -35,9 +35,16 @@ struct cGenotypeFrequency{
 };
 
 struct cFrequencySlice {
-  cFrequencySlice(double in_low, double in_high) : low(in_low), high(in_high) {}
+  cFrequencySlice(uint32_t node_id, double in_low, double in_high) : unique_node_id(node_id), low(in_low), high(in_high) {}
+  uint32_t unique_node_id;
   double low;
   double high;
+};
+
+struct cSortByLow {
+  bool operator () (const cFrequencySlice & lhs , const cFrequencySlice & rhs) const {
+    return lhs.low < rhs.low;
+  }
 };
 
 class cSubpopulation {

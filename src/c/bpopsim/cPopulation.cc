@@ -234,21 +234,33 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
   //The low for this mutation should be the low of the input interval
   double this_low = in_low;
   double this_high = this_low + ((*frequencies)[this_node->unique_node_id]).frequency;
+  double size_depth1_children(0), half_size_parent_swath((this_high-this_low)/2);
+  
+  for (tree<cGenotype>::sibling_iterator it_node = m_tree.begin(this_node); it_node!=m_tree.end(this_node); ++it_node) {
+    if (it_node->unique_node_id < frequencies->size()) {
+      size_depth1_children += ((*frequencies)[it_node->unique_node_id]).frequency;
+    }
+  }
+  /*if(size_depth1_children != 0)
+    std::cout << size_depth1_children << std::endl;*/
+  
+  double this_bottom_high(this_low + half_size_parent_swath - (size_depth1_children/2));
+  double this_top_low(this_bottom_high);
   
   // The swath for this mutation may shrink on the bottom
   // due to its children taking a bite out of it.  
-  double last_assigned_child_high = this_low;
+  double last_assigned_child_high = this_top_low;
   for (tree<cGenotype>::sibling_iterator it_node = m_tree.begin(this_node); it_node!=m_tree.end(this_node); ++it_node) {
 
     // is a frequency assigned for this child (it may have happened later)
     if (it_node->unique_node_id < frequencies->size()) {
       // is the frequency > 0? (It may have gone extinct, in which case it is a waste to keep going down the tree!)
       if( (*frequencies)[it_node->unique_node_id].frequency > 0 ) {
-        last_assigned_child_high = AssignChildFreq(it_node, this_low, this_high, child_freqs, frequencies, depth+1);
+        last_assigned_child_high = AssignChildFreq(it_node, this_top_low, this_high, child_freqs, frequencies, depth+1);
       }
     }
     // Our new low is the last high assigned to a child
-    this_low = last_assigned_child_high;
+    this_top_low = last_assigned_child_high;
   }
   
   // At this point we know the top and bottom of this node...
@@ -256,17 +268,19 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
   // Draw between this_low and this_high ... rounding to only paint whole numbers ...
   
   // save the final values for the low and high of this swath
-  (*child_freqs)[this_node->unique_node_id].unique_node_id = this_node->unique_node_id;
-  (*child_freqs)[this_node->unique_node_id].low = this_low;
-  (*child_freqs)[this_node->unique_node_id].high = this_high;
-
+  //(*child_freqs)[this_node->unique_node_id].unique_node_id = this_node->unique_node_id;
+  //(*child_freqs)[this_node->unique_node_id].low = this_low;
+  //(*child_freqs)[this_node->unique_node_id].high = this_high;
+  
+  (*child_freqs).push_back(cFrequencySlice(this_node->unique_node_id, this_low, this_bottom_high));
+  (*child_freqs).push_back(cFrequencySlice(this_node->unique_node_id, this_top_low, this_high));
   
   // print indented version
-  for (int i=0; i<depth; i++) {
+  /*for (int i=0; i<depth; i++) {
     std::cout << " ";
-  }
+  }*/
   //std::cout << " ID:" << this_node->unique_node_id << " Freq:" << (*frequencies)[this_node->unique_node_id].frequency << " [" << this_low << "," << this_high << "]" << std::endl;
-
+                              
   return this_high;  
 }
 
@@ -290,7 +304,7 @@ void cPopulation::DrawMullerMatrix(std::string filename,
   for (uint32_t time=0; time<(*frequencies).size(); time++) {
     std::cout << time << std::endl;
     
-    std::vector<cFrequencySlice> child_freqs(m_tree.size(), cFrequencySlice(NULL,0,0));
+    std::vector<cFrequencySlice> child_freqs;
     
     tree<cGenotype>::sibling_iterator location;
     location = m_tree.begin();
@@ -298,9 +312,10 @@ void cPopulation::DrawMullerMatrix(std::string filename,
     AssignChildFreq(location, 0, 1, &child_freqs, &((*frequencies)[time]));
     std::sort(child_freqs.begin(), child_freqs.end(), cSortByLow());
     
-    uint32_t resolution(1000), last_node_meeting_span;
+    uint32_t resolution(2000), last_node_meeting_span;
     double pixel_step, span, min_step;
     min_step = (double) 1/resolution;
+    
     
     //@agm Here I first iterate through the number of pixels
     for (uint32_t i=1; i<=resolution; i++) {
@@ -635,7 +650,7 @@ void cPopulation::Mutate()
 void cPopulation::PrintOut(const std::string& output_file_name, 
                            std::vector< std::vector<cGenotypeFrequency> > * frequencies)
 {  
-  std::vector<bool> ColsToPrint = MutationAboveThreshold(&(*frequencies), .1);
+  std::vector<bool> ColsToPrint = MutationAboveThreshold(&(*frequencies), .2);
   
 	//Print everything out
 	std::ofstream output_file;

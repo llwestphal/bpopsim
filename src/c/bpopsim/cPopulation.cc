@@ -300,6 +300,8 @@ void cPopulation::DrawMullerMatrix(std::string filename,
   
   std::ofstream output_handle(filename.c_str());
   
+  uint32_t m_renumber_value(0);
+  
   //step through simulation time
   for (uint32_t time=0; time<(*frequencies).size(); time++) {
     std::cout << time << std::endl;
@@ -312,10 +314,9 @@ void cPopulation::DrawMullerMatrix(std::string filename,
     AssignChildFreq(location, 0, 1, &child_freqs, &((*frequencies)[time]));
     std::sort(child_freqs.begin(), child_freqs.end(), cSortByLow());
     
-    uint32_t resolution(2000), last_node_meeting_span;
+    uint32_t resolution(1000), last_node_meeting_span;
     double pixel_step, span, min_step;
     min_step = (double) 1/resolution;
-    
     
     //@agm Here I first iterate through the number of pixels
     for (uint32_t i=1; i<=resolution; i++) {
@@ -323,16 +324,25 @@ void cPopulation::DrawMullerMatrix(std::string filename,
       //Determine the position of the current pixel_step
       pixel_step = (double) i/resolution;
       
-      //iterate through the child_freqs vector
       for (uint32_t j=0; j<child_freqs.size(); j++) {
         span = child_freqs[j].high - child_freqs[j].low;
+        
         //if the low value for some node is lower than the current pixel_step
         //and the high value for the same node is higher than the current pixel_step
         //then, print the node_id for that nodes
         if( child_freqs[j].high >= pixel_step ) {
+          
           if( span > min_step ) {
-            output_handle << std::left << std::setw(8) << child_freqs[j].unique_node_id;
-            last_node_meeting_span = child_freqs[j].unique_node_id;
+            
+            //Add new significant mutations to a map for renumbering
+            if( m_renumber.count(child_freqs[j].unique_node_id) == 0 ) {
+              m_renumber.insert(std::make_pair(child_freqs[j].unique_node_id, m_renumber_value));
+              m_renumber_value++;
+              m_renumber_value %= 32;
+            }
+            //Return the renumbered-number for the unique_node_id from the built map
+            output_handle << std::left << std::setw(8) << m_renumber.find(child_freqs[j].unique_node_id)->second;
+            last_node_meeting_span = m_renumber.find(child_freqs[j].unique_node_id)->second;
           }
           else {
             output_handle << std::left << std::setw(8) << last_node_meeting_span;
@@ -711,7 +721,7 @@ void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFre
 //     and its predecessor if they got above the threshold passed to the threshold function below
 
 void cPopulation::CalculateSimilarity(std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
-  std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .1));
+  std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .99));
   std::vector< std::vector<cGenotypeFrequency> > only_relevant_mutations;
   int counter(0);
   

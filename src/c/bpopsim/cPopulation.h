@@ -27,6 +27,7 @@ private:
   std::vector<double> m_this_run;
   std::vector<int> m_total_cells;
   std::vector< std::vector<uint32_t> > m_subpops;
+  std::map<uint32_t, uint32_t> m_renumber;
   
   gsl_rng* m_rng;
   

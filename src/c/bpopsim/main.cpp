@@ -156,13 +156,25 @@ int main(int argc, char* argv[])
      
     //Cout << Endl << Endl << "Printing to screen.... " << Endl;
     //population.PrintFrequenciesToScreen(&frequencies);
-    //std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
-    //population.PrintOut(output_file, &frequencies);
-    std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
-    population.CalculateSimilarity(&frequencies);
-    std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
-    std::vector< std::vector<int> > muller_matrix;
-    population.DrawMullerMatrix(output_file, muller_matrix, &frequencies);
+    
+    std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
+    population.PrintOut(output_file, &frequencies);
+    
+    //unsigned int num_below_threshold(0);
+    //std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
+    //num_below_threshold = population.CalculateSimilarity(&frequencies);
+    //std::cout << std::endl << num_below_threshold << std::endl;
+    
+    std::vector<int> time_to_sweep;
+    time_to_sweep = population.TimeToSweep(&frequencies);
+    std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
+    for (std::vector<int>::iterator it_node = time_to_sweep.begin(); it_node != time_to_sweep.end(); it_node++) {
+      if( (*it_node) != 0 )std::cout << (*it_node) << std::endl;
+    }
+    
+    //std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
+    //std::vector< std::vector<int> > muller_matrix;
+    //population.DrawMullerMatrix(output_file, muller_matrix, &frequencies);
   }
 	 
    //population.PrintOut(output_file, frequencies);

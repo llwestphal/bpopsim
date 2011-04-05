@@ -27,7 +27,6 @@ private:
   std::vector<double> m_this_run;
   std::vector<int> m_total_cells;
   std::vector< std::vector<uint32_t> > m_subpops;
-  std::map<uint32_t, uint32_t> m_renumber;
   
   gsl_rng* m_rng;
   
@@ -189,18 +188,20 @@ public:
   //utilities
   
   // Prints a line with numbers in each existing subpopulation
-  void PrintCurrentNumbers();
+  void               PrintCurrentNumbers();
   
-  void PrintOut(const std::string& output_file_name,
-                std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  void ClearRuns();
-  void PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  std::vector<bool> MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > * frequencies, float threshold);
-  void CalculateSimilarity(std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  float Logarithm(float mantissa);
-  void ConstructLookUpTable();
-  void fill_icsi_log_table2(const unsigned precision, float* const pTable);
-  double ReturnLog(double num);
+  void               PrintOut(const std::string& output_file_name,
+                                          std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+  void               ClearRuns();
+  void               PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+  std::vector<bool>  MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > * frequencies, float threshold);
+  unsigned int       CalculateSimilarity(std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+  double             CountMutipleDivergedSubpops();
+  std::vector<int>  TimeToSweep(std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+  float              Logarithm(float mantissa);
+  void               ConstructLookUpTable();
+  void               fill_icsi_log_table2(const unsigned precision, float* const pTable);
+  double             ReturnLog(double num);
   
   // Prints out the tree using bracket notation.
   void PrintTree();

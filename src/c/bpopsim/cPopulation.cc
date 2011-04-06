@@ -279,7 +279,8 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
   /*for (int i=0; i<depth; i++) {
     std::cout << " ";
   }*/
-  //std::cout << " ID:" << this_node->unique_node_id << " Freq:" << (*frequencies)[this_node->unique_node_id].frequency << " [" << this_low << "," << this_high << "]" << std::endl;
+  //std::cout << " ID:" << this_node->unique_node_id << " Freq:" << (*frequencies)[this_node->unique_node_id].frequency;
+  //std::cout << " [" << this_low << "," << this_high << "]" << std::endl;
                               
   return this_high;  
 }
@@ -289,6 +290,8 @@ void cPopulation::DrawMullerMatrix(std::string filename,
                                    std::vector< std::vector<cGenotypeFrequency> > * frequencies){
   
   std::vector< tree<cGenotype>::iterator > where(m_tree.size());
+  std::map<uint32_t, uint32_t> renumber;
+  uint32_t renumber_value(0);
   
   //double threshold(.025);
   //std::vector<bool> relevant_columns(newtree->size(), true);
@@ -312,10 +315,9 @@ void cPopulation::DrawMullerMatrix(std::string filename,
     AssignChildFreq(location, 0, 1, &child_freqs, &((*frequencies)[time]));
     std::sort(child_freqs.begin(), child_freqs.end(), cSortByLow());
     
-    uint32_t resolution(2000), last_node_meeting_span;
+    uint32_t resolution(1000), last_node_meeting_span;
     double pixel_step, span, min_step;
     min_step = (double) 1/resolution;
-    
     
     //@agm Here I first iterate through the number of pixels
     for (uint32_t i=1; i<=resolution; i++) {
@@ -323,16 +325,25 @@ void cPopulation::DrawMullerMatrix(std::string filename,
       //Determine the position of the current pixel_step
       pixel_step = (double) i/resolution;
       
-      //iterate through the child_freqs vector
       for (uint32_t j=0; j<child_freqs.size(); j++) {
         span = child_freqs[j].high - child_freqs[j].low;
+        
         //if the low value for some node is lower than the current pixel_step
         //and the high value for the same node is higher than the current pixel_step
         //then, print the node_id for that nodes
         if( child_freqs[j].high >= pixel_step ) {
+          
           if( span > min_step ) {
-            output_handle << std::left << std::setw(8) << child_freqs[j].unique_node_id;
-            last_node_meeting_span = child_freqs[j].unique_node_id;
+            
+            //Add new significant mutations to a map for renumbering
+            if( renumber.count(child_freqs[j].unique_node_id) == 0 ) {
+              renumber.insert(std::make_pair(child_freqs[j].unique_node_id, renumber_value));
+              renumber_value++;
+              renumber_value %= 32;
+            }
+            //Return the renumbered-number for the unique_node_id from the built map
+            output_handle << std::left << std::setw(8) << renumber.find(child_freqs[j].unique_node_id)->second;
+            last_node_meeting_span = renumber.find(child_freqs[j].unique_node_id)->second;
           }
           else {
             output_handle << std::left << std::setw(8) << last_node_meeting_span;
@@ -344,7 +355,8 @@ void cPopulation::DrawMullerMatrix(std::string filename,
     /*
     
     for(int i=0; i<child_freqs.size(); i++) {
-      if( ((child_freqs[i].high) != (child_freqs[i].low)) )  output_handle << std::left << std::setw(8) << i << " " << std::left << std::setw(15) << child_freqs[i].low << std::setw(15) << child_freqs[i].high << std::endl;
+      if( ((child_freqs[i].high) != (child_freqs[i].low)) )  
+        output_handle << std::left << std::setw(8)<< i << " " << std::left << std::setw(15) << child_freqs[i].low << std::setw(15) << child_freqs[i].high << std::endl;
     }*/
     output_handle << std::endl;
     //muller_matrix.push_back(this_time_point);
@@ -695,7 +707,8 @@ void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFre
     for ( std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[i].begin(); it!=(*frequencies)[i].end(); ++it) {
     //@agm set up a minimum frequency to report the print out the number so it isn't overwhelming.
       if ((*it).frequency > 0.01) {
-        std::cout << "Frequency of mutation # " << std::right << std::setw(6) << (*it).unique_node_id << " at time " << std::right << std::setw(4) << i << " is: " << std::left << std::setw(10) << (*it).frequency << std::endl;
+        std::cout << "Frequency of mutation # " << std::right << std::setw(6) << (*it).unique_node_id << " at time ";
+        std::cout << std::right << std::setw(4) << i << " is: " << std::left << std::setw(10) << (*it).frequency << std::endl;
       }
       total_freqs += (*it).frequency;
       count++;
@@ -710,10 +723,13 @@ void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFre
 //@agm This function determines the maximum difference in genotype frequency between a mutation
 //     and its predecessor if they got above the threshold passed to the threshold function below
 
-void cPopulation::CalculateSimilarity(std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
-  std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .1));
+unsigned int cPopulation::CalculateSimilarity(std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
+  std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .98));
   std::vector< std::vector<cGenotypeFrequency> > only_relevant_mutations;
-  int counter(0);
+  
+  //diff_resolution is in transfers NOT generations
+  //@agm I put this comment because I made the mistake my first time
+  int counter(0), diff_resolution(75);
   
   for (uint32_t i = 0; i<(*frequencies).size(); i++) {
     std::vector<cGenotypeFrequency> relevant_mutations_per_time(relevant_mutations.size());
@@ -731,14 +747,54 @@ void cPopulation::CalculateSimilarity(std::vector< std::vector<cGenotypeFrequenc
   
   std::vector<float> max_diff(counter, 0);
   float current_diff;
+  unsigned int num_below_threshold(0);
   
   for (int i = 0 ; i < counter; i++) {
     for (int time = 0; time < only_relevant_mutations.size(); time++) {
-      current_diff = fabs(only_relevant_mutations[time][i].frequency - only_relevant_mutations[time][i+1].frequency);
-      if( max_diff[i] < current_diff ) max_diff[i] = current_diff;
+      if ( time%diff_resolution == 0 ) {
+        current_diff = fabs(only_relevant_mutations[time][i].frequency - only_relevant_mutations[time][i+1].frequency);
+        if( max_diff[i] < current_diff ) max_diff[i] = current_diff;
+      }
     }
   }
-  for (int i = 0; i<max_diff.size(); i++) std::cout << std::endl << i << " " << max_diff[i] << std::endl;
+  for (int i = 0; i<max_diff.size(); i++) {
+    std::cout << std::endl << i << " " << max_diff[i] << std::endl;
+    if( max_diff[i] <= .15 ) num_below_threshold++;
+  }
+  return num_below_threshold;
+}
+
+/*double cPopulation::CountMutipleDivergedSubpops() {
+  
+  for (uint32_t time=0; time<m_subpops.size(); time++) {
+    
+    
+  }
+}*/
+
+//@agm This function should calculate the amount of time it takes a mutation to sweep (to 98%) once it has gotten above .1 frequency
+
+std::vector<int> cPopulation::TimeToSweep(std::vector<std::vector<cGenotypeFrequency> > *frequencies) {
+  std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .98));
+  std::vector<int> time_to_sweep(m_tree.size(),0);
+  
+  for (uint32_t time=0; time<(*frequencies).size(); time++) {
+    
+    for (std::vector<cGenotypeFrequency>::iterator node_num=(*frequencies)[time].begin(); node_num!=(*frequencies)[time].end(); node_num++) {
+      if( relevant_mutations[(*node_num).unique_node_id] == true ) {
+        if( (*node_num).frequency >= .1 || time_to_sweep[(*node_num).unique_node_id] != 0) {
+          if( (*frequencies)[time][(*node_num).unique_node_id].frequency < .98 && (*frequencies)[time][(*node_num).unique_node_id].frequency > .01) {
+            time_to_sweep[(*node_num).unique_node_id]++;
+          }
+          else if( time_to_sweep[(*node_num).unique_node_id] <= .01 ) {
+            time_to_sweep[(*node_num).unique_node_id] = 0;
+          }
+        }
+      }
+    }
+    
+  }
+  return time_to_sweep;
 }
 
 //@agm This function takes the frequency pointer and returns a boolean vector

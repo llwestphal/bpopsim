@@ -17,6 +17,7 @@
 #include <functional>
 #include <list>
 #include <utility>
+#include <map>
 
 #include <boost/program_options.hpp>
 

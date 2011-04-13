@@ -743,37 +743,46 @@ void cPopulation::PrintFrequenciesToScreen(std::string output_folder, std::vecto
 
 unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
   std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .98));
-  std::vector< std::vector<cGenotypeFrequency> > only_relevant_mutations;
+  uint32_t youngest_sweep(0);
+  
+  for (uint32_t i = relevant_mutations.size(); i > 0; i--) {
+    if( relevant_mutations[i] == true ) {
+      youngest_sweep = i; 
+      break;
+    }
+  }
+  
+  std::vector<uint32_t> all_sweep_ids;
+  tree<cGenotype>::iterator starting_child_iter;
+  
+  for (tree<cGenotype>::iterator it = m_tree.begin(); it!=m_tree.end(); it++) {
+    if( it->unique_node_id == youngest_sweep ) {
+      while (it != NULL) {
+        all_sweep_ids.push_back(it->unique_node_id);
+        it = m_tree.parent(it);
+      }
+      break;
+    }
+  }
+  
+  std::sort(all_sweep_ids.begin(), all_sweep_ids.end());
+  std::vector< std::vector<cGenotypeFrequency> >only_relevant_mutations;
   
   std::ofstream output_handle;
   std::string output_file;
   
   //diff_resolution is in transfers NOT generations
   //@agm I put this comment because I made the mistake my first time
-  int counter(0), diff_resolution(75);
+  int diff_resolution(75);
   
-  for (uint32_t i = 0; i<(*frequencies).size(); i++) {
-    std::vector<cGenotypeFrequency> relevant_mutations_per_time(relevant_mutations.size());
-    uint32_t count(0);
-    counter = 0;
-    for ( std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[i].begin(); it!=(*frequencies)[i].end(); ++it) {
-      if ( relevant_mutations[count] == true ) {
-        relevant_mutations_per_time[counter] = (*it);
-        counter++;
-      }
-      count++;
-		}
-    only_relevant_mutations.push_back(relevant_mutations_per_time);
-	}
-  
-  std::vector<float> max_diff(counter, 0);
+  std::vector<float> max_diff(all_sweep_ids.size(), 0);
   float current_diff;
   unsigned int num_below_threshold(0);
   
-  for (int i = 0 ; i < counter; i++) {
-    for (int time = 0; time < only_relevant_mutations.size(); time++) {
+  for (int i = 0 ; i < all_sweep_ids.size()-1; i++) {
+    for (int time = 0; time < (*frequencies).size(); time++) {
       if ( time%diff_resolution == 0 ) {
-        current_diff = fabs(only_relevant_mutations[time][i].frequency - only_relevant_mutations[time][i+1].frequency);
+        current_diff = (*frequencies)[time][all_sweep_ids[i]].frequency - (*frequencies)[time][all_sweep_ids[i+1]].frequency;
         if( max_diff[i] < current_diff ) max_diff[i] = current_diff;
       }
     }

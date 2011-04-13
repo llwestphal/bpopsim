@@ -86,19 +86,20 @@ int main(int argc, char* argv[])
   T = gsl_rng_taus2;
   randgen = gsl_rng_alloc(T);
   
-  uint16_t seed = 0;
-  if (cmdline_options.count("seed")) {
-    seed = cmdline_options["seed"].as<uint16_t>();
-  } else {
-    seed = time(NULL) * getpid();
-  }  
-  gsl_rng_set(randgen, seed);
-  population.SetRNG(randgen);
-  
   std::vector< std::vector<cGenotypeFrequency> > frequencies, subpops;
   
-  for (int on_run=1; on_run <= population.GetReplicates(); on_run++)
+  for (int on_run=0; on_run < population.GetReplicates(); on_run++)
   {
+    uint16_t seed = 0;
+    if (cmdline_options.count("seed")) {
+      seed = cmdline_options["seed"].as<uint16_t>() + on_run;
+    } else {
+      seed = time(NULL) * getpid();
+    }
+    
+    gsl_rng_set(randgen, seed);
+    population.SetRNG(randgen);
+    
     // Re-initialize the population for a new run 
     // (should really clean up at end of loop, not beginning @jeb)
     population.ClearRuns();
@@ -160,10 +161,8 @@ int main(int argc, char* argv[])
     std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
     population.PrintOut(output_folder, &frequencies);
     
-    unsigned int num_below_threshold(0);
     std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
-    num_below_threshold = population.CalculateSimilarity(output_folder, &frequencies);
-    std::cout << std::endl << num_below_threshold << std::endl;
+    population.CalculateSimilarity(output_folder, &frequencies);
   
     std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
     population.TimeToSweep(output_folder, &frequencies);

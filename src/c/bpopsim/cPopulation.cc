@@ -285,7 +285,7 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
   return this_high;  
 }
 
-void cPopulation::DrawMullerMatrix(std::string filename,
+void cPopulation::DrawMullerMatrix(std::string output_folder,
                                    std::vector< std::vector<int> > muller_matrix, 
                                    std::vector< std::vector<cGenotypeFrequency> > * frequencies){
   
@@ -301,7 +301,11 @@ void cPopulation::DrawMullerMatrix(std::string filename,
   for (tree<cGenotype>::iterator node_loc = m_tree.begin(); node_loc != m_tree.end(); node_loc++)
     where[(*node_loc).unique_node_id] = node_loc;
   
-  std::ofstream output_handle(filename.c_str());
+  std::string output_file;
+  output_file.append(output_folder);
+  output_file.append("/");
+  output_file.append("MullerMatrix.dat");
+  std::ofstream output_handle(output_file.c_str());
   
   //step through simulation time
   for (uint32_t time=0; time<(*frequencies).size(); time++) {
@@ -659,30 +663,35 @@ void cPopulation::Mutate()
     true, and fill NA spaces as the read.table
     function allows. */
 
-void cPopulation::PrintOut(const std::string& output_file_name, 
+void cPopulation::PrintOut(const std::string& output_folder, 
                            std::vector< std::vector<cGenotypeFrequency> > * frequencies)
 {  
   std::vector<bool> ColsToPrint = MutationAboveThreshold(&(*frequencies), .2);
   
 	//Print everything out
-	std::ofstream output_file;
-	output_file.open(output_file_name.c_str(),std::ios_base::app);
+	std::ofstream output_handle;
+  std::string output_file;
+  
+  output_file.append(output_folder);
+  output_file.append("/");
+  output_file.append("Genotype_Frequencies.dat");
+	output_handle.open(output_file.c_str(),std::ios_base::app);
   
   uint32_t last_time((*frequencies).size()-1);
   
 	for (uint32_t i = 0; i<(*frequencies)[last_time].size(); i++) { 
-    if ( ColsToPrint[i] == true ) output_file << i << " ";
+    if ( ColsToPrint[i] == true ) output_handle << i << " ";
 	}
 	//int width = 20;
-  output_file << "\n";
+  output_handle << "\n";
   
 	for (uint32_t i = 0; i<(*frequencies).size(); i++) {
     uint32_t count(0);
     for ( std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[i].begin(); it!=(*frequencies)[i].end(); ++it) {
-      if ( ColsToPrint[count] == true ) output_file << (*it).frequency << " ";
+      if ( ColsToPrint[count] == true ) output_handle << (*it).frequency << " ";
       count++;
 		}
-    output_file << "\n";
+    output_handle << "\n";
 	}
 }
 
@@ -697,10 +706,19 @@ void cPopulation::ClearRuns()
 //@agm As the function name implies, this prints the frequencies above some threshold to screen at whatever
 //     time it is called and passed the frequencies vector
 
-void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
+void cPopulation::PrintFrequenciesToScreen(std::string output_folder, std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
   std::cout << "Done with round... Here's the Output:" << std::endl << std::endl;
   
   int count(0);
+  std::ofstream output_handle;
+  std::string output_file;
+  
+  //@agm this should output exactly the same thing to file as it does to screen
+  //     the virtue of this format is that it is human readable
+  output_file.append(output_folder);
+  output_file.append("/");
+  output_file.append("HumanReadable_GenotypeFrequencies.dat");
+	output_handle.open(output_file.c_str(),std::ios_base::app);
   
 	for (uint32_t i = 0; i<(*frequencies).size(); i++) {
 		double total_freqs = 0;
@@ -708,24 +726,27 @@ void cPopulation::PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFre
     //@agm set up a minimum frequency to report the print out the number so it isn't overwhelming.
       if ((*it).frequency > 0.01) {
         std::cout << "Frequency of mutation # " << std::right << std::setw(6) << (*it).unique_node_id << " at time ";
+        output_handle << "Frequency of mutation # " << std::right << std::setw(6) << (*it).unique_node_id << " at time ";
         std::cout << std::right << std::setw(4) << i << " is: " << std::left << std::setw(10) << (*it).frequency << std::endl;
+        output_handle << std::right << std::setw(4) << i << " is: " << std::left << std::setw(10) << (*it).frequency << std::endl;
       }
       total_freqs += (*it).frequency;
       count++;
     }
-		std::cout << std::endl << "Round # " << i << " sum of frequencies is: " << total_freqs << std::endl << std::endl;
+		std::cout << "Round # " << i << " sum of frequencies is: " << total_freqs << std::endl << std::endl;
+    output_handle << "Round # " << i << " sum of frequencies is: " << total_freqs << std::endl << std::endl;
 	}
-	std::cout << "Number of cells before dilution: " << GetPopSizeBeforeDilution();
-	std::cout << std::endl << "Number of cells after dilution: " << GetPopulationSize() << std::endl << std::endl;
-	std::cout << "------------------------------------------------" << std::endl << std::endl;
 } 
 
 //@agm This function determines the maximum difference in genotype frequency between a mutation
 //     and its predecessor if they got above the threshold passed to the threshold function below
 
-unsigned int cPopulation::CalculateSimilarity(std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
+unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
   std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .98));
   std::vector< std::vector<cGenotypeFrequency> > only_relevant_mutations;
+  
+  std::ofstream output_handle;
+  std::string output_file;
   
   //diff_resolution is in transfers NOT generations
   //@agm I put this comment because I made the mistake my first time
@@ -757,8 +778,15 @@ unsigned int cPopulation::CalculateSimilarity(std::vector< std::vector<cGenotype
       }
     }
   }
+  
+  output_file.append(output_folder);
+  output_file.append("/");
+  output_file.append("SimilarityOf_SignificantParallelMutations.dat");
+	output_handle.open(output_file.c_str(),std::ios_base::app);
+  
   for (int i = 0; i<max_diff.size(); i++) {
     std::cout << std::endl << i << " " << max_diff[i] << std::endl;
+    output_handle << max_diff[i] << std::endl;
     if( max_diff[i] <= .15 ) num_below_threshold++;
   }
   return num_below_threshold;
@@ -774,7 +802,7 @@ unsigned int cPopulation::CalculateSimilarity(std::vector< std::vector<cGenotype
 
 //@agm This function should calculate the amount of time it takes a mutation to sweep (to 98%) once it has gotten above .1 frequency
 
-std::vector<int> cPopulation::TimeToSweep(std::vector<std::vector<cGenotypeFrequency> > *frequencies) {
+void cPopulation::TimeToSweep(std::string output_folder, std::vector<std::vector<cGenotypeFrequency> > *frequencies) {
   std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .98));
   std::vector<int> time_to_sweep(m_tree.size(),0);
   
@@ -792,9 +820,24 @@ std::vector<int> cPopulation::TimeToSweep(std::vector<std::vector<cGenotypeFrequ
         }
       }
     }
-    
   }
-  return time_to_sweep;
+  
+  std::ofstream output_handle;
+  std::string output_file;
+  
+  //@agm this should output exactly the same thing to file as it does to screen
+  //     the virtue of this format is that it is human readable
+  output_file.append(output_folder);
+  output_file.append("/");
+  output_file.append("TimeToSweep.dat");
+	output_handle.open(output_file.c_str(),std::ios_base::app);
+  
+  for (std::vector<int>::iterator it_node = time_to_sweep.begin(); it_node != time_to_sweep.end(); it_node++) {
+    if( (*it_node) != 0 ) {
+      std::cout << (*it_node) << std::endl;
+      output_handle << (*it_node) << std::endl;
+    }
+  }
 }
 
 //@agm This function takes the frequency pointer and returns a boolean vector

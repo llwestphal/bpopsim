@@ -170,7 +170,7 @@ public:
                          std::vector<cGenotypeFrequency> * frequencies,
                          int depth = 0);
   
-  void DrawMullerMatrix(std::string filename,
+  void DrawMullerMatrix(std::string output_folder,
                         std::vector< std::vector<int> > muller_matrix,
                         std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   
@@ -188,20 +188,20 @@ public:
   //utilities
   
   // Prints a line with numbers in each existing subpopulation
-  void               PrintCurrentNumbers();
+  void              PrintCurrentNumbers();
   
-  void               PrintOut(const std::string& output_file_name,
-                                          std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  void               ClearRuns();
-  void               PrintFrequenciesToScreen(std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  std::vector<bool>  MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > * frequencies, float threshold);
-  unsigned int       CalculateSimilarity(std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  double             CountMutipleDivergedSubpops();
-  std::vector<int>  TimeToSweep(std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  float              Logarithm(float mantissa);
-  void               ConstructLookUpTable();
-  void               fill_icsi_log_table2(const unsigned precision, float* const pTable);
-  double             ReturnLog(double num);
+  void              PrintOut(const std::string& output_folder,
+                             std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+  void              ClearRuns();
+  void              PrintFrequenciesToScreen(std::string output_folder, std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+  std::vector<bool> MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > * frequencies, float threshold);
+  unsigned int      CalculateSimilarity(std::string output_folder, std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+  double            CountMutipleDivergedSubpops();
+  void              TimeToSweep(std::string output_folder, std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+  float             Logarithm(float mantissa);
+  void              ConstructLookUpTable();
+  void              fill_icsi_log_table2(const unsigned precision, float* const pTable);
+  double            ReturnLog(double num);
   
   // Prints out the tree using bracket notation.
   void PrintTree();

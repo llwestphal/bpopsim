@@ -15,7 +15,7 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
   ("generations-per-transfer,T", value<double>(), "Generations per transfer")
   ("population-size-after-transfer,N", value<uint32_t>(), "Population size after transfer")
   ("number-of-transfers,n", value<uint16_t>(), "Max number of transfer to replicate")
-  ("output-file,o", value<std::string>(), "Output file")
+  ("output-folder,o", value<std::string>(), "Output folder")
   ("mutation-rate-per-division,u", value<double>(), "Mutation rate per division")
   ("average-selection-coefficient,s", value<double>(), "Average selection coefficient")
   ("time-interval,i", value<uint16_t>(), "Time interval")
@@ -45,7 +45,7 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
 
   // check here for required options
   if(options.count("help")
-      || !options.count("output-file")) {
+      || !options.count("output-folder")) {
       std::cerr << "Usage: GSL_RNG_SEED=123 bpopsim -o output" << std::endl << std::endl;
       std::cerr << cmdline_options << std::endl;
       exit(0);
@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
   //set up command line options
   variables_map cmdline_options;
   get_cmdline_options(cmdline_options, argc, argv);
-  std::string output_file = cmdline_options["output-file"].as<std::string>();
+  std::string output_folder = cmdline_options["output-folder"].as<std::string>();
   
   //Initialize Population object
   cPopulation population;
@@ -153,28 +153,24 @@ int main(int argc, char* argv[])
     if (g_verbose) {
       population.PrintTree();
     }
-     
-    //Cout << Endl << Endl << "Printing to screen.... " << Endl;
-    //population.PrintFrequenciesToScreen(&frequencies);
+    
+    std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
+    population.PrintFrequenciesToScreen(output_folder, &frequencies);
     
     std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
-    population.PrintOut(output_file, &frequencies);
+    population.PrintOut(output_folder, &frequencies);
     
-    //unsigned int num_below_threshold(0);
-    //std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
-    //num_below_threshold = population.CalculateSimilarity(&frequencies);
-    //std::cout << std::endl << num_below_threshold << std::endl;
-    
-    std::vector<int> time_to_sweep;
-    time_to_sweep = population.TimeToSweep(&frequencies);
+    unsigned int num_below_threshold(0);
+    std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
+    num_below_threshold = population.CalculateSimilarity(output_folder, &frequencies);
+    std::cout << std::endl << num_below_threshold << std::endl;
+  
     std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
-    for (std::vector<int>::iterator it_node = time_to_sweep.begin(); it_node != time_to_sweep.end(); it_node++) {
-      if( (*it_node) != 0 )std::cout << (*it_node) << std::endl;
-    }
+    population.TimeToSweep(output_folder, &frequencies);
     
-    //std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
-    //std::vector< std::vector<int> > muller_matrix;
-    //population.DrawMullerMatrix(output_file, muller_matrix, &frequencies);
+    std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
+    std::vector< std::vector<int> > muller_matrix;
+    population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
   }
 	 
    //population.PrintOut(output_file, frequencies);

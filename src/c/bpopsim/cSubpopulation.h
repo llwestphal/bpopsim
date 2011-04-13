@@ -21,10 +21,6 @@
 
 #include <boost/program_options.hpp>
 
-
-/*@agm Rather than create a new class, I created a struct... it seemed simpler
-       since cGenotype really ought to be entirely public with no methods. */
-
 struct cGenotype{
  uint32_t unique_node_id;
  double fitness;

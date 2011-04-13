@@ -793,7 +793,7 @@ unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::ve
   output_file.append("SimilarityOf_SignificantParallelMutations.dat");
 	output_handle.open(output_file.c_str(),std::ios_base::app);
   
-  for (int i = 0; i<max_diff.size(); i++) {
+  for (int i = 0; i<max_diff.size()-1; i++) {
     std::cout << std::endl << i << " " << max_diff[i] << std::endl;
     output_handle << max_diff[i] << std::endl;
     if( max_diff[i] <= .15 ) num_below_threshold++;

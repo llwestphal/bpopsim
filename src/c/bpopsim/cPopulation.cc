@@ -319,7 +319,7 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
     AssignChildFreq(location, 0, 1, &child_freqs, &((*frequencies)[time]));
     std::sort(child_freqs.begin(), child_freqs.end(), cSortByLow());
     
-    uint32_t resolution(1000), last_node_meeting_span;
+    uint32_t resolution(5000), last_node_meeting_span;
     double pixel_step, span, min_step;
     min_step = (double) 1/resolution;
     
@@ -367,6 +367,9 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
   }
 }
 
+void cPopulation::DrawMullerMatrix_RedWhiteOnly(std::string output_folder,
+                                   std::vector< std::vector<int> > muller_matrix, 
+                                                std::vector< std::vector<cGenotypeFrequency> > * frequencies){;}
 
 void cPopulation::Resample() 
 {
@@ -695,6 +698,9 @@ void cPopulation::PrintOut(const std::string& output_folder,
 	}
 }
 
+void cPopulation::PrintOut_RedWhiteOnly(const std::string& output_folder, 
+                                        std::vector< std::vector<cGenotypeFrequency> > * frequencies) {;}
+
 void cPopulation::ClearRuns()
 {
   m_this_run.clear();
@@ -706,7 +712,8 @@ void cPopulation::ClearRuns()
 //@agm As the function name implies, this prints the frequencies above some threshold to screen at whatever
 //     time it is called and passed the frequencies vector
 
-void cPopulation::PrintFrequenciesToScreen(std::string output_folder, std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
+void cPopulation::PrintFrequenciesToScreen(std::string output_folder, 
+                                           std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
   std::cout << "Done with round... Here's the Output:" << std::endl << std::endl;
   
   int count(0);
@@ -737,6 +744,9 @@ void cPopulation::PrintFrequenciesToScreen(std::string output_folder, std::vecto
     output_handle << "Round # " << i << " sum of frequencies is: " << total_freqs << std::endl << std::endl;
 	}
 } 
+
+void cPopulation::PrintFrequenciesToScreen_RedWhiteOnly(std::string output_folder, 
+                                                        std::vector< std::vector<cGenotypeFrequency> > * frequencies) {;}
 
 //@agm This function determines the maximum difference in genotype frequency between a mutation
 //     and its predecessor if they got above the threshold passed to the threshold function below
@@ -811,7 +821,8 @@ unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::ve
 
 //@agm This function should calculate the amount of time it takes a mutation to sweep (to 98%) once it has gotten above .1 frequency
 
-void cPopulation::TimeToSweep(std::string output_folder, std::vector<std::vector<cGenotypeFrequency> > *frequencies) {
+void cPopulation::TimeToSweep(std::string output_folder, 
+                              std::vector<std::vector<cGenotypeFrequency> > *frequencies) {
   std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .98));
   std::vector<int> time_to_sweep(m_tree.size(),0);
   
@@ -820,8 +831,10 @@ void cPopulation::TimeToSweep(std::string output_folder, std::vector<std::vector
     for (std::vector<cGenotypeFrequency>::iterator node_num=(*frequencies)[time].begin(); node_num!=(*frequencies)[time].end(); node_num++) {
       if( relevant_mutations[(*node_num).unique_node_id] == true ) {
         if( (*node_num).frequency >= .1 || time_to_sweep[(*node_num).unique_node_id] != 0) {
-          if( (*frequencies)[time][(*node_num).unique_node_id].frequency < .98 && (*frequencies)[time][(*node_num).unique_node_id].frequency > .01) {
-            time_to_sweep[(*node_num).unique_node_id]++;
+          if( (*frequencies)[time][(*node_num).unique_node_id].frequency < .98 ) {
+             if( (*frequencies)[time][(*node_num).unique_node_id].frequency > .01 ) {
+               time_to_sweep[(*node_num).unique_node_id]++;
+             }
           }
           else if( time_to_sweep[(*node_num).unique_node_id] <= .01 ) {
             time_to_sweep[(*node_num).unique_node_id] = 0;
@@ -848,6 +861,9 @@ void cPopulation::TimeToSweep(std::string output_folder, std::vector<std::vector
     }
   }
 }
+
+void cPopulation::TimeToSweep_RedWhiteOnly(std::string output_folder, 
+                                           std::vector<std::vector<cGenotypeFrequency> > *frequencies) {;}
 
 //@agm This function takes the frequency pointer and returns a boolean vector
 //     The boolean vector contains a true in the mutations that got above the passed threshold

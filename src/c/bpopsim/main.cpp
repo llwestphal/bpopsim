@@ -5,6 +5,7 @@
 
 // Global variable for keeping track of verbosity
 bool g_verbose = false;
+bool g_ro_only = false;
 
 // setup and parse configuration options:
 void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
@@ -25,7 +26,7 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
   ("verbose,v", "Verbose")
   ("lineage-tree,l", value<uint16_t>(), "Lineage Tree")
   ("seed,d", value<uint16_t>(), "Seed for random number generator")
-  ("red-white,m", value<bool>(), "Only care about red/white lineages. For marker divergence.")
+  ("red-white,k", "Only care about red/white lineages. For marker divergence.")
   ("log-approximation,a", value<char>(), "Less precise/faster approximation")
   ("log-approximation-value", value<int>(), "Precise-ness of log approximation")
   ;
@@ -52,6 +53,7 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
   }
   
   if (options.count("verbose")) g_verbose = true;
+  if (options.count("red-white")) g_ro_only = true;
 }
 
 int main(int argc, char* argv[])
@@ -155,21 +157,38 @@ int main(int argc, char* argv[])
       population.PrintTree();
     }
     
-    std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
-    population.PrintFrequenciesToScreen(output_folder, &frequencies);
+    if (g_ro_only) {
+      std::cout << std::endl << "You chose to use red and white only." << std::endl;
+      std::cout << std::endl << "Printing to screen.... " << std::endl;
+      population.PrintFrequenciesToScreen_RedWhiteOnly(output_folder, &frequencies);
+      
+      std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
+      population.PrintOut_RedWhiteOnly(output_folder, &frequencies);
+      
+      //std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
+      //population.TimeToSweep(output_folder, &frequencies);
+      
+      std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
+      std::vector< std::vector<int> > muller_matrix;
+      population.DrawMullerMatrix_RedWhiteOnly(output_folder, muller_matrix, &frequencies);
+    }
+    else {
+      std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
+      population.PrintFrequenciesToScreen(output_folder, &frequencies);
     
-    std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
-    population.PrintOut(output_folder, &frequencies);
+      std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
+      population.PrintOut(output_folder, &frequencies);
     
-    std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
-    population.CalculateSimilarity(output_folder, &frequencies);
+      //std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
+      //population.CalculateSimilarity(output_folder, &frequencies);
   
-    std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
-    population.TimeToSweep(output_folder, &frequencies);
+      std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
+      population.TimeToSweep(output_folder, &frequencies);
     
-    std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
-    std::vector< std::vector<int> > muller_matrix;
-    population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
+      std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
+      std::vector< std::vector<int> > muller_matrix;
+      population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
+    }
   }
 	 
    //population.PrintOut(output_file, frequencies);

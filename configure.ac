@@ -6,7 +6,7 @@ AC_INIT([bpopsim], [0.1], [jeffrey.e.barrick@gmail.com], [bpopsim])
 AC_CONFIG_AUX_DIR(aux_build)
 AC_CONFIG_MACRO_DIR([aux_build/m4])
 AC_CONFIG_HEADERS([aux_build/config.h])
-AC_CONFIG_SRCDIR([])
+#AC_CONFIG_SRCDIR([])
 
 LT_INIT
 AM_INIT_AUTOMAKE
@@ -38,9 +38,12 @@ AC_CHECK_TYPES([ptrdiff_t])
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([pow])
 
-#checks for libraries
-AC_SEARCH_LIBS([gsl_rng_set], [gsl], [], [AC_MSG_ERROR(["libgsl is required."])])
+#checks for libraries                
+        
+## gsl
+AX_PATH_GSL(1.14, [], [AC_MSG_ERROR(["libgsl is required."])] )
 
+## boost
 BOOST_REQUIRE([1.42])
 BOOST_PROGRAM_OPTIONS([s])
 

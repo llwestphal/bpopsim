@@ -38,7 +38,6 @@
 		D952741B132EE0CB009223FC /* tree.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = tree.hh; path = bpopsim/tree.hh; sourceTree = "<group>"; };
 		D952741C132EE0D4009223FC /* tree_util.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = tree_util.hh; path = bpopsim/tree_util.hh; sourceTree = "<group>"; };
 		D9CD9D03132996F4006E387E /* libgsl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgsl.a; path = /opt/local/lib/libgsl.a; sourceTree = "<absolute>"; };
-		D9D66A11133E9C2900BBA1C3 /* icsilog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icsilog.h; path = bpopsim/icsilog.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,7 +84,6 @@
 			isa = PBXGroup;
 			children = (
 				708EE7B21346E8F400E33511 /* common.h */,
-				D9D66A11133E9C2900BBA1C3 /* icsilog.h */,
 				D952741C132EE0D4009223FC /* tree_util.hh */,
 				D952741B132EE0CB009223FC /* tree.hh */,
 				70684A91120A007300BE96CA /* cPopulation.h */,

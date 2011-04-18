@@ -27,8 +27,7 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
   ("lineage-tree,l", value<uint16_t>(), "Lineage Tree")
   ("seed,d", value<uint16_t>(), "Seed for random number generator")
   ("red-white,k", "Only care about red/white lineages. For marker divergence.")
-  ("log-approximation,a", value<char>(), "Less precise/faster approximation")
-  ("log-approximation-value", value<int>(), "Precise-ness of log approximation")
+  ("transfer-interval-to-print,t", value<uint16_t>(), "Red/White Printing intervals.")
   ;
 
 /* Need to add these as options...
@@ -52,29 +51,25 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
       exit(0);
   }
   
-  if (options.count("verbose")) g_verbose = true;
-  if (options.count("red-white")) g_ro_only = true;
+  if ( options.count("verbose") ) g_verbose = true;
+  if ( options.count("red-white") ) g_ro_only = true;
 }
 
 int main(int argc, char* argv[])
 {
-  tree<cGenotype>::iterator_base loc;
 	
   //set up command line options
   variables_map cmdline_options;
   get_cmdline_options(cmdline_options, argc, argv);
+  
   std::string output_folder = cmdline_options["output-folder"].as<std::string>();
+  uint16_t num_replicates = cmdline_options["replicates"].as<uint16_t>();
   
-  //Initialize Population object
-  cPopulation population;
+  uint16_t transfer_interval_to_print(1);
+  if ( cmdline_options.count("transfer-interval-to-print") > 1 )
+      transfer_interval_to_print = cmdline_options["transfer-interval-to-print"].as<uint16_t>();
   
-  //Build lookup table for logs 
-  //Currently it is the the 15th, I should take it as a command line option
-  population.ConstructLookUpTable();
-  
-  //Set cli options
-  population.SetParameters(cmdline_options);
-  population.DisplayParameters();
+  std::vector< std::vector<double> > red_white_ratios;
 	
   //Create Random Number generator and Seed
   //@agm Program defaults to system time seed if not specified at cli
@@ -88,30 +83,46 @@ int main(int argc, char* argv[])
   T = gsl_rng_taus2;
   randgen = gsl_rng_alloc(T);
   
-  std::vector< std::vector<cGenotypeFrequency> > frequencies, subpops;
+  uint16_t seed = 0;
+  if (cmdline_options.count("seed")) {
+    seed = cmdline_options["seed"].as<uint16_t>();
+  } else {
+    seed = time(NULL) * getpid();
+  }
   
-  for (int on_run=0; on_run < population.GetReplicates(); on_run++)
+  gsl_rng_set(randgen, seed);
+  
+  if (g_ro_only) std::cout << std::endl << "You chose to use red and white only." << std::endl;
+  
+  for (uint32_t on_run=0; on_run < num_replicates; on_run++)
   {
-    uint16_t seed = 0;
-    if (cmdline_options.count("seed")) {
-      seed = cmdline_options["seed"].as<uint16_t>() + on_run;
-    } else {
-      seed = time(NULL) * getpid();
-    }
+    std::vector<double> current_ro_ratio;
     
-    gsl_rng_set(randgen, seed);
+    //Initialize Population object
+    cPopulation population;
+    
+    //Build lookup table for logs 
+    //Currently it is the the 15th, I should take it as a command line option
+    //population.ConstructLookUpTable();
+    
+    //Set cli options
+    population.SetParameters(cmdline_options);
+    population.DisplayParameters();
+    
+    tree<cGenotype>::iterator_base loc;
+    std::vector< std::vector<cGenotypeFrequency> > frequencies, subpops;
+    
     population.SetRNG(randgen);
     
     // Re-initialize the population for a new run 
     // (should really clean up at end of loop, not beginning @jeb)
-    population.ClearRuns();
     population.ResetRunStats();
     
     uint32_t count(0);
     std::cout << "Replicate " << on_run << std::endl;   
 		 
     //Initialize the population
-    if (population.GetRedWhiteOnly()) {
+    if (g_ro_only) {
       population.SeedSubpopulationForRedWhite(); 
     } else {
       population.SeedPopulationWithOneColony();
@@ -144,8 +155,17 @@ int main(int argc, char* argv[])
           population.Resample(); 
           count++;
           std::cout << std::endl << "Passing.... " << count << std::endl;
+          if ( population.GetTransfers() %  transfer_interval_to_print == 0 ) {  
+            current_ro_ratio.push_back(population.GetRatio());
+            
+            if (g_verbose == 1) { 
+              std::cout << "Transfer " << population.GetTransfers() << " : " << 
+              "=>" << population.GetPopulationSize() << "  R/W Ratio: " << population.GetRatio() << std::endl;  
+              std::cout << "Total mutations: " << population.GetTotalMutations() << " Maximum Fitness: " << population.GetMaxW() << std::endl;
+              std::cout << "Size = " << current_ro_ratio.size() << std::endl;
+            }
+          }
         }
-        
         //if (g_verbose) population.PrintTree();
       }
     }
@@ -158,19 +178,7 @@ int main(int argc, char* argv[])
     }
     
     if (g_ro_only) {
-      std::cout << std::endl << "You chose to use red and white only." << std::endl;
-      std::cout << std::endl << "Printing to screen.... " << std::endl;
-      population.PrintFrequenciesToScreen_RedWhiteOnly(output_folder, &frequencies);
-      
-      std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
-      population.PrintOut_RedWhiteOnly(output_folder, &frequencies);
-      
-      //std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
-      //population.TimeToSweep(output_folder, &frequencies);
-      
-      /*std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
-      std::vector< std::vector<int> > muller_matrix;
-      population.DrawMullerMatrix_RedWhiteOnly(output_folder, muller_matrix, &frequencies);*/
+      red_white_ratios.push_back(current_ro_ratio);
     }
     else {
       std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
@@ -190,6 +198,13 @@ int main(int argc, char* argv[])
       population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
     }
   }
-	 
-   //population.PrintOut(output_file, frequencies);
+  
+  if (g_ro_only) {
+    //Initialize Population object
+    cPopulation population;
+    std::cout << std::endl << "Printing to file.... " << std::endl;
+    population.PrintOut_RedWhiteOnly(output_folder, &red_white_ratios);
+  }
+  //population.PrintOut(output_file, frequencies);
+  
 }

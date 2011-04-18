@@ -676,7 +676,7 @@ void cPopulation::PrintOut_RedWhiteOnly(const std::string& output_folder,
       if( time >= (*red_white_ratios)[replicate].size() )
         output_handle << "\t";
       else
-        output_handle << "\t" << (*red_white_ratios)[replicate][time];
+        output_handle << "\t" << log((*red_white_ratios)[replicate][time]);
     }
     output_handle << std::endl;
 	}

@@ -319,7 +319,7 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
     AssignChildFreq(location, 0, 1, &child_freqs, &((*frequencies)[time]));
     std::sort(child_freqs.begin(), child_freqs.end(), cSortByLow());
     
-    uint32_t resolution(5000), last_node_meeting_span;
+    uint32_t resolution(1000), last_node_meeting_span;
     double pixel_step, span, min_step;
     min_step = (double) 1/resolution;
     
@@ -791,7 +791,8 @@ unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::ve
   
   for (int i = 0 ; i < all_sweep_ids.size()-1; i++) {
     for (int time = 0; time < (*frequencies).size(); time++) {
-      if ( time%diff_resolution == 0 ) {
+      if ( time%diff_resolution == 0 && (*frequencies)[time].size() > all_sweep_ids.back()) {
+        //There is a bug here
         current_diff = (*frequencies)[time][all_sweep_ids[i]].frequency - (*frequencies)[time][all_sweep_ids[i+1]].frequency;
         if( max_diff[i] < current_diff ) max_diff[i] = current_diff;
       }

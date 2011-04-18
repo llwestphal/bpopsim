@@ -11,16 +11,33 @@ class cLineageTree : public tree<cGenotype> {};
 class cPopulation {
 
 private:
-
-  double m_ratio;
   
-  // we calculate the population size on demand
-  uint32_t m_population_size, m_transfers, m_total_mutations, m_total_subpopulations_lost, m_total_transfers;
+  //All int types
+  uint32_t m_population_size;
+  uint32_t m_transfers;
+  uint32_t m_total_mutations; 
+  uint32_t m_total_subpopulations_lost; 
+  uint32_t m_total_transfers;
     
-  uint16_t m_replicates, m_minimum_printed, m_transfer_interval_to_print, m_lineage;
+  uint16_t m_replicates;
+  uint16_t m_minimum_printed;
+  uint16_t m_transfer_interval_to_print;
+  uint16_t m_lineage;
   
-  int m_N, m_approx_value;
-
+  // @JEB: An uint16_t rather than a uint because this can go negative by a few cells
+  //       when cells (usually the ancestors) divide simultaneously.
+  int64_t m_divisions_until_mutation; 
+  
+  // Simulation parameters that should be arguments
+  uint32_t m_initial_population_size;
+  uint32_t m_pop_size_after_dilution;             // N sub 0 --int is to get rid of warning
+  uint16_t m_seed;
+  uint32_t m_genotype_count; //used to assign node ids in tree, should equal number of nodes
+  
+  int m_N; 
+  int m_approx_value;
+  
+  //All vector types
   std::vector<cSubpopulation> m_populations;
   std::vector<uint32_t> m_divided_lineages;
   std::vector< std::vector<double> > m_runs;
@@ -28,29 +45,35 @@ private:
   std::vector<int> m_total_cells;
   std::vector< std::vector<uint32_t> > m_subpops;
   
-  gsl_rng* m_rng;
-  
-  cLineageTree m_tree;
-  uint32_t m_genotype_count; //used to assign node ids in tree, should equal number of nodes
-  
-  // @JEB: An uint16_t rather than a uint because this can go negative by a few cells
-  //       when cells (usually the ancestors) divide simultaneously.
-  int64_t m_divisions_until_mutation; 
-  
+  //All float variables
   float *m_lookuptable;
   
-  double m_desired_divisions, m_mutation_rate_per_division, m_average_mutation_s, m_growth_phase_generations;
-  double m_update_time, m_this_time_to_next_whole_cell, m_time_to_next_whole_cell, m_max_w, m_pop_size_before_dilution, m_dilution_factor;
-  double m_transfer_binomial_sampling_p, m_lambda, m_by_color[2], m_max_divergence_factor, m_binomial_sampling_threshold, m_completed_divisions;
-
+  //double m_desired_divisions;
+  double m_mutation_rate_per_division; 
+  double m_average_mutation_s; 
+  double m_growth_phase_generations;
+  double m_update_time; 
+  double m_this_time_to_next_whole_cell; 
+  double m_time_to_next_whole_cell; 
+  double m_max_w; 
+  double m_pop_size_before_dilution; 
+  double m_dilution_factor;
+  double m_transfer_binomial_sampling_p; 
+  double m_lambda;
+  double m_by_color[2]; 
+  double m_max_divergence_factor; 
+  double m_binomial_sampling_threshold; 
+  double m_completed_divisions;
+  double m_ratio;
+  
+  //Other sporadic types
   bool m_keep_transferring;
 
   char m_beneficial_mutation_distribution, m_red_white_only, m_approx_bool;
-
-  // Simulation parameters that should be arguments
-  uint32_t m_initial_population_size;
-  uint32_t m_pop_size_after_dilution;             // N sub 0 --int is to get rid of warning
-  uint16_t m_seed;
+  
+  gsl_rng* m_rng;
+  
+  cLineageTree m_tree;
   
 public:
 

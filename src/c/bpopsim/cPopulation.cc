@@ -791,9 +791,14 @@ unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::ve
   
   for (int i = 0 ; i < all_sweep_ids.size()-1; i++) {
     for (int time = 0; time < (*frequencies).size(); time++) {
-      if ( time%diff_resolution == 0 && (*frequencies)[time].size() > all_sweep_ids.back()) {
-        //There is a bug here
-        current_diff = (*frequencies)[time][all_sweep_ids[i]].frequency - (*frequencies)[time][all_sweep_ids[i+1]].frequency;
+      
+      //This conditional is to coarse-grain the sampling to every 75 transfers (~500 generations)
+      //and to make sure there is a value in the vector at that position
+      //another way to think about it is this conditional is checking to make sure that
+      //a particular mutation has arisen in time before comparing it to something.
+      if ( time%diff_resolution == 0 && (*frequencies)[time][all_sweep_ids[i+1]].frequency >= 0) {
+        //Bug should be fixed
+        current_diff = fabs((*frequencies)[time][all_sweep_ids[i]].frequency - (*frequencies)[time][all_sweep_ids[i+1]].frequency);
         if( max_diff[i] < current_diff ) max_diff[i] = current_diff;
       }
     }

@@ -663,20 +663,20 @@ void cPopulation::PrintOut_RedWhiteOnly(const std::string& output_folder,
     if( (*red_white_ratios)[replicate].size() > largest_replicate ) largest_replicate = replicate;
   }
   
-  output_handle << std::left << std::setw(14) << "TransferNum";
+  output_handle << "transfer";
   for (uint16_t replicate = 0; replicate<(*red_white_ratios).size(); replicate++) {
-    output_handle << std::left << std::setw(14) << replicate;
+    output_handle << "\t" << replicate ;
   }
 
   output_handle << std::endl;
   
   for (uint16_t time = 0; time<(*red_white_ratios)[largest_replicate].size(); time++) {
-    output_handle << std::left << std::setw(14) << time*transfer_interval_to_print;
+    output_handle << time*transfer_interval_to_print;
     for (uint16_t replicate = 0; replicate<(*red_white_ratios).size(); replicate++) {
-      if( (*red_white_ratios)[replicate][time] >= .005 && (*red_white_ratios)[replicate][time] <= 200 )
-         output_handle << std::left << std::setw(14) << (*red_white_ratios)[replicate][time];
+      if( time >= (*red_white_ratios)[replicate].size() )
+        output_handle << "\t";
       else
-         output_handle << std::left << std::setw(14) << 0;
+        output_handle << "\t" << (*red_white_ratios)[replicate][time];
     }
     output_handle << std::endl;
 	}

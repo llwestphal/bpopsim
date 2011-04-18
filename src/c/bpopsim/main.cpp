@@ -66,8 +66,9 @@ int main(int argc, char* argv[])
   uint16_t num_replicates = cmdline_options["replicates"].as<uint16_t>();
   
   uint16_t transfer_interval_to_print(1);
-  if ( cmdline_options.count("transfer-interval-to-print") > 1 )
+  if ( cmdline_options.count("transfer-interval-to-print") ) {
       transfer_interval_to_print = cmdline_options["transfer-interval-to-print"].as<uint16_t>();
+  }
   
   std::vector< std::vector<double> > red_white_ratios;
 	
@@ -84,7 +85,7 @@ int main(int argc, char* argv[])
   randgen = gsl_rng_alloc(T);
   
   uint16_t seed = 0;
-  if (cmdline_options.count("seed")) {
+  if ( cmdline_options.count("seed") ) {
     seed = cmdline_options["seed"].as<uint16_t>();
   } else {
     seed = time(NULL) * getpid();
@@ -203,7 +204,7 @@ int main(int argc, char* argv[])
     //Initialize Population object
     cPopulation population;
     std::cout << std::endl << "Printing to file.... " << std::endl;
-    population.PrintOut_RedWhiteOnly(output_folder, &red_white_ratios);
+    population.PrintOut_RedWhiteOnly(output_folder, &red_white_ratios, transfer_interval_to_print);
   }
   //population.PrintOut(output_file, frequencies);
   

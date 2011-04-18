@@ -646,7 +646,8 @@ void cPopulation::PrintOut(const std::string& output_folder,
 
 //This may be changed to pass in a counter
 void cPopulation::PrintOut_RedWhiteOnly(const std::string& output_folder, 
-                                        std::vector< std::vector<double> > * red_white_ratios) 
+                                        std::vector< std::vector<double> > * red_white_ratios,
+                                        uint16_t transfer_interval_to_print) 
 {  
 	//Will print out only red and white
 	std::ofstream output_handle;
@@ -662,6 +663,7 @@ void cPopulation::PrintOut_RedWhiteOnly(const std::string& output_folder,
     if( (*red_white_ratios)[replicate].size() > largest_replicate ) largest_replicate = replicate;
   }
   
+  output_handle << std::left << std::setw(14) << "TransferNum";
   for (uint16_t replicate = 0; replicate<(*red_white_ratios).size(); replicate++) {
     output_handle << std::left << std::setw(14) << replicate;
   }
@@ -669,6 +671,7 @@ void cPopulation::PrintOut_RedWhiteOnly(const std::string& output_folder,
   output_handle << std::endl;
   
   for (uint16_t time = 0; time<(*red_white_ratios)[largest_replicate].size(); time++) {
+    output_handle << std::left << std::setw(14) << time*transfer_interval_to_print;
     for (uint16_t replicate = 0; replicate<(*red_white_ratios).size(); replicate++) {
       if( (*red_white_ratios)[replicate][time] >= .005 && (*red_white_ratios)[replicate][time] <= 200 )
          output_handle << std::left << std::setw(14) << (*red_white_ratios)[replicate][time];

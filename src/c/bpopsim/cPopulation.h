@@ -206,7 +206,8 @@ public:
   void PrintOut(const std::string& output_folder,
                       std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   void PrintOut_RedWhiteOnly(const std::string& output_folder,
-                             std::vector< std::vector<double> > * red_white_ratios);
+                             std::vector< std::vector<double> > * red_white_ratios,
+                             uint16_t transfer_interval_to_print);
   void PrintFrequenciesToScreen(std::string output_folder, 
                                 std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   void PrintFrequenciesToScreen_RedWhiteOnly(std::string output_folder, 

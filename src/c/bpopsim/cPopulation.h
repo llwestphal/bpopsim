@@ -183,10 +183,6 @@ public:
   void DrawMullerMatrix(std::string output_folder,
                         std::vector< std::vector<int> > muller_matrix,
                         std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  void DrawMullerMatrix_RedWhiteOnly(std::string output_folder,
-                        std::vector< std::vector<int> > muller_matrix,
-                        std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  
   void Resample();
   void PushBackRuns();
   void RunSummary();
@@ -202,6 +198,7 @@ public:
   
   // Prints a line with numbers in each existing subpopulation
   void PrintCurrentNumbers();
+  void CurrentUniqueGenotypes();
   
   void PrintOut(const std::string& output_folder,
                       std::vector< std::vector<cGenotypeFrequency> > * frequencies);
@@ -219,8 +216,6 @@ public:
   double CountMutipleDivergedSubpops();
   void TimeToSweep(std::string output_folder, 
                    std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  void TimeToSweep_RedWhiteOnly(std::string output_folder, 
-                                std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   float Logarithm(float mantissa);
   
   // Prints out the tree using bracket notation.

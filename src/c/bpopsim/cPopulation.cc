@@ -326,10 +326,6 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
   }
 }
 
-void cPopulation::DrawMullerMatrix_RedWhiteOnly(std::string output_folder,
-                                   std::vector< std::vector<int> > muller_matrix, 
-                                                std::vector< std::vector<cGenotypeFrequency> > * frequencies){;}
-
 void cPopulation::Resample() 
 {
   //When it is time for a transfer, resample population
@@ -768,7 +764,7 @@ unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::ve
       //another way to think about it is this conditional is checking to make sure that
       //a particular mutation has arisen in time before comparing it to something.
       
-      if ( time%diff_resolution == 0 && (*frequencies)[time][all_sweep_ids[i+1]].frequency >= 0) {
+      if ( time%diff_resolution == 0 && (*frequencies)[time].size() >= all_sweep_ids[i+1]) {
         //Bug should be fixed
         current_diff = fabs((*frequencies)[time][all_sweep_ids[i]].frequency - (*frequencies)[time][all_sweep_ids[i+1]].frequency);
         if( max_diff[i] < current_diff ) max_diff[i] = current_diff;
@@ -776,16 +772,31 @@ unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::ve
     }
   }
   
-  output_file.append(output_folder);
-  output_file.append("/");
-  output_file.append("SimilarityOf_SignificantParallelMutations.dat");
-	output_handle.open(output_file.c_str(),std::ios_base::app);
+  output_file = output_folder + "/" + "SweepClumpiness.dat";
+  output_handle.open(output_file.c_str(), std::ios_base::app);
+  
+  uint16_t num_simultaneous(1);
+
+  for (int i = 0; i<max_diff.size()-1; i++) {
+    if( max_diff[i] <= .1 ) num_simultaneous++; 
+    else {
+      output_handle << num_simultaneous << std::endl;
+      num_simultaneous = 1;
+    }
+  }
+  
+  output_handle.close();
+  
+  output_file = output_folder + "/" + "SignificantParallelMutations.dat";
+	output_handle.open(output_file.c_str(), std::ios_base::app);
   
   for (int i = 0; i<max_diff.size()-1; i++) {
     std::cout << std::endl << i << " " << max_diff[i] << std::endl;
     output_handle << max_diff[i] << std::endl;
     if( max_diff[i] <= .15 ) num_below_threshold++;
   }
+  
+  output_handle.close();
   return num_below_threshold;
 }
 
@@ -839,9 +850,6 @@ void cPopulation::TimeToSweep(std::string output_folder,
     }
   }
 }
-
-void cPopulation::TimeToSweep_RedWhiteOnly(std::string output_folder, 
-                                           std::vector<std::vector<cGenotypeFrequency> > *frequencies) {;}
 
 //@agm This function takes the frequency pointer and returns a boolean vector
 //     The boolean vector contains a true in the mutations that got above the passed threshold

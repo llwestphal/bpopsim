@@ -182,11 +182,11 @@ int main(int argc, char* argv[])
       red_white_ratios.push_back(current_ro_ratio);
     }
     else {
-      std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
-      population.PrintFrequenciesToScreen(output_folder, &frequencies);
+      //std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
+      //population.PrintFrequenciesToScreen(output_folder, &frequencies);
     
-      std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
-      population.PrintOut(output_folder, &frequencies);
+      //std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
+      //population.PrintOut(output_folder, &frequencies);
     
       std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
       population.CalculateSimilarity(output_folder, &frequencies);
@@ -194,9 +194,9 @@ int main(int argc, char* argv[])
       std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
       population.TimeToSweep(output_folder, &frequencies);
     
-      std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
-      std::vector< std::vector<int> > muller_matrix;
-      population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
+      //std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
+      //std::vector< std::vector<int> > muller_matrix;
+      //population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
     }
   }
   

@@ -20,12 +20,12 @@ private:
   double m_mutation_rate_per_division;
   double m_max_w; 
   
-  //All vector types not initialized at constructor
+  //All vector types initialized at constructor
   std::vector<cSubpopulation> m_current_subpopulations;
   std::vector<uint32_t> m_divided_lineages;
   std::vector< std::vector<double> > m_runs;
   std::vector<double> m_this_run;
-  std::vector<int> m_total_cells;
+  std::vector<uint32_t> m_total_cells;
   std::vector< std::vector<uint32_t> > m_all_subpopulations_at_all_times;
   
   //All of the following should be initialized in the constructor
@@ -83,7 +83,13 @@ public:
   m_ratio(0),
   m_seed(0),
   m_max_w(1),
-  m_genotype_count(0) { };
+  m_genotype_count(0),
+  m_divided_lineages(NULL),
+  m_current_subpopulations(NULL),
+  m_runs(NULL),
+  m_this_run(NULL),
+  m_total_cells(NULL),
+  m_all_subpopulations_at_all_times(NULL) { };
 	
   //DESTRUCTOR
   virtual ~cPopulation() { };
@@ -195,13 +201,13 @@ public:
   void Mutate();
   
   //utilities
-  
-  // Prints a line with numbers in each existing subpopulation
-  void PrintCurrentNumbers();
-  void CurrentUniqueGenotypes();
+
+  std::vector<uint16_t> CurrentUniqueGenotypes();
+  void PrintUniqueGenotypes(const std::string& output_folder,
+                            std::vector< std::vector<uint16_t> > * number_of_unique_genotypes);
   
   void PrintOut(const std::string& output_folder,
-                      std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+                std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   void PrintOut_RedWhiteOnly(const std::string& output_folder,
                              std::vector< std::vector<double> > * red_white_ratios,
                              uint16_t transfer_interval_to_print);

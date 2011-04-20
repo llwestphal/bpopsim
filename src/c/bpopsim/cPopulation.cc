@@ -597,16 +597,64 @@ void cPopulation::Mutate()
 
 //Utilities Section
 
+std::vector<uint16_t> cPopulation::CurrentUniqueGenotypes() {
+  std::vector<uint16_t> number_of_unique_genotypes;
+  
+  for (uint32_t time = 0; time<m_all_subpopulations_at_all_times.size(); time++) {
+    uint16_t current_number(0);
+    for (std::vector<uint32_t>::iterator this_one = m_all_subpopulations_at_all_times[time].begin(); this_one!= m_all_subpopulations_at_all_times[time].end(); this_one++) {
+      if( (double) (*this_one) / m_total_cells[time] > .1 ) current_number++;
+    }
+    number_of_unique_genotypes.push_back(current_number);
+  }
+  return number_of_unique_genotypes;
+}
+
+void cPopulation::PrintUniqueGenotypes(const std::string& output_folder,
+                                       std::vector< std::vector<uint16_t> > * number_of_unique_genotypes) {
+  //Will print out only red and white
+	std::ofstream output_handle;
+  std::string output_file;
+  
+  output_file = output_folder + "/Number_Unique_Genotypes.dat";
+  
+	output_handle.open(output_file.c_str(),std::ios_base::app);
+  
+  uint16_t largest_replicate(0);
+  for (uint16_t replicate=0; replicate<(*number_of_unique_genotypes).size(); replicate++) {
+    if( (*number_of_unique_genotypes)[replicate].size() > (*number_of_unique_genotypes)[largest_replicate].size() ) largest_replicate = replicate;
+  }
+  
+  output_handle << "transfer";
+  for (uint16_t replicate = 0; replicate<(*number_of_unique_genotypes).size(); replicate++) {
+    output_handle << "\t" << replicate ;
+  }
+  
+  output_handle << std::endl;
+  
+  for (uint16_t time = 0; time<(*number_of_unique_genotypes)[largest_replicate].size(); time++) {
+    output_handle << time;
+    for (uint16_t replicate = 0; replicate<(*number_of_unique_genotypes).size(); replicate++) {
+      if( time >= (*number_of_unique_genotypes)[replicate].size() )
+        output_handle << "\t";
+      else
+        output_handle << "\t" << (*number_of_unique_genotypes)[replicate][time];
+    }
+    output_handle << std::endl;
+	}
+  
+}
+
 //@agm I comandeered this function to print stuff out in the manner I see fit
 //@agm I basically do a non-human readable raw dump because it's easier for R to deal with
 //     If you want human readable use the PrintToScreen function
 
 /***** Important for post-hoc use with R ******
-    The output file will have a header and it
-    will have the largest number of columns in file.
-    Thus, in R, you can simply set header to 
-    true, and fill NA spaces as the read.table
-    function allows. */
+ The output file will have a header and it
+ will have the largest number of columns in file.
+ Thus, in R, you can simply set header to 
+ true, and fill NA spaces as the read.table
+ function allows. */
 
 void cPopulation::PrintOut(const std::string& output_folder, 
                            std::vector< std::vector<cGenotypeFrequency> > * frequencies)
@@ -640,7 +688,6 @@ void cPopulation::PrintOut(const std::string& output_folder,
 	}
 }
 
-//This may be changed to pass in a counter
 void cPopulation::PrintOut_RedWhiteOnly(const std::string& output_folder, 
                                         std::vector< std::vector<double> > * red_white_ratios,
                                         uint16_t transfer_interval_to_print) 
@@ -799,14 +846,6 @@ unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::ve
   output_handle.close();
   return num_below_threshold;
 }
-
-/*double cPopulation::CountMutipleDivergedSubpops() {
-  
-  for (uint32_t time=0; time<m_all_subpopulations_at_all_times.size(); time++) {
-    
-    
-  }
-}*/
 
 //@agm This function should calculate the amount of time it takes a mutation to sweep (to 98%) once it has gotten above .1 frequency
 

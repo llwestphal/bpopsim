@@ -4,19 +4,20 @@
 using namespace std;
 
 /* */
-cSubpopulation::cSubpopulation()
-{
-   m_number = 0;
-   m_marker = 0;
-}
+cSubpopulation::cSubpopulation() :
+m_number(0),
+m_marker(NULL),
+m_genotype(NULL) { };
 
 /* Copy constructor */
-cSubpopulation::cSubpopulation(const cSubpopulation& in)
-{
-   m_number = in.m_number;
-   m_marker = in.m_marker;
-   m_genotype = in.m_genotype;
-}
+cSubpopulation::cSubpopulation(const cSubpopulation& in) :
+m_number(NULL),
+m_marker(NULL),
+m_genotype(NULL) { 
+  m_number = in.m_number;
+  m_marker = in.m_marker;
+  m_genotype = in.m_genotype;
+};
 
 double cSubpopulation::MutantFitness(double in_fitness, 
                                      double in_average_mutation_s, 

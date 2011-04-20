@@ -60,11 +60,11 @@ void cPopulation::UpdateSubpopulations(double update_time)
     // N = No * exp(log(2)*growth_rate * t) 
     //@agm This is the slow use of the log and exp functions
     double new_number = it->GetNumber() * exp(log(2) * update_time * it->GetFitness());     
-    if (static_cast<uint32_t>(new_number) - static_cast<uint32_t>(it->GetNumber()) >= 1) {
+    if (floor(new_number) - floor(it->GetNumber()) >= 1) {
       m_divided_lineages.push_back(i);
     }
     it->SetNumber(new_number);
-    m_population_size += static_cast<uint32_t>(new_number);
+    m_population_size += floor(new_number);
   }
 }
 
@@ -359,8 +359,9 @@ void cPopulation::Resample()
       SetTotalSubpopulationsLost(GetTotalSubpopulationsLost()+1);
       it = m_current_subpopulations.erase(it);
       it--;
+      continue;
     }
-    m_population_size += static_cast<int>(it->GetNumber());
+    m_population_size +=  floor(it->GetNumber());
   }
     
   if (g_verbose) std::cout << "Colors: " << m_by_color[RED] << " / " << m_by_color[WHITE] << std::endl;
@@ -476,12 +477,17 @@ void cPopulation::CalculateDivisions()
             
   //Now update all lineages by the time that actually passed
  
+  //FIX THIS!!!!
+  //Population size shouldn't have to be recaculated here
+  
+  m_population_size = CalculatePopulationSize();
   uint32_t previous_population_size = m_population_size;
   UpdateSubpopulations(update_time);
   SetCompletedDivisions(GetPopulationSize() - previous_population_size);
               
   if (g_verbose) std::cout << "Completed divisions: " << GetCompletedDivisions() <<std::endl;
   SetDivisionsUntilMutation(GetDivisionsUntilMutation() - GetCompletedDivisions());
+
 }
 
 /*@agm The functions below should build a new tree using the tree.h header */

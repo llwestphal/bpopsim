@@ -54,6 +54,7 @@ private:
 public:
   cSubpopulation();
   cSubpopulation(const cSubpopulation& in); // Copy constructor
+  
   virtual ~cSubpopulation() { ; }; 
 
   const double GetFitness() { return (*m_genotype).fitness; }
@@ -67,15 +68,15 @@ public:
   void SetMarker(const char in_marker) { m_marker = in_marker; } 
   void Transfer(double success_prob, gsl_rng * randomgenerator);
   double MutantFitness(double in_fitness, 
-                            double in_average_mutation_s, 
-                            char in_type_of_mutation, 
-                            gsl_rng * randomgenerator);  
+                       double in_average_mutation_s, 
+                       char in_type_of_mutation, 
+                       gsl_rng * randomgenerator);  
   virtual void CreateDescendant(gsl_rng * randomgenerator, 
-                                   cSubpopulation &ancestor, 
-                                   double averageselectioncoefficient, 
-                                   char beneficialmutationdistribution, 
-                                   tree<cGenotype>& in_tree, 
-                                   uint32_t node_id);
+                                cSubpopulation &ancestor, 
+                                double averageselectioncoefficient, 
+                                char beneficialmutationdistribution, 
+                                tree<cGenotype>& in_tree, 
+                                uint32_t node_id);
 
 };
 #endif

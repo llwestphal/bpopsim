@@ -1,29 +1,12 @@
 #ifndef cSubpopulation_h
 #define cSubpopulation_h
 
-#include <iostream>
-#include <vector>
-#include <cmath>
-#include <fstream>
-#include <algorithm>
-#include <iomanip> 
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_matrix.h>
-#include <stdint.h>
-#include <time.h>
-#include "tree.hh"
-#include "tree_util.hh"
-#include "icsilog.h"
-#include <functional>
-#include <list>
-#include <utility>
-#include <map>
-
-#include <boost/program_options.hpp>
+#include "common.h"
 
 struct cGenotype{
- uint32_t unique_node_id;
- double fitness;
+  uint32_t unique_node_id;
+  double fitness;
+  uint8_t mut_num;
  };
 
 struct cGenotypeFrequency{
@@ -62,6 +45,7 @@ public:
   const uint32_t GetNode_id() { return (*m_genotype).unique_node_id; }
   const double GetNumber() { return m_number; }
   const char GetMarker() { return m_marker; }
+  const uint8_t GetMutNum() { return (*m_genotype).mut_num; }
   
   void SetGenotype(tree<cGenotype>::iterator location) { m_genotype = location; }
   void SetNumber(const double in_number) { m_number = in_number; }

@@ -19,11 +19,7 @@ void cPopulation::SetParameters(const variables_map &options)
   SetMutationRatePerDivision(
 		options.count("mutation-rate-per-division") ?
 		options["mutation-rate-per-division"].as<double>() : 5E-8
-		);  
-  SetAverageMutationS(
-		options.count("average-selection-coefficient") ?
-		options["average-selection-coefficient"].as<double>() : 0.05
-		);  
+		);
   SetTotalTransfers(
 		options.count("number-of-transfers") ?
 		options["number-of-transfers"].as<uint16_t>() : 50
@@ -36,6 +32,13 @@ void cPopulation::SetParameters(const variables_map &options)
 		options.count("type-of-mutations") ?
 		options["type-of-mutations"].as<char>() : 'u'
 		);
+  SetInitialMutVals(
+    options["imv"].as< std::vector<double> >()
+    );
+  SetCoarseGraining(
+    options.count("coarse-graining") ?
+    options["coarse-graining"].as<uint16_t>() : 1
+    );
   
   // Simulation parameters that are pre-calculated
   SetDilutionFactor(exp(log(2)*GetGrowthPhaseGenerations()));
@@ -178,6 +181,34 @@ void cPopulation::FrequenciesPerTransferPerNode(std::vector< std::vector<cGenoty
 	frequencies->push_back(freq_per_node);
 }
 
+void cPopulation::CalculateAverageFitness() {
+  double total_fitness(0);
+  uint16_t pop_counter(0);
+  
+  for (std::vector<cSubpopulation>::iterator it = m_current_subpopulations.begin(); it!=m_current_subpopulations.end(); ++it) {    
+    total_fitness += it->GetFitness();
+    pop_counter++;
+  }
+  m_average_fitness.push_back(total_fitness/pop_counter);
+}
+
+void cPopulation::PrintFitness(std::string output_folder) {
+  std::string output_file;
+  std::ofstream output_handle;
+  
+  output_file = output_folder + "/AverageFitness.dat";
+  
+	output_handle.open(output_file.c_str(),std::ios_base::app);
+  
+  for (uint16_t time = 0; time<m_average_fitness.size(); time++) {
+    if( time%m_coarse_graining == 0 ) {
+      output_handle << m_average_fitness[time] << "\t";
+    }
+  }
+  output_handle << "\n";
+  output_handle.close();
+}
+
 // @JEB function returns the high frequency of the tallest child
 //      (to tell the parent where to put its low frequency)
 double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
@@ -262,8 +293,7 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
   
   std::string output_file;
   output_file.append(output_folder);
-  output_file.append("/");
-  output_file.append("MullerMatrix.dat");
+  output_file.append("/MullerMatrix.dat");
   std::ofstream output_handle(output_file.c_str());
   
   //step through simulation time
@@ -538,10 +568,10 @@ void cPopulation::SeedPopulationWithOneColony() {
   tree<cGenotype>::iterator start_position;
   double starting_fitness(1.0);
   
-  
   cGenotype neutral;
   neutral.fitness = starting_fitness;
   neutral.unique_node_id = m_genotype_count++;
+  neutral.mut_num = 0;
   start_position = m_tree.insert(m_tree.begin(), neutral);
   
   cSubpopulation begin_here;
@@ -561,7 +591,7 @@ void cPopulation::AddSubpopulation(cSubpopulation& subpop)
 }
 
 //Generates new mutant and adds it to the tree
-void cPopulation::Mutate() 
+void cPopulation::Mutate(uint16_t mutation_counter) 
 {	
   // we better have a random number generator
   assert(m_rng);
@@ -579,15 +609,24 @@ void cPopulation::Mutate()
   // There must be at least two cells for a mutation to have occurred...
   assert(ancestor.GetNumber() >= 2);
 	
-  new_subpop.CreateDescendant(   m_rng, 
-                                 ancestor, 
-                                 GetAverageMutationS(), 
-                                 GetBeneficialMutationDistribution(),
-                                 m_tree,
-                                 m_genotype_count++
-                              );
+  //This is necessary so the first few mutation have a much larger fitness advantage
   
-  
+  if( m_first_mutational_vals.size() > ancestor.GetMutNum() ) {
+    new_subpop.CreateDescendant(m_rng, 
+                                ancestor, 
+                                m_first_mutational_vals[ancestor.GetMutNum()], 
+                                GetBeneficialMutationDistribution(),
+                                m_tree,
+                                m_genotype_count++);
+  }
+  else {
+    new_subpop.CreateDescendant(m_rng, 
+                                ancestor, 
+                                m_first_mutational_vals[m_first_mutational_vals.size()-1], 
+                                GetBeneficialMutationDistribution(),
+                                m_tree,
+                                m_genotype_count++);
+  }
   
 	if (g_verbose) std::cout << "  Color: " << new_subpop.GetMarker() << std::endl;
 	if (g_verbose) std::cout << "  New Fitness: " << new_subpop.GetFitness() << std::endl;
@@ -801,10 +840,6 @@ unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::ve
   std::ofstream output_handle;
   std::string output_file;
   
-  //diff_resolution is in transfers NOT generations
-  //@agm I put this comment because I made the mistake my first time
-  int diff_resolution(75);
-  
   std::vector<float> max_diff(all_sweep_ids.size(), 0);
   float current_diff;
   unsigned int num_below_threshold(0);
@@ -817,7 +852,7 @@ unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::ve
       //another way to think about it is this conditional is checking to make sure that
       //a particular mutation has arisen in time before comparing it to something.
       
-      if ( time%diff_resolution == 0 && (*frequencies)[time].size() >= all_sweep_ids[i+1]) {
+      if ( time%m_coarse_graining == 0 && (*frequencies)[time].size() >= all_sweep_ids[i+1]) {
         //Bug should be fixed
         current_diff = fabs((*frequencies)[time][all_sweep_ids[i]].frequency - (*frequencies)[time][all_sweep_ids[i+1]].frequency);
         if( max_diff[i] < current_diff ) max_diff[i] = current_diff;

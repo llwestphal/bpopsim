@@ -17,6 +17,7 @@ private:
   uint32_t m_initial_population_size;
   uint32_t m_pop_size_after_dilution;
   uint32_t m_max_transfers_from_cli;
+  uint16_t m_coarse_graining;
   double m_mutation_rate_per_division;
   double m_max_w; 
   
@@ -27,6 +28,8 @@ private:
   std::vector<double> m_this_run;
   std::vector<uint32_t> m_total_cells;
   std::vector< std::vector<uint32_t> > m_all_subpopulations_at_all_times;
+  std::vector<double> m_first_mutational_vals;
+  std::vector<double> m_average_fitness;
   
   //All of the following should be initialized in the constructor
   //@agm DO NOT MAKE A CLASS VARIABLE THAT IS NOT INITIALIZED AT THE CONSTRUCTOR!!!
@@ -84,12 +87,14 @@ public:
   m_seed(0),
   m_max_w(1),
   m_genotype_count(0),
-  m_divided_lineages(NULL),
-  m_current_subpopulations(NULL),
-  m_runs(NULL),
-  m_this_run(NULL),
-  m_total_cells(NULL),
-  m_all_subpopulations_at_all_times(NULL) { };
+  m_divided_lineages(0),
+  m_current_subpopulations(0),
+  m_runs(0),
+  m_this_run(0),
+  m_total_cells(0),
+  m_all_subpopulations_at_all_times(0),
+  m_first_mutational_vals(0),
+  m_average_fitness(0) { };
 	
   //DESTRUCTOR
   virtual ~cPopulation() { };
@@ -160,10 +165,11 @@ public:
   void SetInitialPopulationSize(uint32_t in_initial_population_size) {m_initial_population_size =in_initial_population_size; }
   void SetPopSizeAfterDilution(uint32_t in_pop_size_after_dilution) {m_pop_size_after_dilution = in_pop_size_after_dilution; }
   void SetMutationRatePerDivision(double in_mutation_rate_per_division) {m_mutation_rate_per_division = in_mutation_rate_per_division; }
-  void SetAverageMutationS(double in_average_mutation_s) {m_average_mutation_s = in_average_mutation_s; }
   void SetGrowthPhaseGenerations(double in_growth_phase_generations) { m_growth_phase_generations= in_growth_phase_generations; }
   void SetBeneficialMutationDistribution(char in_beneficial_mutation_distribution) { m_beneficial_mutation_distribution = in_beneficial_mutation_distribution; }
-  void SetSeedParams(uint16_t seed_type) { m_seed = seed_type; }
+  void SetSeedParams(uint16_t in_seed_type) { m_seed = in_seed_type; }
+  void SetInitialMutVals(std::vector<double> in_mut_vals) { m_first_mutational_vals = in_mut_vals; }
+  void SetCoarseGraining(uint16_t in_coarse) { m_coarse_graining = in_coarse; }
   
   void SetRNG(gsl_rng * in_rng) { m_rng = in_rng; } //@JEB
 
@@ -198,7 +204,7 @@ public:
   void SeedSubpopulationForRedWhite();
   void SeedPopulationWithOneColony();
   void AddSubpopulation(cSubpopulation& subpop);
-  void Mutate();
+  void Mutate(uint16_t mutation_counter);
   
   //utilities
 
@@ -222,6 +228,8 @@ public:
   double CountMutipleDivergedSubpops();
   void TimeToSweep(std::string output_folder, 
                    std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+  void CalculateAverageFitness();
+  void PrintFitness(std::string output_folder);
   float Logarithm(float mantissa);
   
   // Prints out the tree using bracket notation.

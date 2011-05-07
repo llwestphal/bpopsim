@@ -5,15 +5,15 @@ using namespace std;
 
 /* */
 cSubpopulation::cSubpopulation() :
-m_number(0),
-m_marker(NULL),
-m_genotype(NULL) { };
+  m_number(0),
+  m_marker(0),
+  m_genotype(0) { };
 
 /* Copy constructor */
 cSubpopulation::cSubpopulation(const cSubpopulation& in) :
-m_number(NULL),
-m_marker(NULL),
-m_genotype(NULL) { 
+  m_number(0),
+  m_marker(0),
+  m_genotype(0) { 
   m_number = in.m_number;
   m_marker = in.m_marker;
   m_genotype = in.m_genotype;
@@ -63,6 +63,7 @@ void cSubpopulation::CreateDescendant(  gsl_rng * randomgenerator,
                                                 beneficialmutationdistribution, 
                                                 randomgenerator);
 	new_genotype.unique_node_id = node_id;
+  new_genotype.mut_num = ancestor.GetMutNum()+1;
   new_geno_it = in_tree.append_child(ancestor.m_genotype, new_genotype); 
 	SetGenotype(new_geno_it);
 	

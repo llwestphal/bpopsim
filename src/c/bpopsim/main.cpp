@@ -18,7 +18,6 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
   ("number-of-transfers,n", value<uint16_t>(), "Max number of transfer to replicate")
   ("output-folder,o", value<std::string>(), "Output folder")
   ("mutation-rate-per-division,u", value<double>(), "Mutation rate per division")
-  ("average-selection-coefficient,s", value<double>(), "Average selection coefficient")
   ("time-interval,i", value<uint16_t>(), "Time interval")
   ("replicates,r", value<uint16_t>(), "Replicates")
   ("marker-divergence,m", value<uint16_t>(), "Max divergence factor")
@@ -28,6 +27,8 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
   ("seed,d", value<uint16_t>(), "Seed for random number generator")
   ("red-white,k", "Only care about red/white lineages. For marker divergence.")
   ("transfer-interval-to-print,t", value<uint16_t>(), "Red/White Printing intervals.")
+  ("imv,x", value< std::vector<double> >(), "Initial Mutational Values.")
+  ("coarse-graining,c", value<uint16_t>(), "Amount to coarse-grain output.")
   ;
 
 /* Need to add these as options...
@@ -136,6 +137,8 @@ int main(int argc, char* argv[])
     
     //std::cout << node_id << std::endl;
 		 
+    uint16_t mutation_counter(0);
+    
     while( (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring() ) {
 				
       // Calculate the number of divisions until the next mutation 
@@ -150,11 +153,12 @@ int main(int argc, char* argv[])
         population.CalculateDivisions();
 					 
         if( population.GetDivisionsUntilMutation() <= 0) { 
-          population.Mutate(); 
+          population.Mutate(mutation_counter); 
         }
 					 
         if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
           population.FrequenciesPerTransferPerNode(&frequencies);
+          population.CalculateAverageFitness();
           population.Resample(); 
           count++;
           std::cout << std::endl << "Passing.... " << count << std::endl;
@@ -171,6 +175,7 @@ int main(int argc, char* argv[])
         }
         //if (g_verbose) population.PrintTree();
       }
+      mutation_counter++;
     }
     
     std::cout << std::endl << std::endl;
@@ -193,11 +198,14 @@ int main(int argc, char* argv[])
       //std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
       //population.PrintOut(output_folder, &frequencies);
     
-      std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
-      population.CalculateSimilarity(output_folder, &frequencies);
+      //std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
+      //population.CalculateSimilarity(output_folder, &frequencies);
   
-      std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
-      population.TimeToSweep(output_folder, &frequencies);
+      //std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
+      //population.TimeToSweep(output_folder, &frequencies);
+      
+      std::cout << std::endl << std::endl << "Printing average fitness.... " << std::endl;
+      population.PrintFitness(output_folder);
     
       //std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
       //std::vector< std::vector<int> > muller_matrix;
@@ -207,14 +215,14 @@ int main(int argc, char* argv[])
   
   if (g_ro_only) {
     //Initialize Population object
-    cPopulation population;
-    std::cout << std::endl << "Printing to r/w ratio file.... " << std::endl;
-    population.PrintOut_RedWhiteOnly(output_folder, &red_white_ratios, transfer_interval_to_print);
+    //cPopulation population;
+    //std::cout << std::endl << "Printing to r/w ratio file.... " << std::endl;
+    //population.PrintOut_RedWhiteOnly(output_folder, &red_white_ratios, transfer_interval_to_print);
   }
   else {
     //Initialize Population object
-    cPopulation population;
-    std::cout << std::endl << "Printing unique genotypes to file.... " << std::endl;
-    population.PrintUniqueGenotypes(output_folder, &number_unique_genotypes_in_all_replicates);
+    //cPopulation population;
+    //std::cout << std::endl << "Printing unique genotypes to file.... " << std::endl;
+    //population.PrintUniqueGenotypes(output_folder, &number_unique_genotypes_in_all_replicates);
   }
 }

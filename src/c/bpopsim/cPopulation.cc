@@ -308,7 +308,7 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
     AssignChildFreq(location, 0, 1, &child_freqs, &((*frequencies)[time]));
     std::sort(child_freqs.begin(), child_freqs.end(), cSortByLow());
     
-    uint32_t resolution(1000), last_node_meeting_span;
+    uint32_t resolution(2500), last_node_meeting_span;
     double pixel_step, span, min_step;
     min_step = (double) 1/resolution;
     
@@ -332,14 +332,14 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
             if( renumber.count(child_freqs[j].unique_node_id) == 0 ) {
               renumber.insert(std::make_pair(child_freqs[j].unique_node_id, renumber_value));
               renumber_value++;
-              renumber_value %= 32;
+              renumber_value %= 99;
             }
             //Return the renumbered-number for the unique_node_id from the built map
-            output_handle << std::left << std::setw(8) << renumber.find(child_freqs[j].unique_node_id)->second;
+            output_handle << std::left << std::setw(4) << renumber.find(child_freqs[j].unique_node_id)->second;
             last_node_meeting_span = renumber.find(child_freqs[j].unique_node_id)->second;
           }
           else {
-            output_handle << std::left << std::setw(8) << last_node_meeting_span;
+            output_handle << std::left << std::setw(4) << last_node_meeting_span;
           }
           break;
         }

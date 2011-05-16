@@ -31,16 +31,6 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
   ("coarse-graining,c", value<uint16_t>(), "Amount to coarse-grain output.")
   ;
 
-/* Need to add these as options...
-  'fitnesses|f=s' => \@fitnesses,
-  'detailed' => \$detailed,
-  'minimum-data-points|z=s' => \$minimum_data_points,
-  'maximum-data-points|x=s' => \$maximum_data_points,
-  'skip-generations|k=s' => \$skip_generations,
-  'input_initial_w|0=s' => \$input_initial_w,
-  'multiplicative' => \$multiplicative_selection_coefficients
-*/
-
   store(parse_command_line(argc, argv, cmdline_options), options);
   notify(options);
 
@@ -190,7 +180,7 @@ int main(int argc, char* argv[])
       red_white_ratios.push_back(current_ro_ratio);
     }
     else {
-      number_unique_genotypes_in_all_replicates.push_back(population.CurrentUniqueGenotypes());
+      //number_unique_genotypes_in_all_replicates.push_back(population.CurrentUniqueGenotypes());
       
       //std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
       //population.PrintFrequenciesToScreen(output_folder, &frequencies);
@@ -207,12 +197,12 @@ int main(int argc, char* argv[])
       std::cout << std::endl << std::endl << "Printing average fitness.... " << std::endl;
       population.PrintFitness(output_folder);
     
-      //std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
-      //std::vector< std::vector<int> > muller_matrix;
-      //population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
+      std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
+      std::vector< std::vector<int> > muller_matrix;
+      population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
     }
   }
-  
+  /*
   if (g_ro_only) {
     //Initialize Population object
     //cPopulation population;
@@ -224,5 +214,5 @@ int main(int argc, char* argv[])
     //cPopulation population;
     //std::cout << std::endl << "Printing unique genotypes to file.... " << std::endl;
     //population.PrintUniqueGenotypes(output_folder, &number_unique_genotypes_in_all_replicates);
-  }
+  }*/
 }

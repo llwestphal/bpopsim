@@ -162,7 +162,7 @@ public:
   void SetTotalTransfers(uint32_t in_total_transfers) { m_max_transfers_from_cli = in_total_transfers; }
   void SetMaxDivergenceFactor( double in_max_divergence_factor) { m_max_divergence_factor = in_max_divergence_factor; }
   void SetBinomialSamplingThreshold (double in_binomial_sampling_threshold) { m_binomial_sampling_threshold = in_binomial_sampling_threshold; }
-  void SetInitialPopulationSize(uint32_t in_initial_population_size) {m_initial_population_size =in_initial_population_size; }
+  void SetInitialPopulationSize(uint32_t in_initial_population_size) {m_initial_population_size = in_initial_population_size; }
   void SetPopSizeAfterDilution(uint32_t in_pop_size_after_dilution) {m_pop_size_after_dilution = in_pop_size_after_dilution; }
   void SetMutationRatePerDivision(double in_mutation_rate_per_division) {m_mutation_rate_per_division = in_mutation_rate_per_division; }
   void SetGrowthPhaseGenerations(double in_growth_phase_generations) { m_growth_phase_generations= in_growth_phase_generations; }

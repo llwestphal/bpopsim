@@ -18,7 +18,7 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
   ("number-of-transfers,n", value<uint16_t>(), "Max number of transfer to replicate")
   ("output-folder,o", value<std::string>(), "Output folder")
   ("mutation-rate-per-division,u", value<double>(), "Mutation rate per division")
-  ("time-interval,i", value<uint16_t>(), "Time interval")
+  ("initial-population-size,i", value<uint32_t>(), "Initial Population Size")
   ("replicates,r", value<uint16_t>(), "Replicates")
   ("marker-divergence,m", value<uint16_t>(), "Max divergence factor")
   ("type-of-mutations,f", value<char>(), "Type of mutations")
@@ -122,6 +122,10 @@ int main(int argc, char* argv[])
       population.SeedPopulationWithOneColony();
     }
     
+    //Get an initial time points
+    population.CalculateAverageFitness();
+    population.FrequenciesPerTransferPerNode(&frequencies);
+    
     // Print the initial tree
     //if (g_verbose) population.PrintTree();
     
@@ -137,7 +141,7 @@ int main(int argc, char* argv[])
       if (g_verbose) { 
         std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl; 
       }
-         
+      
       while( population.GetDivisionsUntilMutation() > 0 && population.GetKeepTransferring() ) 
       {
         population.CalculateDivisions();
@@ -155,7 +159,8 @@ int main(int argc, char* argv[])
           if ( population.GetTransfers() %  transfer_interval_to_print == 0 ) {  
             current_ro_ratio.push_back(population.GetRatio());
             
-            if (g_verbose == 1) { 
+            if (g_verbose == 1)
+            {
               std::cout << "Transfer " << population.GetTransfers() << " : " << 
               "=>" << population.GetPopulationSize() << "  R/W Ratio: " << population.GetRatio() << std::endl;  
               std::cout << "Total mutations: " << population.GetTotalMutations() << " Maximum Fitness: " << population.GetMaxW() << std::endl;

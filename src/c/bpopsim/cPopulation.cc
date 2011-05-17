@@ -326,7 +326,8 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
         //then, print the node_id for that nodes
         if( child_freqs[j].high >= pixel_step ) {
           
-          if( span > min_step ) {
+          //if( span > min_step ) 
+          {
             
             //Add new significant mutations to a map for renumbering
             if( renumber.count(child_freqs[j].unique_node_id) == 0 ) {
@@ -335,12 +336,12 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
               renumber_value %= 99;
             }
             //Return the renumbered-number for the unique_node_id from the built map
-            output_handle << std::left << std::setw(4) << renumber.find(child_freqs[j].unique_node_id)->second;
+            output_handle << std::left << std::setw(8) << renumber.find(child_freqs[j].unique_node_id)->second;
             last_node_meeting_span = renumber.find(child_freqs[j].unique_node_id)->second;
           }
-          else {
-            output_handle << std::left << std::setw(4) << last_node_meeting_span;
-          }
+          //else {
+          //  output_handle << std::left << std::setw(8) << last_node_meeting_span;
+          //}
           break;
         }
       }

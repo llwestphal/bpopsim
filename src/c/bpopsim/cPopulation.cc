@@ -14,7 +14,7 @@ void cPopulation::SetParameters(const variables_map &options)
 		); 
   SetInitialPopulationSize(
 		options.count("initial-population-size") ?
-		options["initial-population-size"].as<uint32_t>() : uint32_t(2)
+    options["initial-population-size"].as<uint32_t>() : uint32_t(5E6)
 		);  
   SetMutationRatePerDivision(
 		options.count("mutation-rate-per-division") ?
@@ -561,7 +561,7 @@ void cPopulation::SeedSubpopulationForRedWhite()
 //@agm This function seeds the population with only one colony to avoid the red/white problem
 //     when possible. For this to work properly, I need to get rid of victory conditions.
 
-//update: Victory conditions are now a command line option.  If no set to false the simulation
+//update: Victory conditions are now a command line option.  If not set to false the simulation
 //        will run to the max number of iterations.
 
 void cPopulation::SeedPopulationWithOneColony() {

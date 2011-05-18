@@ -185,39 +185,41 @@ int main(int argc, char* argv[])
       red_white_ratios.push_back(current_ro_ratio);
     }
     else {
-      //number_unique_genotypes_in_all_replicates.push_back(population.CurrentUniqueGenotypes());
+      number_unique_genotypes_in_all_replicates.push_back(population.CurrentUniqueGenotypes());
       
-      //std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
-      //population.PrintFrequenciesToScreen(output_folder, &frequencies);
+      std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
+      population.PrintFrequenciesToScreen(output_folder, &frequencies);
     
-      //std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
-      //population.PrintOut(output_folder, &frequencies);
+      std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
+      population.PrintOut(output_folder, &frequencies);
     
-      //std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
-      //population.CalculateSimilarity(output_folder, &frequencies);
+      std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
+      population.CalculateSimilarity(output_folder, &frequencies);
   
-      //std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
-      //population.TimeToSweep(output_folder, &frequencies);
+      std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
+      population.TimeToSweep(output_folder, &frequencies);
       
-      std::cout << std::endl << std::endl << "Printing average fitness.... " << std::endl;
-      population.PrintFitness(output_folder);
+      if( on_run == 0 ) {
+        std::cout << std::endl << std::endl << "Printing average fitness.... " << std::endl;
+        population.PrintFitness(output_folder);
     
-      std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
-      std::vector< std::vector<int> > muller_matrix;
-      population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
+        std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
+        std::vector< std::vector<int> > muller_matrix;
+        population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
+      }
     }
   }
-  /*
+  
   if (g_ro_only) {
     //Initialize Population object
-    //cPopulation population;
-    //std::cout << std::endl << "Printing to r/w ratio file.... " << std::endl;
-    //population.PrintOut_RedWhiteOnly(output_folder, &red_white_ratios, transfer_interval_to_print);
+    cPopulation population;
+    std::cout << std::endl << "Printing to r/w ratio file.... " << std::endl;
+    population.PrintOut_RedWhiteOnly(output_folder, &red_white_ratios, transfer_interval_to_print);
   }
   else {
     //Initialize Population object
-    //cPopulation population;
-    //std::cout << std::endl << "Printing unique genotypes to file.... " << std::endl;
-    //population.PrintUniqueGenotypes(output_folder, &number_unique_genotypes_in_all_replicates);
-  }*/
+    cPopulation population;
+    std::cout << std::endl << "Printing unique genotypes to file.... " << std::endl;
+    population.PrintUniqueGenotypes(output_folder, &number_unique_genotypes_in_all_replicates);
+  }
 }

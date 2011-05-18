@@ -333,10 +333,10 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
             if( renumber.count(child_freqs[j].unique_node_id) == 0 ) {
               renumber.insert(std::make_pair(child_freqs[j].unique_node_id, renumber_value));
               renumber_value++;
-              renumber_value %= 99;
+              renumber_value %= resolution;
             }
             //Return the renumbered-number for the unique_node_id from the built map
-            output_handle << std::left << std::setw(8) << renumber.find(child_freqs[j].unique_node_id)->second;
+            output_handle << std::left << std::setw(6) << renumber.find(child_freqs[j].unique_node_id)->second;
             last_node_meeting_span = renumber.find(child_freqs[j].unique_node_id)->second;
           }
           //else {

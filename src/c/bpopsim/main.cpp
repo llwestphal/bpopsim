@@ -108,10 +108,6 @@ int main(int argc, char* argv[])
     
     population.SetRNG(randgen);
     
-    // Re-initialize the population for a new run 
-    // (should really clean up at end of loop, not beginning @jeb)
-    population.ResetRunStats();
-    
     uint32_t count(0);
     std::cout << "Replicate " << on_run << std::endl;   
 		 
@@ -123,7 +119,9 @@ int main(int argc, char* argv[])
     }
     
     //Get an initial time points
-    population.CalculateAverageFitness();
+    if( on_run == 0 ) 
+      population.CalculateAverageFitness();
+    
     population.FrequenciesPerTransferPerNode(&frequencies);
     
     // Print the initial tree
@@ -152,10 +150,15 @@ int main(int argc, char* argv[])
 					 
         if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
           population.FrequenciesPerTransferPerNode(&frequencies);
-          population.CalculateAverageFitness();
+          
+          if( on_run == 0 ) 
+            population.CalculateAverageFitness();
+          
           population.Resample(); 
+          
           count++;
           std::cout << std::endl << "Passing.... " << count << std::endl;
+          
           if ( population.GetTransfers() %  transfer_interval_to_print == 0 ) {  
             current_ro_ratio.push_back(population.GetRatio());
             
@@ -184,6 +187,7 @@ int main(int argc, char* argv[])
     if (g_ro_only) {
       red_white_ratios.push_back(current_ro_ratio);
     }
+    
     else {
       number_unique_genotypes_in_all_replicates.push_back(population.CurrentUniqueGenotypes());
       
@@ -208,6 +212,9 @@ int main(int argc, char* argv[])
         population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
       }
     }
+    // Re-initialize the population for a new run 
+    // (should really clean up at end of loop, not beginning @jeb)
+    population.ResetRunStats();
   }
   
   if (g_ro_only) {

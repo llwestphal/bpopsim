@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
     }
     
     else {
-      number_unique_genotypes_in_all_replicates.push_back(population.CurrentUniqueGenotypes());
+      //number_unique_genotypes_in_all_replicates.push_back(population.CurrentUniqueGenotypes());
       
       std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
       population.PrintFrequenciesToScreen(output_folder, &frequencies);
@@ -211,12 +211,13 @@ int main(int argc, char* argv[])
         std::vector< std::vector<int> > muller_matrix;
         population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
       }
+      
+      population.ResetRunStats();
     }
     // Re-initialize the population for a new run 
     // (should really clean up at end of loop, not beginning @jeb)
-    population.ResetRunStats();
   }
-  
+  /*
   if (g_ro_only) {
     //Initialize Population object
     cPopulation population;
@@ -228,5 +229,5 @@ int main(int argc, char* argv[])
     cPopulation population;
     std::cout << std::endl << "Printing unique genotypes to file.... " << std::endl;
     population.PrintUniqueGenotypes(output_folder, &number_unique_genotypes_in_all_replicates);
-  }
+  }*/
 }

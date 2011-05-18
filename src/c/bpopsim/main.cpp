@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
   
   if (g_ro_only) std::cout << std::endl << "You chose to use red and white only." << std::endl;
   
-  std::vector< std::vector<uint16_t> > number_unique_genotypes_in_all_replicates;
+  //std::vector< std::vector<uint16_t> > number_unique_genotypes_in_all_replicates;
   
   for (uint32_t on_run=0; on_run < num_replicates; on_run++)
   {
@@ -108,6 +108,10 @@ int main(int argc, char* argv[])
     
     population.SetRNG(randgen);
     
+    // Re-initialize the population for a new run 
+    // (should really clean up at end of loop, not beginning @jeb)
+    population.ResetRunStats();
+    
     uint32_t count(0);
     std::cout << "Replicate " << on_run << std::endl;   
 		 
@@ -119,9 +123,7 @@ int main(int argc, char* argv[])
     }
     
     //Get an initial time points
-    if( on_run == 0 ) 
-      population.CalculateAverageFitness();
-    
+    population.CalculateAverageFitness();
     population.FrequenciesPerTransferPerNode(&frequencies);
     
     // Print the initial tree
@@ -187,7 +189,6 @@ int main(int argc, char* argv[])
     if (g_ro_only) {
       red_white_ratios.push_back(current_ro_ratio);
     }
-    
     else {
       //number_unique_genotypes_in_all_replicates.push_back(population.CurrentUniqueGenotypes());
       
@@ -211,11 +212,7 @@ int main(int argc, char* argv[])
         std::vector< std::vector<int> > muller_matrix;
         population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
       }
-      
-      population.ResetRunStats();
     }
-    // Re-initialize the population for a new run 
-    // (should really clean up at end of loop, not beginning @jeb)
   }
   /*
   if (g_ro_only) {

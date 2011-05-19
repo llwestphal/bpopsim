@@ -188,9 +188,6 @@ int main(int argc, char* argv[])
       //std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
       //population.PrintFrequenciesToScreen(output_folder, &frequencies);
     
-      std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
-      population.PrintOut(output_folder, &frequencies);
-    
       std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
       population.CalculateSimilarity(output_folder, &frequencies);
   
@@ -198,6 +195,9 @@ int main(int argc, char* argv[])
       population.TimeToSweep(output_folder, &frequencies);
       
       if( on_run == 0 ) {
+        std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
+        population.PrintOut(output_folder, &frequencies);
+        
         std::cout << std::endl << std::endl << "Printing average fitness.... " << std::endl;
         population.PrintFitness(output_folder);
     

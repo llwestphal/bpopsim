@@ -30,6 +30,7 @@ private:
   std::vector< std::vector<uint32_t> > m_all_subpopulations_at_all_times;
   std::vector<double> m_first_mutational_vals;
   std::vector<double> m_average_fitness;
+  std::vector< tree<cGenotype>::iterator >  m_mutations_since_last_transfer;
   
   //All of the following should be initialized in the constructor
   //@agm DO NOT MAKE A CLASS VARIABLE THAT IS NOT INITIALIZED AT THE CONSTRUCTOR!!!
@@ -94,7 +95,9 @@ public:
   m_total_cells(0),
   m_all_subpopulations_at_all_times(0),
   m_first_mutational_vals(0),
-  m_average_fitness(0) { };
+  m_average_fitness(0),
+  m_keep_transferring(true),
+  m_mutations_since_last_transfer(0) { };
 	
   //DESTRUCTOR
   virtual ~cPopulation() { };
@@ -198,13 +201,12 @@ public:
   void Resample();
   void PushBackRuns();
   void RunSummary();
-  void ResetRunStats();
   void DisplayParameters();
   void CalculateDivisions();
   void SeedSubpopulationForRedWhite();
   void SeedPopulationWithOneColony();
   void AddSubpopulation(cSubpopulation& subpop);
-  void Mutate(uint16_t mutation_counter);
+  void Mutate();
   
   //utilities
 

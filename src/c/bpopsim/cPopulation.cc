@@ -121,7 +121,9 @@ void cPopulation::FrequenciesPerTransferPerNode(std::vector< std::vector<cGenoty
   // There should be one node in the tree for each assigned genotype id.
   // Since these are the same size, use the one that doesn't require the
   // tree to calculate its size for speed (m_genotype_count). @JEB
-  assert(m_tree.size() == m_genotype_count);
+  
+  //@agm Now we cull nodes
+  //assert(m_tree.size() == m_genotype_count);
   
   // Genotype frequencies (mutations at each node of tree)
 	std::vector<cGenotypeFrequency> freq_per_node(m_genotype_count);
@@ -368,7 +370,7 @@ void cPopulation::Resample()
   m_by_color[WHITE] = 0;
 	
   m_population_size = 0; // recalculate population size
-  for (std::vector<cSubpopulation>::iterator it = m_current_subpopulations.begin(); it!=m_current_subpopulations.end(); ++it) {
+  for (std::vector<cSubpopulation>::iterator it = m_current_subpopulations.end(); it!=m_current_subpopulations.begin(); --it) {
     // Perform accurate binomial sampling only if below a certain population size
     if (it->GetNumber() < GetBinomialSamplingThreshold()) {
       if (g_verbose) std::cout << "binomial " << it->GetNumber() << std::endl;
@@ -386,14 +388,33 @@ void cPopulation::Resample()
     }	
     if( it->GetMarker() == 'r' ) m_by_color[RED] += it->GetNumber();
     else if( it->GetMarker() == 'w' ) m_by_color[WHITE] += it->GetNumber();
+    
+    //@agm This section is to delete new mutations from the tree that do not get passed 
+    //     it also deletes subpopulations from the list that have zero population
+    
+    m_population_size += floor(it->GetNumber());
+    
     if (it->GetNumber() == 0) {
+      std::vector< tree<cGenotype>::iterator >::iterator this_mutation(m_mutations_since_last_transfer.begin());
+      
+      while(this_mutation != m_mutations_since_last_transfer.end()) {
+        if( (*this_mutation) == it->GetGenotypeIter() && m_tree.is_valid(it->GetGenotypeIter())) {
+          //std::cout << "I'm Here: 2 " << it->GetNode_id() << std::endl;
+          m_tree.erase(it->GetGenotypeIter());
+          m_mutations_since_last_transfer.erase(this_mutation);
+          break;
+        }
+        ++this_mutation;
+      }
+      
       SetTotalSubpopulationsLost(GetTotalSubpopulationsLost()+1);
+      
       it = m_current_subpopulations.erase(it);
-      it--;
-      continue;
+      //it++;
     }
-    m_population_size +=  floor(it->GetNumber());
   }
+  
+  m_mutations_since_last_transfer.clear();
     
   if (g_verbose) std::cout << "Colors: " << m_by_color[RED] << " / " << m_by_color[WHITE] << std::endl;
   SetRatio( (double) m_by_color[RED]/m_by_color[WHITE] );
@@ -430,15 +451,6 @@ void cPopulation::RunSummary()
    std::cout << "Total subpopulations lost: " << GetTotalSubpopulationsLost() << std::endl;
    std::cout << "Transfers: " << GetTransfers() << std::endl;
    std::cout << "Maximum Fitness: " << GetMaxW() << std::endl;
-}
-
-void cPopulation::ResetRunStats()
-{
-   SetTotalMutations(0);    
-   SetTotalSubpopulationsLost(0);
-   SetTransfers(1);    
-   SetDivisionsUntilMutation(0);
-   m_keep_transferring = true;
 }
 
 void cPopulation::DisplayParameters()
@@ -517,6 +529,7 @@ void cPopulation::CalculateDivisions()
   SetCompletedDivisions(GetPopulationSize() - previous_population_size);
               
   if (g_verbose) std::cout << "Completed divisions: " << GetCompletedDivisions() <<std::endl;
+  
   SetDivisionsUntilMutation(GetDivisionsUntilMutation() - GetCompletedDivisions());
 
 }
@@ -587,12 +600,14 @@ void cPopulation::AddSubpopulation(cSubpopulation& subpop)
 {
   m_population_size += subpop.GetNumber(); // we have just changed the population size
 	m_current_subpopulations.push_back(subpop);
+  if(subpop.GetNode_id() > 0 && !g_ro_only)
+    m_mutations_since_last_transfer.push_back(subpop.GetGenotypeIter()); // Keep track of all mutations since last transfer
 
 	//std::cout << subpop.GetNode_id() << " " << subpop.GetFitness() << std::endl;
 }
 
 //Generates new mutant and adds it to the tree
-void cPopulation::Mutate(uint16_t mutation_counter) 
+void cPopulation::Mutate() 
 {	
   // we better have a random number generator
   assert(m_rng);

@@ -108,10 +108,6 @@ int main(int argc, char* argv[])
     
     population.SetRNG(randgen);
     
-    // Re-initialize the population for a new run 
-    // (should really clean up at end of loop, not beginning @jeb)
-    population.ResetRunStats();
-    
     uint32_t count(0);
     std::cout << "Replicate " << on_run << std::endl;   
 		 
@@ -130,8 +126,6 @@ int main(int argc, char* argv[])
     //if (g_verbose) population.PrintTree();
     
     //std::cout << node_id << std::endl;
-		 
-    uint16_t mutation_counter(0);
     
     while( (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring() ) {
 				
@@ -147,7 +141,7 @@ int main(int argc, char* argv[])
         population.CalculateDivisions();
 					 
         if( population.GetDivisionsUntilMutation() <= 0) { 
-          population.Mutate(mutation_counter); 
+          population.Mutate(); 
         }
 					 
         if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
@@ -175,7 +169,6 @@ int main(int argc, char* argv[])
         }
         //if (g_verbose) population.PrintTree();
       }
-      mutation_counter++;
     }
     
     std::cout << std::endl << std::endl;
@@ -192,8 +185,8 @@ int main(int argc, char* argv[])
     else {
       //number_unique_genotypes_in_all_replicates.push_back(population.CurrentUniqueGenotypes());
       
-      std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
-      population.PrintFrequenciesToScreen(output_folder, &frequencies);
+      //std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
+      //population.PrintFrequenciesToScreen(output_folder, &frequencies);
     
       std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
       population.PrintOut(output_folder, &frequencies);

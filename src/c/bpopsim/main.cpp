@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
             population.CalculateAverageFitness();
           
           population.Resample();
-          population.CullPopulations();
+          //population.CullPopulations();
           
           count++;
           std::cout << std::endl << "Passing.... " << count << std::endl;

@@ -150,7 +150,8 @@ int main(int argc, char* argv[])
           if( on_run == 0 ) 
             population.CalculateAverageFitness();
           
-          population.Resample(); 
+          population.Resample();
+          population.CullPopulations();
           
           count++;
           std::cout << std::endl << "Passing.... " << count << std::endl;

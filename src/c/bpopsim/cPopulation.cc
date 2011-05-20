@@ -370,7 +370,7 @@ void cPopulation::Resample()
   m_by_color[WHITE] = 0;
 	
   m_population_size = 0; // recalculate population size
-  for (std::vector<cSubpopulation>::iterator it = m_current_subpopulations.end(); it!=m_current_subpopulations.begin(); --it) {
+  for (std::vector<cSubpopulation>::iterator it = m_current_subpopulations.begin(); it!=m_current_subpopulations.end(); ++it) {
     // Perform accurate binomial sampling only if below a certain population size
     if (it->GetNumber() < GetBinomialSamplingThreshold()) {
       if (g_verbose) std::cout << "binomial " << it->GetNumber() << std::endl;
@@ -393,25 +393,6 @@ void cPopulation::Resample()
     //     it also deletes subpopulations from the list that have zero population
     
     m_population_size += floor(it->GetNumber());
-    
-    if (it->GetNumber() == 0) {
-      std::vector< tree<cGenotype>::iterator >::iterator this_mutation(m_mutations_since_last_transfer.begin());
-      
-      while(this_mutation != m_mutations_since_last_transfer.end()) {
-        if( (*this_mutation) == it->GetGenotypeIter() && m_tree.is_valid(it->GetGenotypeIter())) {
-          //std::cout << "I'm Here: 2 " << it->GetNode_id() << std::endl;
-          m_tree.erase(it->GetGenotypeIter());
-          m_mutations_since_last_transfer.erase(this_mutation);
-          break;
-        }
-        ++this_mutation;
-      }
-      
-      SetTotalSubpopulationsLost(GetTotalSubpopulationsLost()+1);
-      
-      it = m_current_subpopulations.erase(it);
-      //it++;
-    }
   }
   
   m_mutations_since_last_transfer.clear();
@@ -438,6 +419,35 @@ void cPopulation::Resample()
       }  
     }
   }
+}
+
+//@agm For some reason (that I don't fully appreciate), the way we were deleting subpopulations 
+//     (based on the GetNumber()==0) Therefore, I am now deleting subpopulations Only when they 
+//     arose between transfers And do not get passed to the next round just like those that are
+//     removed from the tree.  This is a much more conservative pruning so I should try to figure
+//     out why the other does not work.
+     
+void cPopulation::CullPopulations() {
+  
+   for (std::vector<cSubpopulation>::iterator it = m_current_subpopulations.end(); it!=m_current_subpopulations.begin(); --it) {
+     if (it->GetNumber() == 0) {
+       std::vector< tree<cGenotype>::iterator >::iterator this_mutation(m_mutations_since_last_transfer.begin());
+   
+       while(this_mutation != m_mutations_since_last_transfer.end()) {
+         if( (*this_mutation) == it->GetGenotypeIter() && m_tree.is_valid(it->GetGenotypeIter())) {
+           //std::cout << "I'm Here: 2 " << it->GetNode_id() << std::endl;
+           m_tree.erase(it->GetGenotypeIter());
+           m_mutations_since_last_transfer.erase(this_mutation);
+           
+           m_current_subpopulations.erase(it);
+           SetTotalSubpopulationsLost(GetTotalSubpopulationsLost()+1);
+           
+           break;
+         }
+         ++this_mutation;
+       }
+     }
+   }
 }
 
 void cPopulation::PushBackRuns()
@@ -524,12 +534,15 @@ void cPopulation::CalculateDivisions()
   //Population size shouldn't have to be recaculated here
   
   m_population_size = CalculatePopulationSize();
-  uint32_t previous_population_size = m_population_size;
+  uint32_t previous_population_size(m_population_size);
+  
   UpdateSubpopulations(update_time);
+  
   SetCompletedDivisions(GetPopulationSize() - previous_population_size);
               
-  if (g_verbose) std::cout << "Completed divisions: " << GetCompletedDivisions() <<std::endl;
+  if (g_verbose) std::cout << "Completed divisions: " << GetCompletedDivisions() << std::endl;
   
+  //std::cout << "Divisions until mutation: " << GetDivisionsUntilMutation() << " Completed divisions: " << GetCompletedDivisions() << " Population Size: " << GetPopulationSize() << " Previous Population Size: " << previous_population_size << std::endl;
   SetDivisionsUntilMutation(GetDivisionsUntilMutation() - GetCompletedDivisions());
 
 }

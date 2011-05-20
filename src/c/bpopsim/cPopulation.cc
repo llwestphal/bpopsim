@@ -560,7 +560,7 @@ void cPopulation::CalculateDivisions()
               
   if (g_verbose) std::cout << "Completed divisions: " << GetCompletedDivisions() << std::endl;
   
-  std::cout << "Divisions until mutation: " << GetDivisionsUntilMutation() << " Completed divisions: " << GetCompletedDivisions() << " Population Size: " << GetPopulationSize() << " Previous Population Size: " << previous_population_size << std::endl;
+  //std::cout << "Divisions until mutation: " << GetDivisionsUntilMutation() << " Completed divisions: " << GetCompletedDivisions() << " Population Size: " << GetPopulationSize() << " Previous Population Size: " << previous_population_size << std::endl;
   SetDivisionsUntilMutation(GetDivisionsUntilMutation() - GetCompletedDivisions());
 
 }

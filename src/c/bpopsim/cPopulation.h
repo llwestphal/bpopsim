@@ -30,7 +30,7 @@ private:
   std::vector< std::vector<uint32_t> > m_all_subpopulations_at_all_times;
   std::vector<double> m_first_mutational_vals;
   std::vector<double> m_average_fitness;
-  std::vector< tree<cGenotype>::iterator >  m_mutations_since_last_transfer;
+  std::vector<cSubpopulation>  m_mutations_since_last_transfer;
   
   //All of the following should be initialized in the constructor
   //@agm DO NOT MAKE A CLASS VARIABLE THAT IS NOT INITIALIZED AT THE CONSTRUCTOR!!!

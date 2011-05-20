@@ -393,9 +393,14 @@ void cPopulation::Resample()
     //     it also deletes subpopulations from the list that have zero population
     
     m_population_size += floor(it->GetNumber());
+    
+    if( it->GetNumber() == 0 ) {
+      it = m_current_subpopulations.erase(it);
+      --it;
+    
+      SetTotalSubpopulationsLost(GetTotalSubpopulationsLost()+1);
+    }
   }
-  
-  m_mutations_since_last_transfer.clear();
     
   if (g_verbose) std::cout << "Colors: " << m_by_color[RED] << " / " << m_by_color[WHITE] << std::endl;
   SetRatio( (double) m_by_color[RED]/m_by_color[WHITE] );
@@ -429,25 +434,38 @@ void cPopulation::Resample()
      
 void cPopulation::CullPopulations() {
   
-   for (std::vector<cSubpopulation>::iterator it = m_current_subpopulations.end(); it!=m_current_subpopulations.begin(); --it) {
-     if (it->GetNumber() == 0) {
-       std::vector< tree<cGenotype>::iterator >::iterator this_mutation(m_mutations_since_last_transfer.begin());
-   
-       while(this_mutation != m_mutations_since_last_transfer.end()) {
-         if( (*this_mutation) == it->GetGenotypeIter() && m_tree.is_valid(it->GetGenotypeIter())) {
-           //std::cout << "I'm Here: 2 " << it->GetNode_id() << std::endl;
-           m_tree.erase(it->GetGenotypeIter());
-           m_mutations_since_last_transfer.erase(this_mutation);
-           
-           m_current_subpopulations.erase(it);
-           SetTotalSubpopulationsLost(GetTotalSubpopulationsLost()+1);
-           
-           break;
-         }
-         ++this_mutation;
-       }
-     }
-   }
+  std::cout << std::endl;
+  
+  std::vector<cSubpopulation>::iterator this_mutation(m_mutations_since_last_transfer.begin());
+  bool test(false);
+  while( this_mutation != m_mutations_since_last_transfer.end() ) {
+    for (std::vector<cSubpopulation>::iterator it = m_current_subpopulations.begin(); it!=m_current_subpopulations.end(); ++it) {
+      if( this_mutation->GetNode_id() == it->GetNode_id() ) {
+        this_mutation = m_mutations_since_last_transfer.erase(this_mutation);
+        test = true;
+        //std::cout << it->GetNode_id() << std::endl;
+        break;
+      }
+    }
+    
+    if( test == false )
+      this_mutation++;
+    
+    test = false;
+    //std::cout << "I'm Here: 1 " << this_mutation->GetNode_id() << std::endl;
+  }
+  
+  //std::cout << "I'm Here: 2 " << this_mutation->GetNode_id() << std::endl;
+  
+  this_mutation = m_mutations_since_last_transfer.begin();
+  
+  for (std::vector<cSubpopulation>::reverse_iterator rit = m_mutations_since_last_transfer.rbegin(); rit!=m_mutations_since_last_transfer.rend(); ++rit) {
+    
+    //std::cout << "I'm Here: 2 " << rit->GetNode_id() << std::endl;
+
+    m_tree.erase(rit->GetGenotypeIter());
+  }
+  m_mutations_since_last_transfer.clear();
 }
 
 void cPopulation::PushBackRuns()
@@ -542,7 +560,7 @@ void cPopulation::CalculateDivisions()
               
   if (g_verbose) std::cout << "Completed divisions: " << GetCompletedDivisions() << std::endl;
   
-  //std::cout << "Divisions until mutation: " << GetDivisionsUntilMutation() << " Completed divisions: " << GetCompletedDivisions() << " Population Size: " << GetPopulationSize() << " Previous Population Size: " << previous_population_size << std::endl;
+  std::cout << "Divisions until mutation: " << GetDivisionsUntilMutation() << " Completed divisions: " << GetCompletedDivisions() << " Population Size: " << GetPopulationSize() << " Previous Population Size: " << previous_population_size << std::endl;
   SetDivisionsUntilMutation(GetDivisionsUntilMutation() - GetCompletedDivisions());
 
 }
@@ -614,7 +632,7 @@ void cPopulation::AddSubpopulation(cSubpopulation& subpop)
   m_population_size += subpop.GetNumber(); // we have just changed the population size
 	m_current_subpopulations.push_back(subpop);
   if(subpop.GetNode_id() > 0 && !g_ro_only)
-    m_mutations_since_last_transfer.push_back(subpop.GetGenotypeIter()); // Keep track of all mutations since last transfer
+    m_mutations_since_last_transfer.push_back(subpop); // Keep track of all mutations since last transfer
 
 	//std::cout << subpop.GetNode_id() << " " << subpop.GetFitness() << std::endl;
 }

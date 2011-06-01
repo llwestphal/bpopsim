@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
     
     //Get an initial time points
     population.CalculateAverageFitness();
-    population.FrequenciesPerTransferPerNode(&frequencies);
+    population.FrequenciesPerTransferPerNode(frequencies);
     
     // Print the initial tree
     //if (g_verbose) population.PrintTree();
@@ -145,13 +145,13 @@ int main(int argc, char* argv[])
         }
 					 
         if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
-          population.FrequenciesPerTransferPerNode(&frequencies);
+          population.FrequenciesPerTransferPerNode(frequencies);
           
           if( on_run == 0 ) 
             population.CalculateAverageFitness();
           
           population.Resample();
-          //population.CullPopulations();
+          population.CullPopulations();
           
           count++;
           std::cout << std::endl << "Passing.... " << count << std::endl;
@@ -187,24 +187,26 @@ int main(int argc, char* argv[])
       //number_unique_genotypes_in_all_replicates.push_back(population.CurrentUniqueGenotypes());
       
       //std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
-      //population.PrintFrequenciesToScreen(output_folder, &frequencies);
+      //population.PrintFrequenciesToScreen(output_folder, frequencies);
     
       std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
-      population.CalculateSimilarity(output_folder, &frequencies);
+      unsigned int sweep_val = population.CalculateSimilarity(output_folder, frequencies);
   
-      std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
-      population.TimeToSweep(output_folder, &frequencies);
-      
-      if( on_run == 0 ) {
-        std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
-        population.PrintOut(output_folder, &frequencies);
+      if( sweep_val != -1 ) {
+        std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
+        population.TimeToSweep(output_folder, frequencies);
         
-        std::cout << std::endl << std::endl << "Printing average fitness.... " << std::endl;
-        population.PrintFitness(output_folder);
-    
-        std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
-        std::vector< std::vector<int> > muller_matrix;
-        population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
+        /*if( on_run == 0 ) {
+         //std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
+         //population.PrintOut(output_folder, frequencies);
+         
+         std::cout << std::endl << std::endl << "Printing average fitness.... " << std::endl;
+         population.PrintFitness(output_folder);
+         
+         std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
+         std::vector< std::vector<int> > muller_matrix;
+         population.DrawMullerMatrix(output_folder, muller_matrix, frequencies);
+         }*/
       }
     }
   }

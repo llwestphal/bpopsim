@@ -187,7 +187,7 @@ public:
   //! Calculate the time until the next subpopulation divides (passes a whole number of cells)
   double TimeToNextWholeCell();
 
-  void FrequenciesPerTransferPerNode(std::vector< std::vector<cGenotypeFrequency> > * frequencies);  
+  void FrequenciesPerTransferPerNode(std::vector< std::vector<cGenotypeFrequency> > &frequencies);  
   double AssignChildFreq(tree<cGenotype>::sibling_iterator child_node,
                          double parent_low,
                          double parent_high,
@@ -197,7 +197,7 @@ public:
   
   void DrawMullerMatrix(std::string output_folder,
                         std::vector< std::vector<int> > muller_matrix,
-                        std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+                        std::vector< std::vector<cGenotypeFrequency> > &frequencies);
   void Resample();
   void CullPopulations();
   void PushBackRuns();
@@ -216,21 +216,21 @@ public:
                             std::vector< std::vector<uint16_t> > * number_of_unique_genotypes);
   
   void PrintOut(const std::string& output_folder,
-                std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+                std::vector< std::vector<cGenotypeFrequency> > &frequencies);
   void PrintOut_RedWhiteOnly(const std::string& output_folder,
                              std::vector< std::vector<double> > * red_white_ratios,
                              uint16_t transfer_interval_to_print);
   void PrintFrequenciesToScreen(std::string output_folder, 
-                                std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+                                std::vector< std::vector<cGenotypeFrequency> > &frequencies);
   void PrintFrequenciesToScreen_RedWhiteOnly(std::string output_folder, 
-                                             std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  std::vector<bool> MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > * frequencies, 
+                                             std::vector< std::vector<cGenotypeFrequency> > &frequencies);
+  uint32_t MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > &frequencies, 
                                            float threshold);
   unsigned int CalculateSimilarity(std::string output_folder, 
-                                   std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+                                   std::vector< std::vector<cGenotypeFrequency> > &frequencies);
   double CountMutipleDivergedSubpops();
   void TimeToSweep(std::string output_folder, 
-                   std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+                   std::vector< std::vector<cGenotypeFrequency> > &frequencies);
   void CalculateAverageFitness();
   void PrintFitness(std::string output_folder);
   float Logarithm(float mantissa);

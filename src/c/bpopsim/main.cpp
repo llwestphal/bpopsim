@@ -29,6 +29,15 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
   ("transfer-interval-to-print,t", value<uint16_t>(), "Red/White Printing intervals.")
   ("imv,x", value< std::vector<double> >(), "Initial Mutational Values.")
   ("coarse-graining,c", value<uint16_t>(), "Amount to coarse-grain output.")
+  
+  //Here are the output options
+  //They are all set to false by default
+  ("frequencies", "Print Frequencies")
+  ("muller", "Print Muller Matrix")
+  ("average_fit", "Print Average Fitness")
+  ("print_screen", "Print Frequencies to Screen")
+  ("time_sweep", "Print time to sweep for each mutation")
+  ("max_diff", "Print max difference of sweeping mutations")
   ;
 
   store(parse_command_line(argc, argv, cmdline_options), options);
@@ -60,6 +69,16 @@ int main(int argc, char* argv[])
   if ( cmdline_options.count("transfer-interval-to-print") ) {
       transfer_interval_to_print = cmdline_options["transfer-interval-to-print"].as<uint16_t>();
   }
+  
+  bool print_freq(false), print_muller(false), print_average_fit(false),
+       print_screen(false), print_max_diff(false), print_time_to_sweep(false);
+  
+  if( cmdline_options.count("frequencies") ) print_freq = true;
+  if( cmdline_options.count("muller") ) print_muller = true;
+  if( cmdline_options.count("average_fit") ) print_average_fit = true;
+  if( cmdline_options.count("print_screen") ) print_screen = true;
+  if( cmdline_options.count("time_sweep") ) print_time_to_sweep = true;
+  if( cmdline_options.count("max_diff") ) print_max_diff = true;
   
   std::vector< std::vector<double> > red_white_ratios;
 	
@@ -186,36 +205,48 @@ int main(int argc, char* argv[])
     else {
       //number_unique_genotypes_in_all_replicates.push_back(population.CurrentUniqueGenotypes());
       
-      //std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
-      //population.PrintFrequenciesToScreen(output_folder, &frequencies);
-    
-      std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
-      population.CalculateSimilarity(output_folder, &frequencies);
+      if( print_screen ) {
+        std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
+        population.PrintFrequenciesToScreen(output_folder, &frequencies);
+      }
+      
+      if( print_max_diff ) {
+        std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
+        population.CalculateSimilarity(output_folder, &frequencies);
+      }
   
-      std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
-      population.TimeToSweep(output_folder, &frequencies);
+      if( print_time_to_sweep ) {
+        std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
+        population.TimeToSweep(output_folder, &frequencies);
+      }
       
       if( on_run == 0 ) {
-        std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
-        population.PrintOut(output_folder, &frequencies);
+        if( print_freq ) {
+          std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
+          population.PrintOut(output_folder, &frequencies);
+        }
         
-        std::cout << std::endl << std::endl << "Printing average fitness.... " << std::endl;
-        population.PrintFitness(output_folder);
+        if( print_average_fit ) {
+          std::cout << std::endl << std::endl << "Printing average fitness.... " << std::endl;
+          population.PrintFitness(output_folder);
+        }
     
-        std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
-        std::vector< std::vector<int> > muller_matrix;
-        population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
+        if( print_muller ) {
+          std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
+          std::vector< std::vector<int> > muller_matrix;
+          population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
+        }
       }
     }
   }
-  /*
+  
   if (g_ro_only) {
     //Initialize Population object
     cPopulation population;
     std::cout << std::endl << "Printing to r/w ratio file.... " << std::endl;
     population.PrintOut_RedWhiteOnly(output_folder, &red_white_ratios, transfer_interval_to_print);
   }
-  else {
+  /*else {
     //Initialize Population object
     cPopulation population;
     std::cout << std::endl << "Printing unique genotypes to file.... " << std::endl;

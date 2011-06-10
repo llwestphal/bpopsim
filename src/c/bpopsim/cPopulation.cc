@@ -211,6 +211,10 @@ void cPopulation::PrintFitness(std::string output_folder) {
   output_handle.close();
 }
 
+void cPopulation::ConvertExternalPhylogeneticTree(std::string input_tree) {;}
+
+void cPopulation::ConvertExternalFrequencies(std::string input_frequencies) {;}
+
 // @JEB function returns the high frequency of the tallest child
 //      (to tell the parent where to put its low frequency)
 double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,

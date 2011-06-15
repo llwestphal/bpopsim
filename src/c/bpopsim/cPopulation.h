@@ -204,6 +204,7 @@ public:
                         std::vector< std::vector<int> > muller_matrix,
                         std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   void Resample();
+  void Deterministic_Resample();
   
   void CullPopulations();
   

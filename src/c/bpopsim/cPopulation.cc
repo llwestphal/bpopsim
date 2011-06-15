@@ -220,10 +220,20 @@ void cPopulation::PrintSingleFitness(std::string output_folder) {
   
   output_file = output_folder + "/SingleFitness.dat";
   output_handle.open(output_file.c_str(),std::ios_base::app);
-  single_fitness = m_current_subpopulations[0].GetFitness();
+  
+  if(m_current_subpopulations.size() == 1) {
+    for (std::vector<cSubpopulation>::iterator it = m_current_subpopulations.begin(); it!=m_current_subpopulations.end(); ++it) { 
+      single_fitness = it->GetFitness();
+    }
+  }
+  else {
+    std::cerr << "There is more than one population remaining... there is a bug." << std::endl;
+    abort();
+  }
+  
   output_handle << single_fitness << "\n";
-  if( single_fitness != 1 )
-    std::cout << "Fitness: " << single_fitness << "\n";
+  //if( single_fitness != 1 )
+    //std::cout << "Fitness: " << single_fitness << "\n";
   output_handle.close();
 }
 
@@ -446,6 +456,51 @@ void cPopulation::Resample()
     }
   }
 }
+
+//Currently this only works for picking one cell after resample
+void cPopulation::Deterministic_Resample() {
+  long int starting_size(0), random_number;
+  //std::vector<cSubpopulation> temp_populations;
+  
+  assert(m_rng);
+  
+  SetTransfers(GetTransfers()+1);
+  m_population_size = 0; // recalculate population size
+  
+  for (std::vector<cSubpopulation>::iterator it = m_current_subpopulations.begin(); it!=m_current_subpopulations.end(); ++it) {
+    starting_size += it->GetNumber();
+  }
+  
+  //std::cout << "Population size before dilution: " << starting_size << std::endl;
+  
+  //for (uint32_t num_cells = 0; num_cells < m_pop_size_after_dilution; num_cells++) {
+    random_number = gsl_rng_uniform_int(m_rng, starting_size);
+    
+    for (std::vector<cSubpopulation>::iterator it = m_current_subpopulations.begin(); it!=m_current_subpopulations.end(); ++it) {
+      if( random_number < it->GetNumber() ) {
+        it->SetNumber(1);
+        it++;
+        while(it != m_current_subpopulations.end()) {
+          m_current_subpopulations.erase(it);
+        }
+        break;
+      }
+      else {
+        random_number -= it->GetNumber();
+        m_current_subpopulations.erase(it);
+        --it;
+      }
+    }
+  //}
+  
+  /*for (std::vector<cSubpopulation>::iterator it = m_current_subpopulations.begin(); it!=m_current_subpopulations.end(); ++it) {
+    std::cout << it->GetNumber() << " " << it->GetNode_id() << " " << it->GetFitness() << std::endl;
+  }*/
+  
+  m_population_size = 1;
+}
+
+
 
 //@agm For some reason (that I don't fully appreciate), the way we were deleting subpopulations 
 //     (based on the GetNumber()==0) Therefore, I am now deleting subpopulations Only when they 

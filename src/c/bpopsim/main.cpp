@@ -175,16 +175,20 @@ int main(int argc, char* argv[])
           if( on_run == 0 ) 
             population.CalculateAverageFitness();
           
-          population.Resample();
-          //population.CullPopulations();
+          if( print_single_fit )
+            population.Deterministic_Resample();
+          else {
+            population.Resample();
+            //population.CullPopulations();
+          }
           
           if( print_single_fit ) {
             population.PrintSingleFitness(output_folder);
-            std::cout << "Population size: " << population.GetPopulationSize() << std::endl;
+            //std::cout << "Population size: " << population.GetPopulationSize() << std::endl;
           }
           
           count++;
-          std::cout << "Passing.... " << count << std::endl;
+          //std::cout << "Passing.... " << count << std::endl;
           
           if ( population.GetTransfers() %  transfer_interval_to_print == 0 ) {  
             current_ro_ratio.push_back(population.GetRatio());

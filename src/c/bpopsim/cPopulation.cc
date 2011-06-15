@@ -205,9 +205,25 @@ void cPopulation::PrintFitness(std::string output_folder) {
   for (uint16_t time = 0; time<m_average_fitness.size(); time++) {
     if( time%m_coarse_graining == 0 ) {
       output_handle << m_average_fitness[time] << "\t";
+      std::cout << m_average_fitness[time] << "\t";
     }
   }
   output_handle << "\n";
+  output_handle.close();
+}
+
+void cPopulation::PrintSingleFitness(std::string output_folder) {
+  std::string output_file;
+  std::ofstream output_handle;
+  
+  float single_fitness;
+  
+  output_file = output_folder + "/SingleFitness.dat";
+  output_handle.open(output_file.c_str(),std::ios_base::app);
+  single_fitness = m_current_subpopulations[0].GetFitness();
+  output_handle << single_fitness << "\n";
+  if( single_fitness != 1 )
+    std::cout << "Fitness: " << single_fitness << "\n";
   output_handle.close();
 }
 
@@ -367,6 +383,8 @@ void cPopulation::Resample()
 {
   //When it is time for a transfer, resample population
   assert(m_rng);
+  
+  SetTransfers(GetTransfers()+1);
  
   if (g_verbose) std::cout << ">> Transfer!" << std::endl;
   //Is there an exists() in C++?
@@ -408,7 +426,6 @@ void cPopulation::Resample()
     
   if (g_verbose) std::cout << "Colors: " << m_by_color[RED] << " / " << m_by_color[WHITE] << std::endl;
   SetRatio( (double) m_by_color[RED]/m_by_color[WHITE] );
-  SetTransfers(GetTransfers()+1);
 
   // Checks for stopping early if in marker divergence mode
   if (g_ro_only) {

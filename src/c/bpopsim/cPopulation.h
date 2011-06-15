@@ -241,6 +241,8 @@ public:
   void PrintFrequenciesToScreen_RedWhiteOnly(std::string output_folder, 
                                              std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   
+  void PrintSingleFitness(std::string out_folder);
+  
   std::vector<bool> MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > * frequencies, 
                                            float threshold);
   

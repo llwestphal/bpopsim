@@ -38,6 +38,7 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
   ("print_screen", "Print Frequencies to Screen")
   ("time_sweep", "Print time to sweep for each mutation")
   ("max_diff", "Print max difference of sweeping mutations")
+  ("single_fit", "Print the fitness of the single cell.")
   ;
 
   store(parse_command_line(argc, argv, cmdline_options), options);
@@ -71,7 +72,8 @@ int main(int argc, char* argv[])
   }
   
   bool print_freq(false), print_muller(false), print_average_fit(false),
-       print_screen(false), print_max_diff(false), print_time_to_sweep(false);
+       print_screen(false), print_max_diff(false), print_time_to_sweep(false),
+       print_single_fit(false);
   
   if( cmdline_options.count("frequencies") ) print_freq = true;
   if( cmdline_options.count("muller") ) print_muller = true;
@@ -79,6 +81,7 @@ int main(int argc, char* argv[])
   if( cmdline_options.count("print_screen") ) print_screen = true;
   if( cmdline_options.count("time_sweep") ) print_time_to_sweep = true;
   if( cmdline_options.count("max_diff") ) print_max_diff = true;
+  if( cmdline_options.count("single_fit") ) print_single_fit = true;
   
   std::vector< std::vector<double> > red_white_ratios;
 	
@@ -138,7 +141,7 @@ int main(int argc, char* argv[])
     }
     
     //Get an initial time points
-    population.CalculateAverageFitness();
+    //population.CalculateAverageFitness();
     population.FrequenciesPerTransferPerNode(&frequencies);
     
     // Print the initial tree
@@ -146,7 +149,7 @@ int main(int argc, char* argv[])
     
     //std::cout << node_id << std::endl;
     
-    while( (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring() ) {
+    while( (population.GetTransfers() < population.GetTotalTransfers()) ) {
 				
       // Calculate the number of divisions until the next mutation 
       population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + round(gsl_ran_exponential(randgen, population.GetLambda())));
@@ -155,8 +158,11 @@ int main(int argc, char* argv[])
         std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl; 
       }
       
-      while( population.GetDivisionsUntilMutation() > 0 && population.GetKeepTransferring() ) 
+      while( population.GetDivisionsUntilMutation() > 0 && (population.GetTransfers() < population.GetTotalTransfers())) 
       {
+        
+        //std::cout << population.GetTransfers() << " " << population.GetTotalTransfers() << " " << population.GetDivisionsUntilMutation() << std::endl;
+        
         population.CalculateDivisions();
 					 
         if( population.GetDivisionsUntilMutation() <= 0) { 
@@ -172,13 +178,18 @@ int main(int argc, char* argv[])
           population.Resample();
           //population.CullPopulations();
           
+          if( print_single_fit ) {
+            population.PrintSingleFitness(output_folder);
+            std::cout << "Population size: " << population.GetPopulationSize() << std::endl;
+          }
+          
           count++;
-          std::cout << std::endl << "Passing.... " << count << std::endl;
+          std::cout << "Passing.... " << count << std::endl;
           
           if ( population.GetTransfers() %  transfer_interval_to_print == 0 ) {  
             current_ro_ratio.push_back(population.GetRatio());
             
-            if (g_verbose == 1)
+            if (g_verbose)
             {
               std::cout << "Transfer " << population.GetTransfers() << " : " << 
               "=>" << population.GetPopulationSize() << "  R/W Ratio: " << population.GetRatio() << std::endl;  
@@ -192,7 +203,7 @@ int main(int argc, char* argv[])
     }
     
     std::cout << std::endl << std::endl;
-    population.RunSummary();
+    //population.RunSummary();
     population.PushBackRuns();
 
     if (g_verbose) {

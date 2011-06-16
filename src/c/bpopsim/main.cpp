@@ -8,7 +8,7 @@ bool g_verbose = false;
 bool g_ro_only = false;
 
 // setup and parse configuration options:
-void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
+void get_cmdline_options(variables_map &options, uint64_t argc, char* argv[]) {
 
   options_description cmdline_options("Allowed options");
   cmdline_options.add_options()

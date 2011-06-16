@@ -22,7 +22,7 @@ void cPopulation::SetParameters(const variables_map &options)
 		);
   SetTotalTransfers(
 		options.count("number-of-transfers") ?
-		options["number-of-transfers"].as<uint16_t>() : 50
+		options["number-of-transfers"].as<uint32_t>() : 50
 		);  
   SetMaxDivergenceFactor(
 		options.count("marker-divergence") ?

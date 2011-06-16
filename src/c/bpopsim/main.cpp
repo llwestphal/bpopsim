@@ -8,22 +8,22 @@ bool g_verbose = false;
 bool g_ro_only = false;
 
 // setup and parse configuration options:
-void get_cmdline_options(variables_map &options, uint64_t argc, char* argv[]) {
+void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
 
   options_description cmdline_options("Allowed options");
   cmdline_options.add_options()
   ("help,h", "produce this help message")
   ("generations-per-transfer,T", value<double>(), "Generations per transfer")
-  ("population-size-after-transfer,N", value<uint64_t>(), "Population size after transfer")
-  ("number-of-transfers,n", value<uint64_t>(), "Max number of transfer to replicate")
+  ("population-size-after-transfer,N", value<uint32_t>(), "Population size after transfer")
+  ("number-of-transfers,n", value<uint32_t>(), "Max number of transfer to replicate")
   ("output-folder,o", value<std::string>(), "Output folder")
   ("mutation-rate-per-division,u", value<double>(), "Mutation rate per division")
-  ("initial-population-size,i", value<uint64_t>(), "Initial Population Size")
-  ("replicates,r", value<uint64_t>(), "Replicates")
-  ("marker-divergence,m", value<uint64_t>(), "Max divergence factor")
+  ("initial-population-size,i", value<uint32_t>(), "Initial Population Size")
+  ("replicates,r", value<uint32_t>(), "Replicates")
+  ("marker-divergence,m", value<uint16_t>(), "Max divergence factor")
   ("type-of-mutations,f", value<char>(), "Type of mutations")
   ("verbose,v", "Verbose")
-  ("lineage-tree,l", value<uint64_t>(), "Lineage Tree")
+  ("lineage-tree,l", value<uint32_t>(), "Lineage Tree")
   ("seed,d", value<uint16_t>(), "Seed for random number generator")
   ("red-white,k", "Only care about red/white lineages. For marker divergence.")
   ("transfer-interval-to-print,t", value<uint16_t>(), "Red/White Printing intervals.")
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
   get_cmdline_options(cmdline_options, argc, argv);
   
   std::string output_folder = cmdline_options["output-folder"].as<std::string>();
-  uint16_t num_replicates = cmdline_options["replicates"].as<uint16_t>();
+  uint32_t num_replicates = cmdline_options["replicates"].as<uint32_t>();
   
   uint16_t transfer_interval_to_print(1);
   if ( cmdline_options.count("transfer-interval-to-print") ) {

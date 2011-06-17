@@ -42,8 +42,8 @@ AC_CHECK_FUNCS([pow])
         
 ## gsl
 ##AX_PATH_GSL(1.14, [], [AC_MSG_ERROR(["libgsl is required."])] )
-AC_SEARCH_LIBS([gsl_rng_alloc], [gsl], [], [AC_MSG_ERROR(["libgsl >=1.14 is required."])])
-
+##AC_SEARCH_LIBS([gsl_rng_alloc], [gsl], [], [AC_MSG_ERROR(["libgsl >=1.14 is required."])])
+AC_CHECK_LIB([gsl], [gsl_rng_alloc])
 
 ## boost
 BOOST_REQUIRE([1.42])

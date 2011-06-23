@@ -4,6 +4,7 @@
 #include <iostream>
 
 //This is a line to have a commit from lonestar.
+//Push from ranger.
 
 // Global variable for keeping track of verbosity
 bool g_verbose = false;

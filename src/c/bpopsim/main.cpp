@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+//This is a line to have a commit from lonestar.
+
 // Global variable for keeping track of verbosity
 bool g_verbose = false;
 bool g_ro_only = false;

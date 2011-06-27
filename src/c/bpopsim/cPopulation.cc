@@ -627,7 +627,7 @@ void cPopulation::CalculateDivisions()
   //FIX THIS!!!!
   //Population size shouldn't have to be recaculated here
   
-  m_population_size = CalculatePopulationSize();
+  //m_population_size = CalculatePopulationSize();
   uint32_t previous_population_size(m_population_size);
   
   UpdateSubpopulations(update_time);

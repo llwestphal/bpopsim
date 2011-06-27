@@ -171,9 +171,17 @@ int main(int argc, char* argv[])
         if( population.GetDivisionsUntilMutation() <= 0) { 
           population.Mutate(); 
         }
+        
+        //std::cout << population.GetTransfers() << " " << population.GetTotalTransfers() << " " << population.GetDivisionsUntilMutation() << std::endl;
+        
+        //std::cout << "I'm here: 1\n";
+        
+        //std::cout << population.GetPopSizeBeforeDilution() << " " << population.GetPopulationSize() << std::endl;
 					 
         if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
           population.FrequenciesPerTransferPerNode(&frequencies);
+          
+          //std::cout << "I'm here: 2\n";
           
           if( on_run == 0 ) 
             population.CalculateAverageFitness();
@@ -182,6 +190,7 @@ int main(int argc, char* argv[])
             population.Deterministic_Resample();
           else {
             population.Resample();
+            //std::cout << "I'm here: 3\n";
             //population.CullPopulations();
           }
           
@@ -191,11 +200,12 @@ int main(int argc, char* argv[])
           }
           
           count++;
-          //std::cout << "Passing.... " << count << std::endl;
+          if( !print_single_fit )
+            std::cout << "Passing.... " << count << std::endl;
           
           if ( population.GetTransfers() %  transfer_interval_to_print == 0 ) {  
             current_ro_ratio.push_back(population.GetRatio());
-            
+            //std::cout << "I'm here: 4\n";
             if (g_verbose)
             {
               std::cout << "Transfer " << population.GetTransfers() << " : " << 

@@ -968,7 +968,6 @@ unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::ve
   }
   
   std::sort(all_sweep_ids.begin(), all_sweep_ids.end());
-  std::vector< std::vector<cGenotypeFrequency> >only_relevant_mutations;
   
   std::ofstream output_handle;
   std::string output_file;
@@ -993,7 +992,6 @@ unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::ve
         if( max_diff[i] < current_diff ) max_diff[i] = current_diff;
       }
       time++;
-      
     }
     i++;
   }
@@ -1019,40 +1017,57 @@ unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::ve
   for (int i = 0; i<max_diff.size()-1; i++) {
     std::cout << std::endl << i << " " << max_diff[i] << std::endl;
     output_handle << max_diff[i] << std::endl;
-    if( max_diff[i] <= .15 ) num_below_threshold++;
+    if( max_diff[i] <= .1 ) num_below_threshold++;
   }
   
   output_handle.close();
   return num_below_threshold;
 }
 
-//@agm This function should calculate the amount of time it takes a mutation to sweep (to 98%) once it has gotten above .1 frequency
-
 void cPopulation::TimeToSweep(std::string output_folder, 
-                              std::vector<std::vector<cGenotypeFrequency> > *frequencies) {
-  std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .98));
-  std::vector<int> time_to_sweep(m_tree.size(),0);
+                              std::vector<std::vector<cGenotypeFrequency> > &frequencies) {
   
-  for (uint32_t time=0; time<(*frequencies).size(); time++) {
-    
-    for (std::vector<cGenotypeFrequency>::iterator node_num=(*frequencies)[time].begin(); node_num!=(*frequencies)[time].end(); node_num++) {
-      if( relevant_mutations[(*node_num).unique_node_id] == true ) {
-        if( (*node_num).frequency >= .1 || time_to_sweep[(*node_num).unique_node_id] != 0) {
-          if( (*frequencies)[time][(*node_num).unique_node_id].frequency < .98 ) {
-             if( (*frequencies)[time][(*node_num).unique_node_id].frequency > .01 ) {
-               time_to_sweep[(*node_num).unique_node_id]++;
-             }
-          }
-          else if( time_to_sweep[(*node_num).unique_node_id] <= .01 ) {
-            time_to_sweep[(*node_num).unique_node_id] = 0;
-          }
-        }
+  uint32_t youngest_sweep(MutationAboveThreshold_2(frequencies, .98));
+  
+  std::vector<uint32_t> all_sweep_ids;
+  
+  for (tree<cGenotype>::iterator it = m_tree.begin(); it!=m_tree.end(); it++) {
+    if( it->unique_node_id == youngest_sweep ) {
+      while (it != NULL) {
+        all_sweep_ids.push_back(it->unique_node_id);
+        it = m_tree.parent(it);
       }
+      break;
     }
   }
   
+  std::sort(all_sweep_ids.begin(), all_sweep_ids.end());
+  
   std::ofstream output_handle;
   std::string output_file;
+  
+  std::vector<uint16_t> time_to_sweep(all_sweep_ids.size(), 0);
+  
+  uint32_t i=0;
+  
+  for (uint16_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
+    uint32_t time = 0;
+    for (std::vector< std::vector<cGenotypeFrequency> >::iterator this_time = frequencies.begin(); this_time < frequencies.end(); ++this_time) {
+      
+      //This conditional is to coarse-grain the sampling to every 75 transfers (~500 generations)
+      //and to make sure there is a value in the vector at that position
+      //another way to think about it is this conditional is checking to make sure that
+      //a particular mutation has arisen in time before comparing it to something.
+      
+      double frequency( Find_Node_in_Freq_By_NodeID(*this_time, all_sweep_ids[a_node]) );
+      
+      if ( time%m_coarse_graining == 0 && frequency != 1 && frequency > .01) {
+        time_to_sweep[a_node]+=3;
+      }
+      time++;
+    }
+    i++;
+  }
   
   //@agm this should output exactly the same thing to file as it does to screen
   //     the virtue of this format is that it is human readable
@@ -1061,7 +1076,7 @@ void cPopulation::TimeToSweep(std::string output_folder,
   output_file.append("TimeToSweep.dat");
 	output_handle.open(output_file.c_str(),std::ios_base::app);
   
-  for (std::vector<int>::iterator it_node = time_to_sweep.begin(); it_node != time_to_sweep.end(); it_node++) {
+  for (std::vector<uint16_t>::iterator it_node = time_to_sweep.begin(); it_node != time_to_sweep.end(); it_node++) {
     if( (*it_node) != 0 ) {
       std::cout << (*it_node) << std::endl;
       output_handle << (*it_node) << std::endl;

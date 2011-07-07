@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
     }
     
     //Get an initial time points
-    //population.CalculateAverageFitness();
+    population.CalculateAverageFitness();
     population.FrequenciesPerTransferPerNode(&frequencies);
     
     // Print the initial tree
@@ -232,7 +232,7 @@ int main(int argc, char* argv[])
   
       if( print_time_to_sweep ) {
         std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
-        population.TimeToSweep(output_folder, &frequencies);
+        population.TimeToSweep(output_folder, frequencies);
       }
       
       if( on_run == 0 ) {

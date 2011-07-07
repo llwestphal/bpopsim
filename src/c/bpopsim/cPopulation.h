@@ -232,7 +232,7 @@ public:
                                    std::vector< std::vector<cGenotypeFrequency> > &frequencies);
   double CountMutipleDivergedSubpops();
   void   TimeToSweep(std::string output_folder, 
-                   std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+                   std::vector< std::vector<cGenotypeFrequency> > &frequencies);
   void   CalculateAverageFitness();
   void   PrintFitness(std::string output_folder);
   float  Logarithm(float mantissa);

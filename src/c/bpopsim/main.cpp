@@ -227,7 +227,7 @@ int main(int argc, char* argv[])
       
       if( print_max_diff ) {
         std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
-        population.CalculateSimilarity(output_folder, &frequencies);
+        population.CalculateSimilarity(output_folder, frequencies);
       }
   
       if( print_time_to_sweep ) {

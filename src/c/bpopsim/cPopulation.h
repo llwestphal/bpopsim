@@ -188,7 +188,9 @@ public:
   void   ConvertExternalPhylogeneticTree(std::string input_tree);
   void   ConvertExternalFrequencies(std::string input_frequencies);
   std::vector<cGenotypeFrequency>::iterator Find_Node_in_Freq(std::vector<cGenotypeFrequency> &frequencies, 
-                                                    tree<cGenotype>::sibling_iterator this_node);
+                                                              tree<cGenotype>::sibling_iterator this_node);
+  double Find_Node_in_Freq_By_NodeID(std::vector<cGenotypeFrequency> &frequencies,
+                                     uint32_t this_node);
   double AssignChildFreq(tree<cGenotype>::sibling_iterator child_node,
                          double parent_low,
                          double parent_high,
@@ -222,11 +224,12 @@ public:
   void   PrintFrequenciesToScreen_RedWhiteOnly(std::string output_folder, 
                                              std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   void   PrintSingleFitness(std::string out_folder);
-
+  
+  uint32_t MutationAboveThreshold_2(std::vector< std::vector<cGenotypeFrequency> > &frequencies, float threshold);
   std::vector<bool> MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > * frequencies, 
                                            float threshold);
   unsigned int CalculateSimilarity(std::string output_folder, 
-                                   std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+                                   std::vector< std::vector<cGenotypeFrequency> > &frequencies);
   double CountMutipleDivergedSubpops();
   void   TimeToSweep(std::string output_folder, 
                    std::vector< std::vector<cGenotypeFrequency> > * frequencies);

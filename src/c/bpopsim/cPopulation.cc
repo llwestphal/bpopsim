@@ -263,6 +263,16 @@ std::vector<cGenotypeFrequency>::iterator cPopulation::Find_Node_in_Freq(std::ve
   return return_vector.begin();
 }
 
+double cPopulation::Find_Node_in_Freq_By_NodeID(std::vector<cGenotypeFrequency> &frequencies,
+                                                uint32_t this_node) {
+  for( std::vector<cGenotypeFrequency>::iterator a_node = frequencies.begin(); a_node < frequencies.end(); ++a_node ) {
+    if( a_node->unique_node_id == this_node )
+      return a_node->frequency;
+  }
+  
+  return 0;
+}
+
 
 // @JEB function returns the high frequency of the tallest child
 //      (to tell the parent where to put its low frequency)
@@ -941,19 +951,11 @@ void cPopulation::PrintFrequenciesToScreen_RedWhiteOnly(std::string output_folde
 //@agm This function determines the maximum difference in genotype frequency between a mutation
 //     and its predecessor if they got above the threshold passed to the threshold function below
 
-unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
-  std::vector<bool> relevant_mutations (MutationAboveThreshold(frequencies, .98));
-  uint32_t youngest_sweep(0);
+unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::vector< std::vector<cGenotypeFrequency> > &frequencies) {
   
-  for (uint32_t i = relevant_mutations.size(); i > 0; i--) {
-    if( relevant_mutations[i] == true ) {
-      youngest_sweep = i; 
-      break;
-    }
-  }
+  uint32_t youngest_sweep(MutationAboveThreshold_2(frequencies, .98));
   
   std::vector<uint32_t> all_sweep_ids;
-  tree<cGenotype>::iterator starting_child_iter;
   
   for (tree<cGenotype>::iterator it = m_tree.begin(); it!=m_tree.end(); it++) {
     if( it->unique_node_id == youngest_sweep ) {
@@ -975,20 +977,25 @@ unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::ve
   float current_diff;
   unsigned int num_below_threshold(0);
   
-  for (int i = 0 ; i < all_sweep_ids.size()-1; i++) {
-    for (int time = 0; time < (*frequencies).size(); time++) {
+  uint32_t i=0;
+  
+  for (uint16_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
+    uint32_t time = 0;
+    for (std::vector< std::vector<cGenotypeFrequency> >::iterator this_time = frequencies.begin(); this_time < frequencies.end(); ++this_time) {
       
       //This conditional is to coarse-grain the sampling to every 75 transfers (~500 generations)
       //and to make sure there is a value in the vector at that position
       //another way to think about it is this conditional is checking to make sure that
       //a particular mutation has arisen in time before comparing it to something.
       
-      if ( time%m_coarse_graining == 0 && (*frequencies)[time].size() >= all_sweep_ids[i+1]) {
-        //Bug should be fixed
-        current_diff = fabs((*frequencies)[time][all_sweep_ids[i]].frequency - (*frequencies)[time][all_sweep_ids[i+1]].frequency);
+      if ( time%m_coarse_graining == 0 ) {
+        current_diff = fabs(Find_Node_in_Freq_By_NodeID(*this_time, all_sweep_ids[a_node]) - Find_Node_in_Freq_By_NodeID(*this_time, all_sweep_ids[a_node+1]));
         if( max_diff[i] < current_diff ) max_diff[i] = current_diff;
       }
+      time++;
+      
     }
+    i++;
   }
   
   output_file = output_folder + "/" + "SweepClumpiness.dat";
@@ -1060,6 +1067,20 @@ void cPopulation::TimeToSweep(std::string output_folder,
       output_handle << (*it_node) << std::endl;
     }
   }
+}
+
+uint32_t cPopulation::MutationAboveThreshold_2(std::vector< std::vector<cGenotypeFrequency> > &frequencies, float threshold) {
+  
+  for( std::vector< std::vector<cGenotypeFrequency> >::reverse_iterator time = frequencies.rbegin(); time < frequencies.rend(); ++time ) {
+    for( std::vector<cGenotypeFrequency>::reverse_iterator node = time->rbegin(); node < time->rend(); ++node) {
+      if( node->frequency >= threshold )
+        return node->unique_node_id;
+    }
+  }
+  
+  std::cout << "Nothing met threshold." << std::endl;
+  
+  return 0;
 }
 
 //@agm This function takes the frequency pointer and returns a boolean vector

@@ -15,20 +15,30 @@ void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
   ("help,h", "produce this help message")
   ("generations-per-transfer,T", value<double>(), "Generations per transfer")
   ("population-size-after-transfer,N", value<uint32_t>(), "Population size after transfer")
-  ("number-of-transfers,n", value<uint16_t>(), "Max number of transfer to replicate")
+  ("number-of-transfers,n", value<uint32_t>(), "Max number of transfer to replicate")
   ("output-folder,o", value<std::string>(), "Output folder")
   ("mutation-rate-per-division,u", value<double>(), "Mutation rate per division")
   ("initial-population-size,i", value<uint32_t>(), "Initial Population Size")
-  ("replicates,r", value<uint16_t>(), "Replicates")
+  ("replicates,r", value<uint32_t>(), "Replicates")
   ("marker-divergence,m", value<uint16_t>(), "Max divergence factor")
   ("type-of-mutations,f", value<char>(), "Type of mutations")
   ("verbose,v", "Verbose")
-  ("lineage-tree,l", value<uint16_t>(), "Lineage Tree")
+  ("lineage-tree,l", value<uint32_t>(), "Lineage Tree")
   ("seed,d", value<uint16_t>(), "Seed for random number generator")
   ("red-white,k", "Only care about red/white lineages. For marker divergence.")
   ("transfer-interval-to-print,t", value<uint16_t>(), "Red/White Printing intervals.")
   ("imv,x", value< std::vector<double> >(), "Initial Mutational Values.")
   ("coarse-graining,c", value<uint16_t>(), "Amount to coarse-grain output.")
+  
+  //Here are the output options
+  //They are all set to false by default
+  ("frequencies", "Print Frequencies")
+  ("muller", "Print Muller Matrix")
+  ("average_fit", "Print Average Fitness")
+  ("print_screen", "Print Frequencies to Screen")
+  ("time_sweep", "Print time to sweep for each mutation")
+  ("max_diff", "Print max difference of sweeping mutations")
+  ("single_fit", "Print the fitness of the single cell.")
   ;
 
   store(parse_command_line(argc, argv, cmdline_options), options);
@@ -54,12 +64,24 @@ int main(int argc, char* argv[])
   get_cmdline_options(cmdline_options, argc, argv);
   
   std::string output_folder = cmdline_options["output-folder"].as<std::string>();
-  uint16_t num_replicates = cmdline_options["replicates"].as<uint16_t>();
+  uint32_t num_replicates = cmdline_options["replicates"].as<uint32_t>();
   
   uint16_t transfer_interval_to_print(1);
   if ( cmdline_options.count("transfer-interval-to-print") ) {
       transfer_interval_to_print = cmdline_options["transfer-interval-to-print"].as<uint16_t>();
   }
+  
+  bool print_freq(false), print_muller(false), print_average_fit(false),
+       print_screen(false), print_max_diff(false), print_time_to_sweep(false),
+       print_single_fit(false);
+  
+  if( cmdline_options.count("frequencies") ) print_freq = true;
+  if( cmdline_options.count("muller") ) print_muller = true;
+  if( cmdline_options.count("average_fit") ) print_average_fit = true;
+  if( cmdline_options.count("print_screen") ) print_screen = true;
+  if( cmdline_options.count("time_sweep") ) print_time_to_sweep = true;
+  if( cmdline_options.count("max_diff") ) print_max_diff = true;
+  if( cmdline_options.count("single_fit") ) print_single_fit = true;
   
   std::vector< std::vector<double> > red_white_ratios;
 	
@@ -119,15 +141,15 @@ int main(int argc, char* argv[])
     }
     
     //Get an initial time points
-    population.CalculateAverageFitness();
-    population.FrequenciesPerTransferPerNode(frequencies);
+    //population.CalculateAverageFitness();
+    population.FrequenciesPerTransferPerNode(&frequencies);
     
     // Print the initial tree
     //if (g_verbose) population.PrintTree();
     
     //std::cout << node_id << std::endl;
     
-    while( (population.GetTransfers() < population.GetTotalTransfers()) && population.GetKeepTransferring() ) {
+    while( (population.GetTransfers() < population.GetTotalTransfers()) ) {
 				
       // Calculate the number of divisions until the next mutation 
       population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + round(gsl_ran_exponential(randgen, population.GetLambda())));
@@ -136,8 +158,11 @@ int main(int argc, char* argv[])
         std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl; 
       }
       
-      while( population.GetDivisionsUntilMutation() > 0 && population.GetKeepTransferring() ) 
+      while( population.GetDivisionsUntilMutation() > 0 && (population.GetTransfers() < population.GetTotalTransfers())) 
       {
+        
+        //std::cout << population.GetTransfers() << " " << population.GetTotalTransfers() << " " << population.GetDivisionsUntilMutation() << std::endl;
+        
         population.CalculateDivisions();
 					 
         if( population.GetDivisionsUntilMutation() <= 0) { 
@@ -145,21 +170,30 @@ int main(int argc, char* argv[])
         }
 					 
         if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
-          population.FrequenciesPerTransferPerNode(frequencies);
+          population.FrequenciesPerTransferPerNode(&frequencies);
           
           if( on_run == 0 ) 
             population.CalculateAverageFitness();
           
-          population.Resample();
-          population.CullPopulations();
+          if( print_single_fit )
+            population.Deterministic_Resample();
+          else {
+            population.Resample();
+            //population.CullPopulations();
+          }
+          
+          if( print_single_fit ) {
+            population.PrintSingleFitness(output_folder);
+            //std::cout << "Population size: " << population.GetPopulationSize() << std::endl;
+          }
           
           count++;
-          std::cout << std::endl << "Passing.... " << count << std::endl;
+          std::cout << "Passing.... " << count << std::endl;
           
           if ( population.GetTransfers() %  transfer_interval_to_print == 0 ) {  
             current_ro_ratio.push_back(population.GetRatio());
             
-            if (g_verbose == 1)
+            if (g_verbose)
             {
               std::cout << "Transfer " << population.GetTransfers() << " : " << 
               "=>" << population.GetPopulationSize() << "  R/W Ratio: " << population.GetRatio() << std::endl;  
@@ -173,7 +207,7 @@ int main(int argc, char* argv[])
     }
     
     std::cout << std::endl << std::endl;
-    population.RunSummary();
+    //population.RunSummary();
     population.PushBackRuns();
 
     if (g_verbose) {
@@ -186,38 +220,48 @@ int main(int argc, char* argv[])
     else {
       //number_unique_genotypes_in_all_replicates.push_back(population.CurrentUniqueGenotypes());
       
-      //std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
-      //population.PrintFrequenciesToScreen(output_folder, frequencies);
-    
-      std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
-      unsigned int sweep_val = population.CalculateSimilarity(output_folder, frequencies);
+      if( print_screen ) {
+        std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
+        population.PrintFrequenciesToScreen(output_folder, &frequencies);
+      }
+      
+      if( print_max_diff ) {
+        std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
+        population.CalculateSimilarity(output_folder, &frequencies);
+      }
   
-      if( sweep_val != -1 ) {
+      if( print_time_to_sweep ) {
         std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
-        population.TimeToSweep(output_folder, frequencies);
+        population.TimeToSweep(output_folder, &frequencies);
+      }
+      
+      if( on_run == 0 ) {
+        if( print_freq ) {
+          std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
+          population.PrintOut(output_folder, &frequencies);
+        }
         
-        /*if( on_run == 0 ) {
-         //std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
-         //population.PrintOut(output_folder, frequencies);
-         
-         std::cout << std::endl << std::endl << "Printing average fitness.... " << std::endl;
-         population.PrintFitness(output_folder);
-         
-         std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
-         std::vector< std::vector<int> > muller_matrix;
-         population.DrawMullerMatrix(output_folder, muller_matrix, frequencies);
-         }*/
+        if( print_average_fit ) {
+          std::cout << std::endl << std::endl << "Printing average fitness.... " << std::endl;
+          population.PrintFitness(output_folder);
+        }
+    
+        if( print_muller ) {
+          std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
+          std::vector< std::vector<int> > muller_matrix;
+          population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
+        }
       }
     }
   }
-  /*
+  
   if (g_ro_only) {
     //Initialize Population object
     cPopulation population;
     std::cout << std::endl << "Printing to r/w ratio file.... " << std::endl;
     population.PrintOut_RedWhiteOnly(output_folder, &red_white_ratios, transfer_interval_to_print);
   }
-  else {
+  /*else {
     //Initialize Population object
     cPopulation population;
     std::cout << std::endl << "Printing unique genotypes to file.... " << std::endl;

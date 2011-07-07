@@ -288,11 +288,11 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
   
   //The low for this mutation should be the low of the input interval
   double this_low = in_low;
-  double this_high = this_low + Find_Node_in_Freq(frequencies, this_node)->frequency;
+  double this_high = this_low + Find_Node_in_Freq_By_NodeID(frequencies, this_node->unique_node_id);
   double size_depth1_children(0), half_size_parent_swath((this_high-this_low)/2);
   
   for (tree<cGenotype>::sibling_iterator it_node = m_tree.begin(this_node); it_node!=m_tree.end(this_node); ++it_node) {
-    size_depth1_children += Find_Node_in_Freq(frequencies, it_node)->frequency;
+    size_depth1_children += Find_Node_in_Freq_By_NodeID(frequencies, it_node->unique_node_id);
   }
   /*if(size_depth1_children != 0)
     std::cout << size_depth1_children << std::endl;*/
@@ -306,7 +306,7 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
   for (tree<cGenotype>::sibling_iterator it_node = m_tree.begin(this_node); it_node!=m_tree.end(this_node); ++it_node) {
     
     // is the frequency > 0? (It may have gone extinct, in which case it is a waste to keep going down the tree!)
-    if( Find_Node_in_Freq(frequencies, it_node)->frequency > 0 ) {
+    if( Find_Node_in_Freq_By_NodeID(frequencies, it_node->unique_node_id) > 0 ) {
       last_assigned_child_high = AssignChildFreq(it_node, this_top_low, this_high, child_freqs, frequencies, depth+1);
     }
     

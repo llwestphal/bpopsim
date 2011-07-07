@@ -126,7 +126,7 @@ void cPopulation::FrequenciesPerTransferPerNode(std::vector< std::vector<cGenoty
   //assert(m_tree.size() == m_genotype_count);
   
   // Genotype frequencies (mutations at each node of tree)
-	std::vector<cGenotypeFrequency> freq_per_node(m_genotype_count);
+	std::vector<cGenotypeFrequency> freq_per_node(0);
   
   // Genotype number (mutations at each node of tree)
 	std::vector<uint32_t> number_with_genotype(m_genotype_count,0);
@@ -169,7 +169,10 @@ void cPopulation::FrequenciesPerTransferPerNode(std::vector< std::vector<cGenoty
     
     this_node.unique_node_id = i;
     this_node.frequency = (double)number_with_genotype[i]/m_population_size;
-    freq_per_node[i] = this_node;
+    
+    if( this_node.frequency > 0 ) {
+      freq_per_node.push_back(this_node);
+    }
 		
 		total_freqs += this_node.frequency;
     // /*if (g_verbose) */std::cout << this_node.unique_node_id << "  " << this_node.frequency << std::endl;
@@ -241,13 +244,33 @@ void cPopulation::ConvertExternalPhylogeneticTree(std::string input_tree) {;}
 
 void cPopulation::ConvertExternalFrequencies(std::string input_frequencies) {;}
 
+std::vector<cGenotypeFrequency>::iterator cPopulation::Find_Node_in_Freq(std::vector<cGenotypeFrequency> &frequencies, tree<cGenotype>::sibling_iterator this_node) {
+  
+  cGenotypeFrequency return_node;
+  return_node.unique_node_id = this_node->unique_node_id;
+  
+  for( std::vector<cGenotypeFrequency>::iterator a_node = frequencies.begin(); a_node < frequencies.end(); ++a_node ){
+    if( a_node->unique_node_id == this_node->unique_node_id ) {
+      return a_node;
+    }
+    else
+      return_node.frequency = 0;
+  }
+  
+  std::vector<cGenotypeFrequency> return_vector;
+  return_vector.push_back(return_node);
+  
+  return return_vector.begin();
+}
+
+
 // @JEB function returns the high frequency of the tallest child
 //      (to tell the parent where to put its low frequency)
 double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
                                   double in_low,
                                   double in_high,
                                   std::vector<cFrequencySlice> * child_freqs,
-                                  std::vector<cGenotypeFrequency> * frequencies, 
+                                  std::vector<cGenotypeFrequency> &frequencies, 
                                   int depth)  // current depth in tree, defaults to zero
 {
   
@@ -255,13 +278,11 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
   
   //The low for this mutation should be the low of the input interval
   double this_low = in_low;
-  double this_high = this_low + ((*frequencies)[this_node->unique_node_id]).frequency;
+  double this_high = this_low + Find_Node_in_Freq(frequencies, this_node)->frequency;
   double size_depth1_children(0), half_size_parent_swath((this_high-this_low)/2);
   
   for (tree<cGenotype>::sibling_iterator it_node = m_tree.begin(this_node); it_node!=m_tree.end(this_node); ++it_node) {
-    if (it_node->unique_node_id < frequencies->size()) {
-      size_depth1_children += ((*frequencies)[it_node->unique_node_id]).frequency;
-    }
+    size_depth1_children += Find_Node_in_Freq(frequencies, it_node)->frequency;
   }
   /*if(size_depth1_children != 0)
     std::cout << size_depth1_children << std::endl;*/
@@ -273,14 +294,12 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
   // due to its children taking a bite out of it.  
   double last_assigned_child_high = this_top_low;
   for (tree<cGenotype>::sibling_iterator it_node = m_tree.begin(this_node); it_node!=m_tree.end(this_node); ++it_node) {
-
-    // is a frequency assigned for this child (it may have happened later)
-    if (it_node->unique_node_id < frequencies->size()) {
-      // is the frequency > 0? (It may have gone extinct, in which case it is a waste to keep going down the tree!)
-      if( (*frequencies)[it_node->unique_node_id].frequency > 0 ) {
-        last_assigned_child_high = AssignChildFreq(it_node, this_top_low, this_high, child_freqs, frequencies, depth+1);
-      }
+    
+    // is the frequency > 0? (It may have gone extinct, in which case it is a waste to keep going down the tree!)
+    if( Find_Node_in_Freq(frequencies, it_node)->frequency > 0 ) {
+      last_assigned_child_high = AssignChildFreq(it_node, this_top_low, this_high, child_freqs, frequencies, depth+1);
     }
+    
     // Our new low is the last high assigned to a child
     this_top_low = last_assigned_child_high;
   }
@@ -288,11 +307,6 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
   // At this point we know the top and bottom of this node...
   // This is where we would want to paint into a bitmap between them!!
   // Draw between this_low and this_high ... rounding to only paint whole numbers ...
-  
-  // save the final values for the low and high of this swath
-  //(*child_freqs)[this_node->unique_node_id].unique_node_id = this_node->unique_node_id;
-  //(*child_freqs)[this_node->unique_node_id].low = this_low;
-  //(*child_freqs)[this_node->unique_node_id].high = this_high;
   
   (*child_freqs).push_back(cFrequencySlice(this_node->unique_node_id, this_low, this_bottom_high));
   (*child_freqs).push_back(cFrequencySlice(this_node->unique_node_id, this_top_low, this_high));
@@ -309,7 +323,7 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
 
 void cPopulation::DrawMullerMatrix(std::string output_folder,
                                    std::vector< std::vector<int> > muller_matrix, 
-                                   std::vector< std::vector<cGenotypeFrequency> > * frequencies){
+                                   std::vector< std::vector<cGenotypeFrequency> > &frequencies){
   
   std::vector< tree<cGenotype>::iterator > where(m_tree.size());
   std::map<uint32_t, uint32_t> renumber;
@@ -328,16 +342,19 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
   output_file.append("/MullerMatrix.dat");
   std::ofstream output_handle(output_file.c_str());
   
+  uint32_t time = 0;
+  
   //step through simulation time
-  for (uint32_t time=0; time<(*frequencies).size(); time++) {
+  for (std::vector< std::vector<cGenotypeFrequency> >::iterator this_time_freq = frequencies.begin(); this_time_freq < frequencies.end(); ++this_time_freq) {
     std::cout << time << std::endl;
-    
+    time++;
+
     std::vector<cFrequencySlice> child_freqs;
     
     tree<cGenotype>::sibling_iterator location;
     location = m_tree.begin();
     
-    AssignChildFreq(location, 0, 1, &child_freqs, &((*frequencies)[time]));
+    AssignChildFreq(location, 0, 1, &child_freqs, *this_time_freq);
     std::sort(child_freqs.begin(), child_freqs.end(), cSortByLow());
     
     uint32_t resolution(2500), last_node_meeting_span;
@@ -371,21 +388,12 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
             output_handle << std::left << std::setw(6) << renumber.find(child_freqs[j].unique_node_id)->second;
             last_node_meeting_span = renumber.find(child_freqs[j].unique_node_id)->second;
           }
-          //else {
-          //  output_handle << std::left << std::setw(8) << last_node_meeting_span;
-          //}
+
           break;
         }
       }
     }
-    /*
-    
-    for(int i=0; i<child_freqs.size(); i++) {
-      if( ((child_freqs[i].high) != (child_freqs[i].low)) )  
-        output_handle << std::left << std::setw(8)<< i << " " << std::left << std::setw(15) << child_freqs[i].low << std::setw(15) << child_freqs[i].high << std::endl;
-    }*/
     output_handle << std::endl;
-    //muller_matrix.push_back(this_time_point);
   }
 }
 

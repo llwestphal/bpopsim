@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
           
           count++;
           std::cout << "Passing.... " << count << std::endl;
-          
+
           if ( population.GetTransfers() %  transfer_interval_to_print == 0 ) {  
             current_ro_ratio.push_back(population.GetRatio());
             
@@ -249,7 +249,7 @@ int main(int argc, char* argv[])
         if( print_muller ) {
           std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
           std::vector< std::vector<int> > muller_matrix;
-          population.DrawMullerMatrix(output_folder, muller_matrix, &frequencies);
+          population.DrawMullerMatrix(output_folder, muller_matrix, frequencies);
         }
       }
     }

@@ -187,16 +187,17 @@ public:
   void   FrequenciesPerTransferPerNode(std::vector< std::vector<cGenotypeFrequency> > * frequencies); 
   void   ConvertExternalPhylogeneticTree(std::string input_tree);
   void   ConvertExternalFrequencies(std::string input_frequencies);
+  std::vector<cGenotypeFrequency>::iterator Find_Node_in_Freq(std::vector<cGenotypeFrequency> &frequencies, 
+                                                    tree<cGenotype>::sibling_iterator this_node);
   double AssignChildFreq(tree<cGenotype>::sibling_iterator child_node,
                          double parent_low,
                          double parent_high,
                          std::vector<cFrequencySlice> * child_freqs, 
-                         std::vector<cGenotypeFrequency> * frequencies,
+                         std::vector<cGenotypeFrequency> &frequencies,
                          int depth = 0);
-  
   void   DrawMullerMatrix(std::string output_folder,
                         std::vector< std::vector<int> > muller_matrix,
-                        std::vector< std::vector<cGenotypeFrequency> > * frequencies);
+                        std::vector< std::vector<cGenotypeFrequency> > &frequencies);
   void   Resample();
   void   Deterministic_Resample();
   void   CullPopulations();
@@ -221,6 +222,7 @@ public:
   void   PrintFrequenciesToScreen_RedWhiteOnly(std::string output_folder, 
                                              std::vector< std::vector<cGenotypeFrequency> > * frequencies);
   void   PrintSingleFitness(std::string out_folder);
+
   std::vector<bool> MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > * frequencies, 
                                            float threshold);
   unsigned int CalculateSimilarity(std::string output_folder, 

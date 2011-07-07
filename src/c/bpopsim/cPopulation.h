@@ -179,20 +179,14 @@ public:
   //METHODS
 	//@agm To keep the lines of manageable length, if a method has multiple variables, each variable got a new line
     
-  void SetParameters(const variables_map & options);
-	
+  void   SetParameters(const variables_map & options);
 	//! Move time forward by this increment, growing all subpopulations
-  void UpdateSubpopulations(double update_time);
-
+  void   UpdateSubpopulations(double update_time);
   //! Calculate the time until the next subpopulation divides (passes a whole number of cells)
   double TimeToNextWholeCell();
-
-  void FrequenciesPerTransferPerNode(std::vector< std::vector<cGenotypeFrequency> > * frequencies); 
-  
-  void ConvertExternalPhylogeneticTree(std::string input_tree);
-  
-  void ConvertExternalFrequencies(std::string input_frequencies);
-  
+  void   FrequenciesPerTransferPerNode(std::vector< std::vector<cGenotypeFrequency> > * frequencies); 
+  void   ConvertExternalPhylogeneticTree(std::string input_tree);
+  void   ConvertExternalFrequencies(std::string input_frequencies);
   double AssignChildFreq(tree<cGenotype>::sibling_iterator child_node,
                          double parent_low,
                          double parent_high,
@@ -200,66 +194,45 @@ public:
                          std::vector<cGenotypeFrequency> * frequencies,
                          int depth = 0);
   
-  void DrawMullerMatrix(std::string output_folder,
+  void   DrawMullerMatrix(std::string output_folder,
                         std::vector< std::vector<int> > muller_matrix,
                         std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  void Resample();
-  
-  void CullPopulations();
-  
-  void PushBackRuns();
-  
-  void RunSummary();
-  
-  void DisplayParameters();
-  
-  void CalculateDivisions();
-  
-  void SeedSubpopulationForRedWhite();
-  
-  void SeedPopulationWithOneColony();
-  
-  void AddSubpopulation(cSubpopulation& subpop);
-  
-  void Mutate();
-  
-
+  void   Resample();
+  void   Deterministic_Resample();
+  void   CullPopulations();
+  void   PushBackRuns();
+  void   RunSummary();
+  void   DisplayParameters();
+  void   CalculateDivisions();
+  void   SeedSubpopulationForRedWhite();
+  void   SeedPopulationWithOneColony();
+  void   AddSubpopulation(cSubpopulation& subpop);
+  void   Mutate();
   std::vector<uint16_t> CurrentUniqueGenotypes();
-  void PrintUniqueGenotypes(const std::string& output_folder,
+  void   PrintUniqueGenotypes(const std::string& output_folder,
                             std::vector< std::vector<uint16_t> > * number_of_unique_genotypes);
-  
-  void PrintOut(const std::string& output_folder,
+  void   PrintOut(const std::string& output_folder,
                 std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  
-  void PrintOut_RedWhiteOnly(const std::string& output_folder,
+  void   PrintOut_RedWhiteOnly(const std::string& output_folder,
                              std::vector< std::vector<double> > * red_white_ratios,
                              uint16_t transfer_interval_to_print);
-  
-  void PrintFrequenciesToScreen(std::string output_folder, 
+  void   PrintFrequenciesToScreen(std::string output_folder, 
                                 std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  
-  void PrintFrequenciesToScreen_RedWhiteOnly(std::string output_folder, 
+  void   PrintFrequenciesToScreen_RedWhiteOnly(std::string output_folder, 
                                              std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  
+  void   PrintSingleFitness(std::string out_folder);
   std::vector<bool> MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > * frequencies, 
                                            float threshold);
-  
   unsigned int CalculateSimilarity(std::string output_folder, 
                                    std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  
   double CountMutipleDivergedSubpops();
-  
-  void TimeToSweep(std::string output_folder, 
+  void   TimeToSweep(std::string output_folder, 
                    std::vector< std::vector<cGenotypeFrequency> > * frequencies);
-  
-  void CalculateAverageFitness();
-  
-  void PrintFitness(std::string output_folder);
-  
-  float Logarithm(float mantissa);
-  
+  void   CalculateAverageFitness();
+  void   PrintFitness(std::string output_folder);
+  float  Logarithm(float mantissa);
   // Prints out the tree using bracket notation.
-  void PrintTree();
+  void   PrintTree();
 };
 
 #endif

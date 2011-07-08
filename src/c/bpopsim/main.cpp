@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
             population.Deterministic_Resample();
           else {
             population.Resample();
-            //population.CullPopulations();
+            population.CullPopulations();
           }
           
           if( print_single_fit ) {

@@ -11,6 +11,7 @@
 		701E92841201406800653784 /* libboost_program_options-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 701E92831201406800653784 /* libboost_program_options-mt.a */; };
 		70307F1D11F7E39E00BEFD1F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 70307F1C11F7E39E00BEFD1F /* main.cpp */; };
 		70684A92120A007300BE96CA /* cPopulation.cc in Sources */ = {isa = PBXBuildFile; fileRef = 70684A90120A007300BE96CA /* cPopulation.cc */; };
+		D9C6594B13EC4C7A00BFCCCB /* anyoption.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C6594A13EC4C7A00BFCCCB /* anyoption.cpp */; };
 		D9CD9D04132996F4006E387E /* libgsl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9CD9D03132996F4006E387E /* libgsl.a */; };
 /* End PBXBuildFile section */
 
@@ -37,6 +38,8 @@
 		8DD76F6C0486A84900D96B5E /* popsim */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = popsim; sourceTree = BUILT_PRODUCTS_DIR; };
 		D952741B132EE0CB009223FC /* tree.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = tree.hh; path = bpopsim/tree.hh; sourceTree = "<group>"; };
 		D952741C132EE0D4009223FC /* tree_util.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = tree_util.hh; path = bpopsim/tree_util.hh; sourceTree = "<group>"; };
+		D9C6594A13EC4C7A00BFCCCB /* anyoption.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = anyoption.cpp; path = bpopsim/anyoption.cpp; sourceTree = "<group>"; };
+		D9C6594C13EC4C8300BFCCCB /* anyoption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = anyoption.h; path = bpopsim/anyoption.h; sourceTree = "<group>"; };
 		D9CD9D03132996F4006E387E /* libgsl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgsl.a; path = /opt/local/lib/libgsl.a; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
@@ -85,6 +88,7 @@
 			children = (
 				708EE7B21346E8F400E33511 /* common.h */,
 				D952741C132EE0D4009223FC /* tree_util.hh */,
+				D9C6594C13EC4C8300BFCCCB /* anyoption.h */,
 				D952741B132EE0CB009223FC /* tree.hh */,
 				70684A91120A007300BE96CA /* cPopulation.h */,
 				701E921A120134BD00653784 /* cSubpopulation.h */,
@@ -105,6 +109,7 @@
 		70D4DBC61200EB360055362E /* src */ = {
 			isa = PBXGroup;
 			children = (
+				D9C6594A13EC4C7A00BFCCCB /* anyoption.cpp */,
 				70307F1C11F7E39E00BEFD1F /* main.cpp */,
 				70684A90120A007300BE96CA /* cPopulation.cc */,
 				701E9218120134B800653784 /* cSubpopulation.cc */,
@@ -172,6 +177,7 @@
 				70307F1D11F7E39E00BEFD1F /* main.cpp in Sources */,
 				701E9219120134B800653784 /* cSubpopulation.cc in Sources */,
 				70684A92120A007300BE96CA /* cPopulation.cc in Sources */,
+				D9C6594B13EC4C7A00BFCCCB /* anyoption.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,43 +1,38 @@
 #include "common.h"
 #include "cPopulation.h"
 
-void cPopulation::SetParameters(const variables_map &options)
+using namespace bpopsim;
+using namespace std;
+
+void cPopulation::SetParameters(AnyOption &options)
 {
 	
   SetGrowthPhaseGenerations(
-		options.count("generations-per-transfer") ?
-		options["generations-per-transfer"].as<double>() : 6.64
+		from_string<double>(options["generations-per-transfer"])
 		);
   SetPopSizeAfterDilution(
-		options.count("population-size-after-transfer") ?
-		options["population-size-after-transfer"].as<uint32_t>() : uint32_t(5E6)
+		from_string<uint32_t>(options["population-size-after-transfer"])
 		); 
   SetInitialPopulationSize(
-		options.count("initial-population-size") ?
-    options["initial-population-size"].as<uint32_t>() : uint32_t(5E6)
+    from_string<uint32_t>(options["initial-population-size"])
 		);  
   SetMutationRatePerDivision(
-		options.count("mutation-rate-per-division") ?
-		options["mutation-rate-per-division"].as<double>() : 5E-8
+		from_string<double>(options["mutation-rate-per-division"])
 		);
   SetTotalTransfers(
-		options.count("number-of-transfers") ?
-		options["number-of-transfers"].as<uint32_t>() : 50
+		from_string<uint32_t>(options["number-of-transfers"])
 		);  
   SetMaxDivergenceFactor(
-		options.count("marker-divergence") ?
-		options["marker-divergence"].as<uint16_t>() : 100
+		from_string<double>(options["marker-divergence"])
 		);  
   SetBeneficialMutationDistribution(
-		options.count("type-of-mutations") ?
-		options["type-of-mutations"].as<char>() : 'u'
+		from_string<char>(options["type-of-mutations"])
 		);
   SetInitialMutVals(
-    options["imv"].as< std::vector<double> >()
+    from_string<vector< double > >(options["imv"])
     );
   SetCoarseGraining(
-    options.count("coarse-graining") ?
-    options["coarse-graining"].as<uint16_t>() : 1
+    from_string<uint16_t>(options["coarse-graining"])
     );
   
   // Simulation parameters that are pre-calculated

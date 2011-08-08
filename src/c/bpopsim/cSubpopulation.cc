@@ -2,6 +2,7 @@
 #include "cSubpopulation.h"
 
 using namespace std;
+using namespace bpopsim;
 
 /* */
 cSubpopulation::cSubpopulation() :

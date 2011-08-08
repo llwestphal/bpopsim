@@ -47,7 +47,7 @@ image.matrix <- function(x, colorTable=NULL, xlab="x", ylab="y", ...) {
   image(x=1:ncol(x),y=1:nrow(x),z=rotate270.matrix(x), col=colorTable, xlab=xlab, ylab=ylab, ...)
 }
 
-location <- "/location/to/MullerMatrix.dat"
+location <- "/path/to/MullerMatrix.dat"
 
 muller_mat <- t(as.matrix((read.table(paste(location, "/MullerMatrix.dat", sep=""), header=F))))*10
 
@@ -60,10 +60,10 @@ units = "px")
 
 colors = c(hsv(runif(10000), 1, .65))
 
-par(mar=c(5,3,4,3))
-par(mgp=c(3.5,1,0))
+par(mar=c(13,3,13,3))
+par(mgp=c(10,4,0))
 
-xticksnames=seq(0,20000, by=500)
+xticksnames=seq(0,20000, by=1000)
 xticks=xticksnames/6.64
 
 image.matrix(muller_mat,
@@ -73,20 +73,20 @@ image.matrix(muller_mat,
              axes=FALSE,
              xaxt="n",
              yaxt="n",
-             cex.lab=2)
+             cex.lab=6)
 
 axis(1,
      at=xticks,
      labels=xticksnames,
      col.axis="black", 
      adj=0,
-     lwd=2,
+     lwd=5,
      tck=-0.01,
-     cex.axis=2)
+     cex.axis=5)
   
 title(main='Bpopsim Muller Matrix', 
   col.main="black", 
-  cex.main = 3)
+  cex.main = 12)
 
 dev.off()
 

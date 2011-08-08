@@ -10,55 +10,6 @@ using namespace std;
 bool g_verbose = false;
 bool g_ro_only = false;
 
-// setup and parse configuration options:
-/*void get_cmdline_options(variables_map &options, uint16_t argc, char* argv[]) {
-
-  options_description cmdline_options("Allowed options");
-  cmdline_options.add_options()
-  ("help,h", "produce this help message")
-  ("generations-per-transfer,T", value<double>(), "Generations per transfer")
-  ("population-size-after-transfer,N", value<uint32_t>(), "Population size after transfer")
-  ("number-of-transfers,n", value<uint32_t>(), "Max number of transfer to replicate")
-  ("output-folder,o", value<std::string>(), "Output folder")
-  ("mutation-rate-per-division,u", value<double>(), "Mutation rate per division")
-  ("initial-population-size,i", value<uint32_t>(), "Initial Population Size")
-  ("replicates,r", value<uint32_t>(), "Replicates")
-  ("marker-divergence,m", value<uint16_t>(), "Max divergence factor")
-  ("type-of-mutations,f", value<char>(), "Type of mutations")
-  ("verbose,v", "Verbose")
-  ("lineage-tree,l", value<uint32_t>(), "Lineage Tree")
-  ("seed,d", value<uint16_t>(), "Seed for random number generator")
-  ("red-white,k", "Only care about red/white lineages. For marker divergence.")
-  ("transfer-interval-to-print,t", value<uint16_t>(), "Red/White Printing intervals.")
-  ("imv,x", value< std::vector<double> >(), "Initial Mutational Values.")
-  ("coarse-graining,c", value<uint16_t>(), "Amount to coarse-grain output.")
-  
-  //Here are the output options
-  //They are all set to false by default
-  ("frequencies", "Print Frequencies")
-  ("muller", "Print Muller Matrix")
-  ("average_fit", "Print Average Fitness")
-  ("print_screen", "Print Frequencies to Screen")
-  ("time_sweep", "Print time to sweep for each mutation")
-  ("max_diff", "Print max difference of sweeping mutations")
-  ("single_fit", "Print the fitness of the single cell.")
-  ;
-
-  store(parse_command_line(argc, argv, cmdline_options), options);
-  notify(options);
-
-  // check here for required options
-  if(options.count("help")
-      || !options.count("output-folder")) {
-      std::cerr << "Usage: GSL_RNG_SEED=123 bpopsim -o output" << std::endl << std::endl;
-      std::cerr << cmdline_options << std::endl;
-      exit(0);
-  }
-  
-  if ( options.count("verbose") ) g_verbose = true;
-  if ( options.count("red-white") ) g_ro_only = true;
-}*/
-
 int main(int argc, char* argv[])
 {
   AnyOption options("Usage: bpopsim etc");
@@ -118,30 +69,6 @@ int main(int argc, char* argv[])
     if( options.count("time_sweep") ) print_time_to_sweep = true;
     if( options.count("max_diff") ) print_max_diff = true;
     if( options.count("single_fit") ) print_single_fit = true;
-	
-    //set up command line options
-    /*variables_map cmdline_options;
-    //get_cmdline_options(cmdline_options, argc, argv);
-    
-    std::string output_folder = cmdline_options["output-folder"].as<std::string>();
-    uint32_t num_replicates = cmdline_options["replicates"].as<uint32_t>();
-    
-    uint16_t transfer_interval_to_print(1);
-    if ( cmdline_options.count("transfer-interval-to-print") ) {
-        transfer_interval_to_print = cmdline_options["transfer-interval-to-print"].as<uint16_t>();
-    }
-    
-    bool print_freq(false), print_muller(false), print_average_fit(false),
-         print_screen(false), print_max_diff(false), print_time_to_sweep(false),
-         print_single_fit(false);
-    
-    if( cmdline_options.count("frequencies") ) print_freq = true;
-    if( cmdline_options.count("muller") ) print_muller = true;
-    if( cmdline_options.count("average_fit") ) print_average_fit = true;
-    if( cmdline_options.count("print_screen") ) print_screen = true;
-    if( cmdline_options.count("time_sweep") ) print_time_to_sweep = true;
-    if( cmdline_options.count("max_diff") ) print_max_diff = true;
-    if( cmdline_options.count("single_fit") ) print_single_fit = true;*/
     
     std::vector< std::vector<double> > red_white_ratios;
     

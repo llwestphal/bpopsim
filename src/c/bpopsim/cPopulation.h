@@ -3,7 +3,6 @@
 
 #include "cSubpopulation.h"
 
-using namespace boost::program_options;
 using namespace std;
 
 namespace bpopsim {

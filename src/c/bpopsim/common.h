@@ -1,26 +1,40 @@
 #ifndef common_h
 #define common_h
 
-#include <iostream>
-#include <vector>
-#include <cmath>
-#include <fstream>
-#include <algorithm>
-#include <iomanip> 
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_matrix.h>
+// System headers
+
+// C
+#include <assert.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
 #include <time.h>
+
+// C++
+#include <algorithm>
+#include <cmath>
+#include <fstream>
+#include <functional>
+#include <iomanip> 
+#include <iostream>
+#include <limits>
+#include <list>
+#include <map>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
+
+//Other Includes
 #include "tree.hh"
 #include "tree_util.hh"
 #include "icsilog.h"
-#include <functional>
-#include <list>
-#include <utility>
-#include <map>
 #include "anyoption.h"
-
-#include <boost/program_options.hpp>
+#include <gsl/gsl_randist.h>
+#include <gsl/gsl_matrix.h>
 
 using namespace std;
 

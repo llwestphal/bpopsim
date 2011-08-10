@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		701E9219120134B800653784 /* cSubpopulation.cc in Sources */ = {isa = PBXBuildFile; fileRef = 701E9218120134B800653784 /* cSubpopulation.cc */; };
-		701E92841201406800653784 /* libboost_program_options-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 701E92831201406800653784 /* libboost_program_options-mt.a */; };
 		70307F1D11F7E39E00BEFD1F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 70307F1C11F7E39E00BEFD1F /* main.cpp */; };
 		70684A92120A007300BE96CA /* cPopulation.cc in Sources */ = {isa = PBXBuildFile; fileRef = 70684A90120A007300BE96CA /* cPopulation.cc */; };
 		D9C6594B13EC4C7A00BFCCCB /* anyoption.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C6594A13EC4C7A00BFCCCB /* anyoption.cpp */; };
@@ -30,7 +29,6 @@
 /* Begin PBXFileReference section */
 		701E9218120134B800653784 /* cSubpopulation.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cSubpopulation.cc; path = bpopsim/cSubpopulation.cc; sourceTree = "<group>"; };
 		701E921A120134BD00653784 /* cSubpopulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cSubpopulation.h; path = bpopsim/cSubpopulation.h; sourceTree = "<group>"; };
-		701E92831201406800653784 /* libboost_program_options-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_program_options-mt.a"; path = "/opt/local/lib/libboost_program_options-mt.a"; sourceTree = "<absolute>"; };
 		70307F1C11F7E39E00BEFD1F /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = bpopsim/main.cpp; sourceTree = "<group>"; };
 		70684A90120A007300BE96CA /* cPopulation.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cPopulation.cc; path = bpopsim/cPopulation.cc; sourceTree = "<group>"; wrapsLines = 0; };
 		70684A91120A007300BE96CA /* cPopulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cPopulation.h; path = bpopsim/cPopulation.h; sourceTree = "<group>"; };
@@ -48,7 +46,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				701E92841201406800653784 /* libboost_program_options-mt.a in Frameworks */,
 				D9CD9D04132996F4006E387E /* libgsl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -78,7 +75,6 @@
 			isa = PBXGroup;
 			children = (
 				D9CD9D03132996F4006E387E /* libgsl.a */,
-				701E92831201406800653784 /* libboost_program_options-mt.a */,
 			);
 			name = lib;
 			sourceTree = "<group>";

@@ -70,6 +70,12 @@ void cSubpopulation::CreateDescendant(  gsl_rng * randomgenerator,
 	
 }
 
+void cSubpopulation::AddToTree(tree<bpopsim::cGenotype> &in_tree, 
+                               tree<cGenotype>::iterator parent, 
+                               bpopsim::cGenotype child) {
+  in_tree.append_child(parent, child);
+}
+
 void cSubpopulation::Transfer(double success_prob, 
                               gsl_rng * randomgenerator) {
 		

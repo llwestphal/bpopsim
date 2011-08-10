@@ -264,11 +264,13 @@ void cPopulation::ConvertExternalData(const string &input_file) {
       m_frequencies.resize(line_pieces.size()-1);
       
       for(uint16_t this_time = 0; this_time < m_frequencies.size(); ++this_time) {
-        cGenotypeFrequency temp_time;
-        temp_time.unique_node_id = num_nodes;
-        temp_time.name = *(preformat_tree.end()-1);
-        temp_time.frequency = from_string<double>(line_pieces[this_time+1]);
-        m_frequencies[this_time].push_back(temp_time);
+        if( from_string<double>(line_pieces[this_time+1]) != 0 ) {
+          cGenotypeFrequency temp_time;
+          temp_time.unique_node_id = num_nodes;
+          temp_time.name = *(preformat_tree.end()-1);
+          temp_time.frequency = from_string<double>(line_pieces[this_time+1]);
+          m_frequencies[this_time].push_back(temp_time);
+        }
       }
     }
     else {
@@ -283,11 +285,13 @@ void cPopulation::ConvertExternalData(const string &input_file) {
           new_child.AddToTree(m_tree, this_node, child);
           
           for(uint16_t this_time = 0; this_time < m_frequencies.size(); ++this_time) {
-            cGenotypeFrequency temp_time;
-            temp_time.unique_node_id = num_nodes;
-            temp_time.name = *(preformat_tree.end()-1);
-            temp_time.frequency = from_string<double>(line_pieces[this_time+1]);
-            m_frequencies[this_time].push_back(temp_time);
+            if( from_string<double>(line_pieces[this_time+1]) != 0 ) {
+              cGenotypeFrequency temp_time;
+              temp_time.unique_node_id = num_nodes;
+              temp_time.name = *(preformat_tree.end()-1);
+              temp_time.frequency = from_string<double>(line_pieces[this_time+1]);
+              m_frequencies[this_time].push_back(temp_time);
+            }
           }
         }
       }
@@ -300,16 +304,20 @@ void cPopulation::ConvertExternalData(const string &input_file) {
   
   /*for(tree<cGenotype>::iterator this_node = m_tree.begin(); this_node != m_tree.end(); ++this_node) {
     cout << this_node->unique_node_id << " " << this_node->name << endl;
-  }
+  }*/
   
-  PrintTree();*/
+  PrintFreqsQuick();
+  PrintTree();
   
+}
+
+void cPopulation::PrintFreqsQuick() {
   for(vector< vector<cGenotypeFrequency> >::iterator this_time=m_frequencies.begin(); this_time!=m_frequencies.end(); ++this_time) {
     for(vector<cGenotypeFrequency>::iterator this_genotype=this_time->begin(); this_genotype!=this_time->end(); ++this_genotype) {
       cout << this_genotype->unique_node_id << " " << this_genotype->name << " " << this_genotype->frequency << endl;
     }
+    cout << endl << endl;
   }
-  
 }
 
 std::vector<cGenotypeFrequency>::iterator cPopulation::Find_Node_in_Freq(std::vector<cGenotypeFrequency> &frequencies, tree<cGenotype>::sibling_iterator this_node) {

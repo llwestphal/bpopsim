@@ -7,12 +7,14 @@ namespace bpopsim {
 
   struct cGenotype{
     uint32_t unique_node_id;
-    double fitness;
-    uint8_t mut_num;
+    string   name;
+    double   fitness;
+    uint8_t  mut_num;
    };
 
   struct cGenotypeFrequency{
     uint32_t unique_node_id;
+    string name;
     double frequency;
   };
 
@@ -43,6 +45,7 @@ namespace bpopsim {
     virtual ~cSubpopulation() { ; }; 
 
     const double GetFitness() { return (*m_genotype).fitness; }
+    const string GetName() { return (*m_genotype).name; }
     tree<cGenotype>::iterator GetGenotypeIter() { return m_genotype; }
     const uint32_t GetNode_id() { return (*m_genotype).unique_node_id; }
     const double GetNumber() { return m_number; }
@@ -63,6 +66,11 @@ namespace bpopsim {
                                   char beneficialmutationdistribution, 
                                   tree<cGenotype>& in_tree, 
                                   uint32_t node_id);
+    
+    virtual void AddToTree(tree<cGenotype>& in_tree,
+                           tree<cGenotype>::iterator parent,
+                           cGenotype child);
+                           
 
   };
   

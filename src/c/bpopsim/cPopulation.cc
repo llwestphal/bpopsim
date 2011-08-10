@@ -105,7 +105,7 @@ double cPopulation::TimeToNextWholeCell()
 
 //@agm Now the information is stored in a vector and passed back to the main function for later use.
 
-void cPopulation::FrequenciesPerTransferPerNode(std::vector< std::vector<cGenotypeFrequency> > * frequencies)
+void cPopulation::FrequenciesPerTransferPerNode()
 {	
   //  Debug: this checks to see if our population size was correct.
   //  Please leave commented out and don't remove.
@@ -178,7 +178,7 @@ void cPopulation::FrequenciesPerTransferPerNode(std::vector< std::vector<cGenoty
 
 	//@agm Printing sum of frequencies and building the doubly deep vector
 	//Cout << Endl << "Sum of all freqs: " << total_freqs << Endl;
-	frequencies->push_back(freq_per_node);
+	m_frequencies.push_back(freq_per_node);
 }
 
 void cPopulation::CalculateAverageFitness() {
@@ -235,9 +235,82 @@ void cPopulation::PrintSingleFitness(std::string output_folder) {
   output_handle.close();
 }
 
-void cPopulation::ConvertExternalPhylogeneticTree(std::string input_tree) {;}
-
-void cPopulation::ConvertExternalFrequencies(std::string input_frequencies) {;}
+void cPopulation::ConvertExternalData(const string &input_file) {
+  
+  fstream input_handle;
+  input_handle.open(input_file.c_str(), fstream::in);
+  assert(input_handle.is_open());
+  
+  char char_line[1000];
+  
+  uint16_t num_nodes = 1;
+  
+  while(!input_handle.getline(char_line,1000).eof()) {
+    string line(char_line);
+    vector<string> line_pieces(split(line, " ")), preformat_tree(split(line_pieces[0], ","));
+    
+    tree<cGenotype>::iterator top, next;
+    
+    if( num_nodes == 1 ) { 
+      cGenotype origin;
+      origin.unique_node_id = num_nodes;
+      origin.name = preformat_tree[0];
+      origin.fitness = 1;
+      origin.mut_num = 0;
+      
+      top = m_tree.begin();
+      m_tree.insert(top, origin);
+      
+      m_frequencies.resize(line_pieces.size()-1);
+      
+      for(uint16_t this_time = 0; this_time < m_frequencies.size(); ++this_time) {
+        cGenotypeFrequency temp_time;
+        temp_time.unique_node_id = num_nodes;
+        temp_time.name = *(preformat_tree.end()-1);
+        temp_time.frequency = from_string<double>(line_pieces[this_time+1]);
+        m_frequencies[this_time].push_back(temp_time);
+      }
+    }
+    else {
+      for(tree<cGenotype>::iterator this_node = m_tree.begin(); this_node != m_tree.end(); ++this_node) {
+        if( *(preformat_tree.end()-2) == (*this_node).name ) {
+          cSubpopulation new_child;
+          cGenotype child;
+          child.name = *(preformat_tree.end()-1);
+          child.unique_node_id = num_nodes;
+          child.fitness = 1;
+          child.mut_num = num_nodes;
+          new_child.AddToTree(m_tree, this_node, child);
+          
+          for(uint16_t this_time = 0; this_time < m_frequencies.size(); ++this_time) {
+            cGenotypeFrequency temp_time;
+            temp_time.unique_node_id = num_nodes;
+            temp_time.name = *(preformat_tree.end()-1);
+            temp_time.frequency = from_string<double>(line_pieces[this_time+1]);
+            m_frequencies[this_time].push_back(temp_time);
+          }
+        }
+      }
+    }
+    
+    num_nodes++;
+  }
+  
+  input_handle.close();
+  
+  /*for(tree<cGenotype>::iterator this_node = m_tree.begin(); this_node != m_tree.end(); ++this_node) {
+    cout << this_node->unique_node_id << " " << this_node->name << endl;
+  }
+  
+  PrintTree();*/
+  
+  for(vector< vector<cGenotypeFrequency> >::iterator this_time=m_frequencies.begin(); this_time!=m_frequencies.end(); ++this_time) {
+    for(vector<cGenotypeFrequency>::iterator this_genotype=this_time->begin(); this_genotype!=this_time->end(); ++this_genotype) {
+      cout << this_genotype->unique_node_id << " " << this_genotype->name << " " << this_genotype->frequency << endl;
+    }
+  }
+  
+}
 
 std::vector<cGenotypeFrequency>::iterator cPopulation::Find_Node_in_Freq(std::vector<cGenotypeFrequency> &frequencies, tree<cGenotype>::sibling_iterator this_node) {
   
@@ -327,8 +400,7 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
 }
 
 void cPopulation::DrawMullerMatrix(std::string output_folder,
-                                   std::vector< std::vector<int> > muller_matrix, 
-                                   std::vector< std::vector<cGenotypeFrequency> > &frequencies){
+                                   std::vector< std::vector<int> > muller_matrix){
   
   std::vector< tree<cGenotype>::iterator > where(m_tree.size());
   std::map<uint32_t, uint32_t> renumber;
@@ -350,7 +422,7 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
   uint32_t time = 0;
   
   //step through simulation time
-  for (std::vector< std::vector<cGenotypeFrequency> >::iterator this_time_freq = frequencies.begin(); this_time_freq < frequencies.end(); ++this_time_freq) {
+  for (std::vector< std::vector<cGenotypeFrequency> >::iterator this_time_freq = m_frequencies.begin(); this_time_freq < m_frequencies.end(); ++this_time_freq) {
     std::cout << time << std::endl;
     time++;
 
@@ -837,10 +909,9 @@ void cPopulation::PrintUniqueGenotypes(const std::string& output_folder,
  true, and fill NA spaces as the read.table
  function allows. */
 
-void cPopulation::PrintOut(const std::string& output_folder, 
-                           std::vector< std::vector<cGenotypeFrequency> > * frequencies)
+void cPopulation::PrintOut(const std::string& output_folder)
 {  
-  std::vector<bool> ColsToPrint = MutationAboveThreshold(&(*frequencies), .2);
+  std::vector<bool> ColsToPrint = MutationAboveThreshold(.2);
   
 	//Print everything out
 	std::ofstream output_handle;
@@ -851,17 +922,17 @@ void cPopulation::PrintOut(const std::string& output_folder,
   output_file.append("Genotype_Frequencies.dat");
 	output_handle.open(output_file.c_str(),std::ios_base::app);
   
-  uint32_t last_time((*frequencies).size()-1);
+  uint32_t last_time(m_frequencies.size()-1);
   
-	for (uint32_t i = 0; i<(*frequencies)[last_time].size(); i++) { 
+	for (uint32_t i = 0; i<m_frequencies[last_time].size(); i++) { 
     if ( ColsToPrint[i] == true ) output_handle << i << " ";
 	}
 	//int width = 20;
   output_handle << "\n";
   
-	for (uint32_t i = 0; i<(*frequencies).size(); i++) {
+	for (uint32_t i = 0; i<m_frequencies.size(); i++) {
     uint32_t count(0);
-    for ( std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[i].begin(); it!=(*frequencies)[i].end(); ++it) {
+    for ( std::vector<cGenotypeFrequency>::iterator it = m_frequencies[i].begin(); it!=m_frequencies[i].end(); ++it) {
       if ( ColsToPrint[count] == true ) output_handle << (*it).frequency << " ";
       count++;
 		}
@@ -909,8 +980,7 @@ void cPopulation::PrintOut_RedWhiteOnly(const std::string& output_folder,
 //@agm As the function name implies, this prints the frequencies above some threshold to screen at whatever
 //     time it is called and passed the frequencies vector
 
-void cPopulation::PrintFrequenciesToScreen(std::string output_folder, 
-                                           std::vector< std::vector<cGenotypeFrequency> > * frequencies) {
+void cPopulation::PrintFrequenciesToScreen(std::string output_folder) {
   int count(0);
   std::ofstream output_handle;
   std::string output_file;
@@ -922,9 +992,9 @@ void cPopulation::PrintFrequenciesToScreen(std::string output_folder,
   output_file.append("HumanReadable_GenotypeFrequencies.dat");
 	output_handle.open(output_file.c_str(),std::ios_base::app);
   
-	for (uint32_t i = 0; i<(*frequencies).size(); i++) {
+	for (uint32_t i = 0; i<m_frequencies.size(); i++) {
 		double total_freqs = 0;
-    for ( std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[i].begin(); it!=(*frequencies)[i].end(); ++it) {
+    for ( std::vector<cGenotypeFrequency>::iterator it = m_frequencies[i].begin(); it!=m_frequencies[i].end(); ++it) {
     //@agm set up a minimum frequency to report the print out the number so it isn't overwhelming.
       if ((*it).frequency > 0.01) {
         std::cout << "Frequency of mutation # " << std::right << std::setw(6) << (*it).unique_node_id << " at time ";
@@ -940,15 +1010,14 @@ void cPopulation::PrintFrequenciesToScreen(std::string output_folder,
 	}
 } 
 
-void cPopulation::PrintFrequenciesToScreen_RedWhiteOnly(std::string output_folder, 
-                                                        std::vector< std::vector<cGenotypeFrequency> > * frequencies) {;}
+void cPopulation::PrintFrequenciesToScreen_RedWhiteOnly(std::string output_folder) {;}
 
 //@agm This function determines the maximum difference in genotype frequency between a mutation
 //     and its predecessor if they got above the threshold passed to the threshold function below
 
-unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::vector< std::vector<cGenotypeFrequency> > &frequencies) {
+unsigned int cPopulation::CalculateSimilarity(std::string output_folder) {
   
-  uint32_t youngest_sweep(MutationAboveThreshold_2(frequencies, .98));
+  uint32_t youngest_sweep(MutationAboveThreshold_2(.98));
   
   std::vector<uint32_t> all_sweep_ids;
   
@@ -975,7 +1044,7 @@ unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::ve
   
   for (uint16_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
     uint32_t time = 0;
-    for (std::vector< std::vector<cGenotypeFrequency> >::iterator this_time = frequencies.begin(); this_time < frequencies.end(); ++this_time) {
+    for (std::vector< std::vector<cGenotypeFrequency> >::iterator this_time = m_frequencies.begin(); this_time < m_frequencies.end(); ++this_time) {
       
       //This conditional is to coarse-grain the sampling to every 75 transfers (~500 generations)
       //and to make sure there is a value in the vector at that position
@@ -1019,10 +1088,9 @@ unsigned int cPopulation::CalculateSimilarity(std::string output_folder, std::ve
   return num_below_threshold;
 }
 
-void cPopulation::TimeToSweep(std::string output_folder, 
-                              std::vector<std::vector<cGenotypeFrequency> > &frequencies) {
+void cPopulation::TimeToSweep(std::string output_folder) {
   
-  uint32_t youngest_sweep(MutationAboveThreshold_2(frequencies, .98));
+  uint32_t youngest_sweep(MutationAboveThreshold_2(.98));
   
   std::vector<uint32_t> all_sweep_ids;
   
@@ -1047,7 +1115,7 @@ void cPopulation::TimeToSweep(std::string output_folder,
   
   for (uint16_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
     uint32_t time = 0;
-    for (std::vector< std::vector<cGenotypeFrequency> >::iterator this_time = frequencies.begin(); this_time < frequencies.end(); ++this_time) {
+    for (std::vector< std::vector<cGenotypeFrequency> >::iterator this_time = m_frequencies.begin(); this_time < m_frequencies.end(); ++this_time) {
       
       //This conditional is to coarse-grain the sampling to every 75 transfers (~500 generations)
       //and to make sure there is a value in the vector at that position
@@ -1079,9 +1147,9 @@ void cPopulation::TimeToSweep(std::string output_folder,
   }
 }
 
-uint32_t cPopulation::MutationAboveThreshold_2(std::vector< std::vector<cGenotypeFrequency> > &frequencies, float threshold) {
+uint32_t cPopulation::MutationAboveThreshold_2(float threshold) {
   
-  for( std::vector< std::vector<cGenotypeFrequency> >::reverse_iterator time = frequencies.rbegin(); time < frequencies.rend(); ++time ) {
+  for( std::vector< std::vector<cGenotypeFrequency> >::reverse_iterator time = m_frequencies.rbegin(); time < m_frequencies.rend(); ++time ) {
     for( std::vector<cGenotypeFrequency>::reverse_iterator node = time->rbegin(); node < time->rend(); ++node) {
       if( node->frequency >= threshold )
         return node->unique_node_id;
@@ -1096,14 +1164,14 @@ uint32_t cPopulation::MutationAboveThreshold_2(std::vector< std::vector<cGenotyp
 //@agm This function takes the frequency pointer and returns a boolean vector
 //     The boolean vector contains a true in the mutations that got above the passed threshold
 
-std::vector<bool> cPopulation::MutationAboveThreshold(std::vector< std::vector<cGenotypeFrequency> > * frequencies, float threshold) {
-  uint32_t last_time((*frequencies).size()-1);
+std::vector<bool> cPopulation::MutationAboveThreshold(float threshold) {
+  uint32_t last_time(m_frequencies.size()-1);
   
-  std::vector<bool> Fixed((*frequencies)[last_time].size(),false);
+  std::vector<bool> Fixed(m_frequencies[last_time].size(),false);
   
-  for (uint16_t i = 0; i<(*frequencies).size(); i++) {
+  for (uint16_t i = 0; i<m_frequencies.size(); i++) {
     uint32_t count(0);
-    for (std::vector<cGenotypeFrequency>::iterator it = (*frequencies)[i].begin(); it!=(*frequencies)[i].end(); ++it) {
+    for (std::vector<cGenotypeFrequency>::iterator it = m_frequencies[i].begin(); it!=m_frequencies[i].end(); ++it) {
       if ( (*it).frequency >= threshold ) Fixed[count] = true;
       count++;
     }

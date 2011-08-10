@@ -190,6 +190,7 @@ namespace bpopsim {
     double TimeToNextWholeCell();
     void   FrequenciesPerTransferPerNode(); 
     void   ConvertExternalData(const string &input_file);
+    void   PrintFreqsQuick();
     std::vector<cGenotypeFrequency>::iterator Find_Node_in_Freq(std::vector<cGenotypeFrequency> &frequencies, 
                                                                 tree<cGenotype>::sibling_iterator this_node);
     double Find_Node_in_Freq_By_NodeID(std::vector<cGenotypeFrequency> &frequencies,

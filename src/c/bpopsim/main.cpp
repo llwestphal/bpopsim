@@ -60,26 +60,32 @@ int main(int argc, char* argv[])
   
 	try {
     
+    bool print_freq(false), print_muller(false), print_average_fit(false),
+    print_screen(false), print_max_diff(false), print_time_to_sweep(false),
+    print_single_fit(false);
+    
+    if( options.count("frequencies") ) print_freq = true;
+    if( options.count("muller") ) print_muller = true;
+    if( options.count("average_fit") ) print_average_fit = true;
+    if( options.count("print_screen") ) print_screen = true;
+    if( options.count("time_sweep") ) print_time_to_sweep = true;
+    if( options.count("max_diff") ) print_max_diff = true;
+    if( options.count("single_fit") ) print_single_fit = true;
+    
     if( options.count("convert_tree") ){
       cPopulation access_to_functions;
       
       access_to_functions.ConvertExternalData(options["input_file"]);
-      
-      
+        
+      if( print_muller ) {
+        std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
+        std::vector< std::vector<int> > muller_matrix;
+        access_to_functions.DrawMullerMatrix(options["output-folder"], muller_matrix);
+      }
+    
     }
     
     else {
-      bool print_freq(false), print_muller(false), print_average_fit(false),
-      print_screen(false), print_max_diff(false), print_time_to_sweep(false),
-      print_single_fit(false);
-      
-      if( options.count("frequencies") ) print_freq = true;
-      if( options.count("muller") ) print_muller = true;
-      if( options.count("average_fit") ) print_average_fit = true;
-      if( options.count("print_screen") ) print_screen = true;
-      if( options.count("time_sweep") ) print_time_to_sweep = true;
-      if( options.count("max_diff") ) print_max_diff = true;
-      if( options.count("single_fit") ) print_single_fit = true;
       
       std::vector< std::vector<double> > red_white_ratios;
       
@@ -251,6 +257,11 @@ int main(int argc, char* argv[])
             }
           }
         }
+        
+        cout << endl << endl;
+        population.PrintFreqsQuick();
+        population.PrintTree();
+        
       }
       
       if (g_ro_only) {

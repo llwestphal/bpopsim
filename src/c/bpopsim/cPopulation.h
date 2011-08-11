@@ -226,7 +226,7 @@ namespace bpopsim {
     void   PrintSingleFitness(std::string out_folder);
     
     uint32_t MutationAboveThreshold_2(float threshold);
-    std::vector<bool> MutationAboveThreshold(float threshold);
+    std::vector<uint32_t> MutationAboveThreshold(float threshold);
     unsigned int CalculateSimilarity(std::string output_folder);
     double CountMutipleDivergedSubpops();
     void   TimeToSweep(std::string output_folder);

@@ -258,9 +258,9 @@ int main(int argc, char* argv[])
           }
         }
         
-        cout << endl << endl;
-        population.PrintFreqsQuick();
-        population.PrintTree();
+        //cout << endl << endl;
+        //population.PrintFreqsQuick();
+        //population.PrintTree();
         
       }
       

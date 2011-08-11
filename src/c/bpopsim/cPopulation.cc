@@ -417,8 +417,10 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
   //double threshold(.025);
   //std::vector<bool> relevant_columns(newtree->size(), true);
   
-  //Build vector called where to store all iterator in tree for parental recall later
+  //Build vector to store all iterators in tree for parental recall later
   //@JEB should we store this iterator in cGenotypeFrequency?
+  //@AGM storing transient information like iterators in an object won't work
+  
   for (tree<cGenotype>::iterator node_loc = m_tree.begin(); node_loc != m_tree.end(); node_loc++)
     where[(*node_loc).unique_node_id] = node_loc;
   
@@ -440,9 +442,9 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
     location = m_tree.begin();
     
     AssignChildFreq(location, 0, 1, &child_freqs, *this_time_freq);
-    std::sort(child_freqs.begin(), child_freqs.end(), cSortByLow());
+    sort(child_freqs.begin(), child_freqs.end(), cSortByLow());
     
-    uint32_t resolution(2500), last_node_meeting_span;
+    uint32_t resolution(3000), last_node_meeting_span;
     double pixel_step, span, min_step;
     min_step = (double) 1/resolution;
     
@@ -457,7 +459,7 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
         
         //if the low value for some node is lower than the current pixel_step
         //and the high value for the same node is higher than the current pixel_step
-        //then, print the node_id for that nodes
+        //then, print the node_id for that node
         if( child_freqs[j].high >= pixel_step ) {
           
           //if( span > min_step ) 
@@ -919,9 +921,10 @@ void cPopulation::PrintUniqueGenotypes(const std::string& output_folder,
 
 void cPopulation::PrintOut(const std::string& output_folder)
 {  
-  std::vector<bool> ColsToPrint = MutationAboveThreshold(.2);
   
-	//Print everything out
+  std::vector<uint32_t> all_relevant_nodes( MutationAboveThreshold(.25) );
+  
+  //Print everything out
 	std::ofstream output_handle;
   std::string output_file;
   
@@ -930,22 +933,23 @@ void cPopulation::PrintOut(const std::string& output_folder)
   output_file.append("Genotype_Frequencies.dat");
 	output_handle.open(output_file.c_str(),std::ios_base::app);
   
-  uint32_t last_time(m_frequencies.size()-1);
+  for (uint16_t a_node=0; a_node<all_relevant_nodes.size(); a_node++) {
+    output_handle << "Genotype_" << all_relevant_nodes[a_node] << " ";
+  }
   
-	for (uint32_t i = 0; i<m_frequencies[last_time].size(); i++) { 
-    if ( ColsToPrint[i] == true ) output_handle << i << " ";
-	}
-	//int width = 20;
-  output_handle << "\n";
+  output_handle << endl;
   
-	for (uint32_t i = 0; i<m_frequencies.size(); i++) {
-    uint32_t count(0);
-    for ( std::vector<cGenotypeFrequency>::iterator it = m_frequencies[i].begin(); it!=m_frequencies[i].end(); ++it) {
-      if ( ColsToPrint[count] == true ) output_handle << (*it).frequency << " ";
-      count++;
-		}
-    output_handle << "\n";
-	}
+  for (std::vector< std::vector<cGenotypeFrequency> >::iterator this_time = m_frequencies.begin(); this_time < m_frequencies.end(); ++this_time) {
+    for (uint16_t a_node=0; a_node<all_relevant_nodes.size(); a_node++) {
+      //cout << a_node << endl;
+      double frequency( Find_Node_in_Freq_By_NodeID(*this_time, all_relevant_nodes[a_node]) );
+      output_handle << frequency << " ";
+    }
+    output_handle << endl;
+  }
+  
+  output_handle.close();
+
 }
 
 void cPopulation::PrintOut_RedWhiteOnly(const std::string& output_folder, 
@@ -1172,18 +1176,20 @@ uint32_t cPopulation::MutationAboveThreshold_2(float threshold) {
 //@agm This function takes the frequency pointer and returns a boolean vector
 //     The boolean vector contains a true in the mutations that got above the passed threshold
 
-std::vector<bool> cPopulation::MutationAboveThreshold(float threshold) {
-  uint32_t last_time(m_frequencies.size()-1);
+std::vector<uint32_t> cPopulation::MutationAboveThreshold(float threshold) {
   
-  std::vector<bool> Fixed(m_frequencies[last_time].size(),false);
+  std::vector<uint32_t> Fixed;
   
-  for (uint16_t i = 0; i<m_frequencies.size(); i++) {
-    uint32_t count(0);
-    for (std::vector<cGenotypeFrequency>::iterator it = m_frequencies[i].begin(); it!=m_frequencies[i].end(); ++it) {
-      if ( (*it).frequency >= threshold ) Fixed[count] = true;
-      count++;
+  for (vector< vector< cGenotypeFrequency > >::iterator it_time = m_frequencies.begin(); it_time!=m_frequencies.end(); ++it_time) {
+    for( vector<cGenotypeFrequency>::iterator it_node = it_time->begin(); it_node != it_time->end(); ++it_node) {
+      if( it_node->frequency >= threshold && !binary_search(Fixed.begin(), Fixed.end(), it_node->unique_node_id)) {
+        Fixed.push_back(it_node->unique_node_id);
+        sort(Fixed.begin(), Fixed.end());
+        cout << it_node->unique_node_id << " ";
+      }
     }
   }
+  cout << endl;
   return Fixed;
 }
 

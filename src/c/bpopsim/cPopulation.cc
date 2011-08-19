@@ -919,18 +919,19 @@ void cPopulation::PrintUniqueGenotypes(const std::string& output_folder,
  true, and fill NA spaces as the read.table
  function allows. */
 
-void cPopulation::PrintOut(const std::string& output_folder)
+void cPopulation::PrintOut(const std::string& output_folder, uint32_t on_run)
 {  
   
-  std::vector<uint32_t> all_relevant_nodes( MutationAboveThreshold(.25) );
+  std::vector<uint32_t> all_relevant_nodes( MutationAboveThreshold(1.0) );
   
   //Print everything out
 	std::ofstream output_handle;
   std::string output_file;
   
   output_file.append(output_folder);
-  output_file.append("/");
-  output_file.append("Genotype_Frequencies.dat");
+  output_file.append("/Genotype_Frequencies_");
+  output_file.append(to_string(on_run));
+  output_file.append(".dat");
 	output_handle.open(output_file.c_str(),std::ios_base::app);
   
   for (uint16_t a_node=0; a_node<all_relevant_nodes.size(); a_node++) {

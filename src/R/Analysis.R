@@ -8,7 +8,7 @@
 
 library(plyr)
 
-location <- "/path/to/data"
+location <- "/Users/austin/Desktop/output_test"
 
 #parallelMuts_dat <- (as.list(read.table(paste(location, "/SignificantParallelMutations.dat", sep=""),
 #                      sep="\n")))[[1]]
@@ -27,10 +27,10 @@ colors = c(hsv(runif(1000), 1, .65))
 yticks <- seq(-1,1,by=.1)
 xticks <- seq(-50000,50000,by=100)
 
-png(paste(location, "/Genotype_Frequencies.png", sep=""), 
-width=1280, 
-height=1024, 
-units = "px")
+# png(paste(location, "/Genotype_Frequencies.png", sep=""), 
+# width=1280, 
+# height=1024, 
+# units = "px")
     
 par(mar=c(6,6,6,4))
 par(mgp=c(4,1,0))
@@ -72,7 +72,7 @@ legend_names <- colnames(genotype_frequency_dat)
 
 #legend(0,.99, legend_names, cex=1.5, pch=20, col=colors)
 
-dev.off()
+# dev.off()
 
 #This is just an easy way to comment out several lines
 if(FALSE) {

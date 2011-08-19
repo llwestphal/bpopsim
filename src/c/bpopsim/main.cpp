@@ -239,11 +239,12 @@ int main(int argc, char* argv[])
             population.TimeToSweep(options["output-folder"]);
           }
           
+          if( print_freq ) {
+            std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
+            population.PrintOut(options["output-folder"], on_run);
+          }
+          
           if( on_run == 0 ) {
-            if( print_freq ) {
-              std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
-              population.PrintOut(options["output-folder"]);
-            }
             
             if( print_average_fit ) {
               std::cout << std::endl << std::endl << "Printing average fitness.... " << std::endl;

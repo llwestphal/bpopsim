@@ -32,6 +32,7 @@ int main(int argc, char* argv[])
   ("transfer-interval-to-print,t", "Red/White Printing intervals.", 1)
   ("imv,x", "Initial Mutational Values.")
   ("coarse-graining,c", "Amount to coarse-grain output.", 1)
+  ("mut_num,y", "Specify an exact number of mutations per transfer.", 1)
   
   //Here are the output options
   //They are all set to false by default
@@ -54,6 +55,7 @@ int main(int argc, char* argv[])
      && !options.count("max_diff")
      && !options.count("single_fit")
      ) {
+    cout << "You have not chosen any output options." << endl;
 		options.printUsage();
 		return -1;
 	}                       
@@ -62,7 +64,7 @@ int main(int argc, char* argv[])
     
     bool print_freq(false), print_muller(false), print_average_fit(false),
     print_screen(false), print_max_diff(false), print_time_to_sweep(false),
-    print_single_fit(false);
+    print_single_fit(false), use_mute_num(false);
     
     if( options.count("frequencies") ) print_freq = true;
     if( options.count("muller") ) print_muller = true;
@@ -71,6 +73,7 @@ int main(int argc, char* argv[])
     if( options.count("time_sweep") ) print_time_to_sweep = true;
     if( options.count("max_diff") ) print_max_diff = true;
     if( options.count("single_fit") ) print_single_fit = true;
+    if( options.count("mut_num") ) use_mute_num = true;
     
     if( options.count("convert_tree") ){
       cPopulation access_to_functions;
@@ -153,11 +156,36 @@ int main(int argc, char* argv[])
         
         //std::cout << node_id << std::endl;
         
+        uint16_t number_of_mutations(0);
+        vector<uint32_t> mutation_division(0);
+        mutation_division.push_back(0);
+        if( use_mute_num ) {
+          for(uint32_t i=0; i<from_string<uint32_t>(options["mut_num"]); i++) {
+            mutation_division.push_back(gsl_rng_uniform_int(randgen, pow(2,from_string<double>(options["generations-per-transfer"])-1)));
+          }
+          
+          uint32_t sum(0);
+          for(uint32_t i=0; i<from_string<uint32_t>(options["mut_num"]); i++) {
+            sum+=mutation_division[i];
+            //cout << mutation_division[i] << " " << pow(2,from_string<double>(options["generations-per-transfer"])-1) << endl;
+          }
+          
+          //cout << sum << " " << pow(2,from_string<double>(options["generations-per-transfer"])-1) << endl;
+          
+          sort(mutation_division.begin(), mutation_division.end());
+        }
+        
         while( (population.GetTransfers() < population.GetTotalTransfers()) ) {
             
           // Calculate the number of divisions until the next mutation 
-          population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + round(gsl_ran_exponential(randgen, population.GetLambda())));
-            
+          if( use_mute_num ) {
+            population.SetDivisionsUntilMutation( mutation_division[number_of_mutations+1] - mutation_division[number_of_mutations] );
+            //cout << population.GetPopulationSize() << " " << population.GetDivisionsUntilMutation() << " " << mutation_division.size() << " " << mutation_division[number_of_mutations] << " " << pow(2,from_string<double>(options["generations-per-transfer"])-1) << endl;
+          }
+          else {
+            population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + round(gsl_ran_exponential(randgen, population.GetLambda())));
+          }
+          
           if (g_verbose) { 
             std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl; 
           }
@@ -169,10 +197,14 @@ int main(int argc, char* argv[])
             
             population.CalculateDivisions();
                
-            if( population.GetDivisionsUntilMutation() <= 0) { 
-              population.Mutate(); 
+            if( population.GetDivisionsUntilMutation() <= 0 ) { 
+              population.Mutate();
+              if( use_mute_num ) {
+                number_of_mutations++;
+                cout << "This is the number of mutations: " << number_of_mutations << endl;
+              }
             }
-               
+            
             if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
               population.FrequenciesPerTransferPerNode();
               
@@ -194,7 +226,7 @@ int main(int argc, char* argv[])
               count++;
               std::cout << "Passing.... " << count << std::endl;
 
-              if ( population.GetTransfers() %  from_string<uint16_t>(options["transfer-interval-to-print"]) == 0 ) {  
+              if ( population.GetTransfers() % from_string<uint16_t>(options["transfer-interval-to-print"]) == 0 ) {  
                 current_ro_ratio.push_back(population.GetRatio());
                 
                 if (g_verbose)
@@ -206,6 +238,7 @@ int main(int argc, char* argv[])
                 }
               }
             }
+            //if( number_of_mutations >= from_string<uint16_t>(options["mut_num"]) ) break;
             //if (g_verbose) population.PrintTree();
           }
         }

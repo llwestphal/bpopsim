@@ -20,7 +20,8 @@ int main(int argc, char* argv[])
   ("number-of-transfers,n", "Max number of transfer to replicate", 50)
   ("output-folder,o", "Output folder")
   ("input_file,i", "Input file for converting external tree")
-  ("mutation-rate-per-division,u", "Mutation rate per division", 5E-8)
+  ("mutation-rate-per-division,u", "Mutation rate per division", 0)
+  ("mut_num,y", "Specify an exact number of mutations per transfer.", 1)
   ("initial-population-size,p", "Initial Population Size", uint32_t(5E6))
   ("replicates,r", "Replicates")
   ("marker-divergence,m", "Max divergence factor", 100)
@@ -32,7 +33,6 @@ int main(int argc, char* argv[])
   ("transfer-interval-to-print,t", "Red/White Printing intervals.", 1)
   ("imv,x", "Initial Mutational Values.")
   ("coarse-graining,c", "Amount to coarse-grain output.", 1)
-  ("mut_num,y", "Specify an exact number of mutations per transfer.", 1)
   
   //Here are the output options
   //They are all set to false by default
@@ -238,7 +238,6 @@ int main(int argc, char* argv[])
                 }
               }
             }
-            //if( number_of_mutations >= from_string<uint16_t>(options["mut_num"]) ) break;
             //if (g_verbose) population.PrintTree();
           }
         }

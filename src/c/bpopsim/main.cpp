@@ -120,7 +120,12 @@ int main(int argc, char* argv[])
       
       //std::vector< std::vector<uint16_t> > number_unique_genotypes_in_all_replicates;
       
-      for (uint32_t on_run=1; on_run < from_string<uint32_t>(options["replicates"]); on_run++)
+      uint64_t replicates(0);
+      
+      if( use_mute_num && from_string<uint32_t>(options["mut_num"]) == 1) replicates = pow(2, from_string<double>(options["generations-per-transfer"]));
+      else replicates = from_string<uint32_t>(options["replicates"]);
+      
+      for (uint32_t on_run=1; on_run < replicates; on_run++)
       {
         std::vector<double> current_ro_ratio;
         

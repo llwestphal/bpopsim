@@ -90,6 +90,9 @@ int main(int argc, char* argv[])
     
     else {
       
+      //for testing!!!!
+      vector<double> mutations_until_division(0);
+      
       std::vector< std::vector<double> > red_white_ratios;
       
       //Create Random Number generator and Seed
@@ -117,7 +120,7 @@ int main(int argc, char* argv[])
       
       //std::vector< std::vector<uint16_t> > number_unique_genotypes_in_all_replicates;
       
-      for (uint32_t on_run=0; on_run < from_string<uint32_t>(options["replicates"]); on_run++)
+      for (uint32_t on_run=1; on_run < from_string<uint32_t>(options["replicates"]); on_run++)
       {
         std::vector<double> current_ro_ratio;
         
@@ -159,16 +162,20 @@ int main(int argc, char* argv[])
         uint16_t number_of_mutations(0);
         vector<uint32_t> mutation_division(0);
         mutation_division.push_back(0);
+        double division_of_mutation;
+        
         if( use_mute_num ) {
           for(uint32_t i=0; i<from_string<uint32_t>(options["mut_num"]); i++) {
-            mutation_division.push_back(gsl_rng_uniform_int(randgen, pow(2,from_string<double>(options["generations-per-transfer"])-1)));
+            division_of_mutation = (double) gsl_rng_uniform_int(randgen, pow(2, from_string<double>(options["generations-per-transfer"])));
+            mutation_division.push_back( division_of_mutation );
+            mutations_until_division.push_back( division_of_mutation );
           }
           
-          uint32_t sum(0);
+          /*uint32_t sum(0);
           for(uint32_t i=0; i<from_string<uint32_t>(options["mut_num"]); i++) {
             sum+=mutation_division[i];
-            //cout << mutation_division[i] << " " << pow(2,from_string<double>(options["generations-per-transfer"])-1) << endl;
-          }
+            //cout << mutation_division[i] << " " << pow(2,from_string<double>(options["generations-per-transfer"])) << endl;
+          }*/
           
           //cout << sum << " " << pow(2,from_string<double>(options["generations-per-transfer"])-1) << endl;
           
@@ -178,11 +185,17 @@ int main(int argc, char* argv[])
         while( (population.GetTransfers() < population.GetTotalTransfers()) ) {
             
           // Calculate the number of divisions until the next mutation 
-          if( use_mute_num ) {
-            population.SetDivisionsUntilMutation( mutation_division[number_of_mutations+1] - mutation_division[number_of_mutations] );
-            //cout << population.GetPopulationSize() << " " << population.GetDivisionsUntilMutation() << " " << mutation_division.size() << " " << mutation_division[number_of_mutations] << " " << pow(2,from_string<double>(options["generations-per-transfer"])-1) << endl;
+          if( use_mute_num && number_of_mutations <= from_string<uint32_t>(options["mut_num"]) && from_string<uint32_t>(options["mut_num"]) == 1) {
+            population.SetDivisionsUntilMutation( on_run );
           }
-          else {
+          else if ( use_mute_num && from_string<uint32_t>(options["mut_num"]) != 1 ) {
+            population.SetDivisionsUntilMutation( mutation_division[number_of_mutations+1] - mutation_division[number_of_mutations] );
+            
+            //population.SetDivisionsUntilMutation( pow(2, from_string<double>(options["generations-per-transfer"]))/pow(2, from_string<double>(options["generations-per-transfer"])/2) );
+            //cout << population.GetPopulationSize() << " " << population.GetDivisionsUntilMutation() << " " << mutation_division.size() << " " << mutation_division[number_of_mutations] << " " << pow(2,from_string<double>(options["generations-per-transfer"])) << endl;
+            
+          }
+          else if ( !use_mute_num ) {
             population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + round(gsl_ran_exponential(randgen, population.GetLambda())));
           }
           
@@ -198,11 +211,19 @@ int main(int argc, char* argv[])
             population.CalculateDivisions();
                
             if( population.GetDivisionsUntilMutation() <= 0 ) { 
-              population.Mutate();
-              if( use_mute_num ) {
+               
+              if( !use_mute_num ) population.Mutate();
+              
+              if( use_mute_num && number_of_mutations >= from_string<uint32_t>(options["mut_num"]) ) {
+                population.SetDivisionsUntilMutation( pow(2, from_string<double>(options["generations-per-transfer"])) );
+              }
+              else if( use_mute_num && number_of_mutations <  from_string<uint32_t>(options["mut_num"]) ) {
+                population.Mutate();
                 number_of_mutations++;
                 cout << "This is the number of mutations: " << number_of_mutations << endl;
               }
+              
+              
             }
             
             if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
@@ -309,6 +330,12 @@ int main(int argc, char* argv[])
         std::cout << std::endl << "Printing unique genotypes to file.... " << std::endl;
         population.PrintUniqueGenotypes(output_folder, &number_unique_genotypes_in_all_replicates);
       }*/
+      
+      /*double sum(0);
+      for(vector<double>::iterator i = mutations_until_division.begin(); i != mutations_until_division.end(); i++) {
+        sum+=log(*i);
+      }
+      cout << "Here is the average of time of mutation: " << sum/mutations_until_division.size();*/
     }
   } catch(...) {
     // failed; 

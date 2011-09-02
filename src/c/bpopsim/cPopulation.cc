@@ -85,9 +85,10 @@ double cPopulation::TimeToNextWholeCell()
       if(it->GetNumber() == 0) continue;
 
       //what is the time to get to the next whole number of cells?     
-      double current_cells = it->GetNumber();
-      double next_whole_cells = static_cast<uint32_t>(it->GetNumber());
+      double current_cells(it->GetNumber());
+      double next_whole_cells(floor(it->GetNumber())+1);
       
+      //cout << "Current cells: " << current_cells << " Next whole cells: " << next_whole_cells << endl;
       // N = No * exp(log(2) * growth_rate * t) 
       double this_time_to_next_whole_cell = (log(next_whole_cells / current_cells) / (it->GetFitness())) / log(2);   
 
@@ -179,6 +180,14 @@ void cPopulation::FrequenciesPerTransferPerNode()
 	//@agm Printing sum of frequencies and building the doubly deep vector
 	//Cout << Endl << "Sum of all freqs: " << total_freqs << Endl;
 	m_frequencies.push_back(freq_per_node);
+  
+  if (g_verbose) {
+    std::cout << "Completed divisions: " << GetCompletedDivisions() << std::endl;
+    for(vector<cSubpopulation>::iterator this_time = m_current_subpopulations.begin(); this_time != m_current_subpopulations.end(); this_time++) {
+      cout << "Genotype2: " << this_time->GetNode_id() << " Frequency2: " << this_time->GetNumber() << endl;
+    }
+  }
+  
 }
 
 void cPopulation::CalculateAverageFitness() {
@@ -664,6 +673,14 @@ void cPopulation::DisplayParameters()
 
 void cPopulation::CalculateDivisions()
 {
+  
+  if (g_verbose) {
+    std::cout << "Completed divisions: " << GetCompletedDivisions() << std::endl;
+    for(vector<cSubpopulation>::iterator this_time = m_current_subpopulations.begin(); this_time != m_current_subpopulations.end(); this_time++) {
+      cout << "Genotype: " << this_time->GetNode_id() << " Frequency: " << this_time->GetNumber() << endl;
+    }
+  }
+  
   // Move time forward until another mutation occurs.
   // Calculate points to output between last time and current time
   // First time through the loop, a partial time interval
@@ -677,12 +694,9 @@ void cPopulation::CalculateDivisions()
   // We would like to move forward by as many divisions as it takes to
   // get to either (1) the next mutation OR (2) the next transfer.
   double desired_divisions = GetDivisionsUntilMutation();
+  
   if (desired_divisions + GetPopulationSize() > GetPopSizeBeforeDilution()) {
      desired_divisions = GetPopSizeBeforeDilution() - GetPopulationSize();
-  }
-  
-  if(g_verbose) {
-    std::cout << "Divisions before next mutation: " << GetDivisionsUntilMutation() <<std::endl;
   }
   
   // Note: we underestimate by a few divisions so that we can step forward by single division increments
@@ -694,7 +708,7 @@ void cPopulation::CalculateDivisions()
   
   if (g_verbose) {
      std::cout << "Total pop size: " << GetPopulationSize() <<std::endl;
-     std::cout << "Desired divisions " << desired_divisions <<std::endl;
+     std::cout << "Desired divisions: " << desired_divisions <<std::endl;
   }
       
   // How much time would we like to pass to achieve the desired number of divisions?
@@ -721,15 +735,21 @@ void cPopulation::CalculateDivisions()
  
   //FIX THIS!!!!
   //Population size shouldn't have to be recaculated here
+  //I think this is fixed... the problem was in the AddSubpopulation() method
+  //m_population_size = CalculatePopulationSize();
   
-  m_population_size = CalculatePopulationSize();
   uint32_t previous_population_size(m_population_size);
   
   UpdateSubpopulations(update_time);
   
   SetCompletedDivisions(GetPopulationSize() - previous_population_size);
               
-  if (g_verbose) std::cout << "Completed divisions: " << GetCompletedDivisions() << std::endl;
+  if (g_verbose) {
+    std::cout << "Completed divisions: " << GetCompletedDivisions() << std::endl;
+    for(vector<cSubpopulation>::iterator this_time = m_current_subpopulations.begin(); this_time != m_current_subpopulations.end(); this_time++) {
+      cout << "Genotype: " << this_time->GetNode_id() << " Frequency: " << this_time->GetNumber() << endl;
+    }
+  }
   
   //std::cout << "Divisions until mutation: " << GetDivisionsUntilMutation() << " Completed divisions: " << GetCompletedDivisions() << " Population Size: " << GetPopulationSize() << " Previous Population Size: " << previous_population_size << std::endl;
   SetDivisionsUntilMutation(GetDivisionsUntilMutation() - GetCompletedDivisions());
@@ -796,6 +816,13 @@ void cPopulation::SeedPopulationWithOneColony() {
   begin_here.SetMarker('n');
   AddSubpopulation(begin_here);
   
+  if (g_verbose) {
+    std::cout << "Completed divisions: " << GetCompletedDivisions() << std::endl;
+    for(vector<cSubpopulation>::iterator this_time = m_current_subpopulations.begin(); this_time != m_current_subpopulations.end(); this_time++) {
+      cout << "Genotype1: " << this_time->GetNode_id() << " Frequency1: " << this_time->GetNumber() << endl;
+    }
+  }
+  
 }
 
 void cPopulation::AddSubpopulation(cSubpopulation& subpop) 
@@ -813,10 +840,9 @@ void cPopulation::Mutate()
 {	
   // we better have a random number generator
   assert(m_rng);
-
-	m_total_mutations++;
 	
 	if (g_verbose) std::cout << "* Mutating!" << std::endl;
+  if (g_verbose) std::cout << "Total population: " << CalculatePopulationSize() << std::endl;
 	
 	//Mutation happened in the one that just divided
 	//Break ties randomly here.
@@ -848,14 +874,26 @@ void cPopulation::Mutate()
   
 	if (g_verbose) std::cout << "  Color: " << new_subpop.GetMarker() << std::endl;
 	if (g_verbose) std::cout << "  New Fitness: " << new_subpop.GetFitness() << std::endl;
-	
+  
 	AddSubpopulation(new_subpop);
+  
+  //@agm Since an existent cell is picked to mutate,
+  //     rather than doubling a cell and picking its
+  //     progeny to mutate... we should not add a new
+  //     cell to the population, but AddSubpopulation does.
+  m_population_size-=1;
 	
 	if(new_subpop.GetFitness() > GetMaxW()) 
 	{
 		SetMaxW(new_subpop.GetFitness());
 	}
 	
+  //ancestor.SetNumber(ancestor.GetNumber()-1);
+  
+  if (g_verbose) std::cout << "  New Number: " << new_subpop.GetNumber() << std::endl;
+  if (g_verbose) std::cout << "  Old Number: " << ancestor.GetNumber() << std::endl;
+  
+  m_total_mutations++;
 }
 
 //Utilities Section
@@ -951,6 +989,27 @@ void cPopulation::PrintOut(const std::string& output_folder, uint32_t on_run)
   
   output_handle.close();
 
+}
+
+void cPopulation::PrintExpectationValue(const std::string& output_folder) {
+  //Print everything out
+	std::ofstream output_handle;
+  std::string output_file;
+  
+  output_file.append(output_folder);
+  output_file.append("/ExpectationVal.dat");
+	output_handle.open(output_file.c_str(),std::ios_base::app);
+  
+  double calculated_mutant_population_freq(0);
+
+  for ( std::vector<cGenotypeFrequency>::iterator it = m_frequencies[m_frequencies.size()-1].begin(); it!=m_frequencies[m_frequencies.size()-1].end(); ++it) {
+    if( it->unique_node_id != 0 ) {
+      calculated_mutant_population_freq += it->frequency;
+    }
+  }
+    
+  cout << calculated_mutant_population_freq << endl;
+  
 }
 
 void cPopulation::PrintOut_RedWhiteOnly(const std::string& output_folder, 

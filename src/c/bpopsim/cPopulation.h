@@ -218,6 +218,7 @@ namespace bpopsim {
     void   PrintUniqueGenotypes(const std::string& output_folder,
                               std::vector< std::vector<uint16_t> > * number_of_unique_genotypes);
     void   PrintOut(const std::string& output_folder, uint32_t on_run);
+    void   PrintExpectationValue(const std::string& output_folder);
     void   PrintOut_RedWhiteOnly(const std::string& output_folder,
                                std::vector< std::vector<double> > *red_white_ratios,
                                uint16_t transfer_interval_to_print);

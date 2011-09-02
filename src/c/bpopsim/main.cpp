@@ -66,6 +66,7 @@ int main(int argc, char* argv[])
     print_screen(false), print_max_diff(false), print_time_to_sweep(false),
     print_single_fit(false), use_mute_num(false);
     
+    if( options.count("verbose") ) g_verbose = true;
     if( options.count("frequencies") ) print_freq = true;
     if( options.count("muller") ) print_muller = true;
     if( options.count("average_fit") ) print_average_fit = true;
@@ -75,7 +76,7 @@ int main(int argc, char* argv[])
     if( options.count("single_fit") ) print_single_fit = true;
     if( options.count("mut_num") ) use_mute_num = true;
     
-    if( options.count("convert_tree") ){
+    if( options.count("convert_tree") ) {
       cPopulation access_to_functions;
       
       access_to_functions.ConvertExternalData(options["input_file"]);
@@ -125,7 +126,10 @@ int main(int argc, char* argv[])
       if( use_mute_num && from_string<uint32_t>(options["mut_num"]) == 1) replicates = pow(2, from_string<double>(options["generations-per-transfer"]));
       else replicates = from_string<uint32_t>(options["replicates"]);
       
-      for (uint32_t on_run=1; on_run < replicates; on_run++)
+      uint8_t start_num(0);
+      if( use_mute_num ) start_num = 1;
+      
+      for (uint32_t on_run=start_num; on_run < replicates; on_run++)
       {
         std::vector<double> current_ro_ratio;
         
@@ -187,47 +191,67 @@ int main(int argc, char* argv[])
           sort(mutation_division.begin(), mutation_division.end());
         }
         
-        while( (population.GetTransfers() < population.GetTotalTransfers()) ) {
-            
+        while( population.GetTransfers() < population.GetTotalTransfers() ) {
+          
+          if (g_verbose) {
+            for(vector<cSubpopulation>::iterator this_time = population.GetPopulation().begin(); this_time != population.GetPopulation().end(); this_time++) {
+              cout << "Genotype3: " << this_time->GetNode_id() << " Frequency3: " << this_time->GetNumber() << endl;
+            }
+          }
+          
           // Calculate the number of divisions until the next mutation 
-          if( use_mute_num && number_of_mutations <= from_string<uint32_t>(options["mut_num"]) && from_string<uint32_t>(options["mut_num"]) == 1) {
+          if( use_mute_num && number_of_mutations < from_string<uint32_t>(options["mut_num"]) && from_string<uint32_t>(options["mut_num"]) == 1) {
             population.SetDivisionsUntilMutation( on_run );
           }
+          
+          else if( use_mute_num && number_of_mutations >= from_string<uint32_t>(options["mut_num"]) && from_string<uint32_t>(options["mut_num"]) == 1 ) {
+            population.SetDivisionsUntilMutation( pow(2, from_string<double>(options["generations-per-transfer"])) );
+          }
+          
           else if ( use_mute_num && from_string<uint32_t>(options["mut_num"]) != 1 ) {
             population.SetDivisionsUntilMutation( mutation_division[number_of_mutations+1] - mutation_division[number_of_mutations] );
             
             //population.SetDivisionsUntilMutation( pow(2, from_string<double>(options["generations-per-transfer"]))/pow(2, from_string<double>(options["generations-per-transfer"])/2) );
             //cout << population.GetPopulationSize() << " " << population.GetDivisionsUntilMutation() << " " << mutation_division.size() << " " << mutation_division[number_of_mutations] << " " << pow(2,from_string<double>(options["generations-per-transfer"])) << endl;
-            
           }
+          
           else if ( !use_mute_num ) {
             population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + round(gsl_ran_exponential(randgen, population.GetLambda())));
           }
           
-          if (g_verbose) { 
-            std::cout << "  New divisions before next mutation: " << population.GetDivisionsUntilMutation() << std::endl; 
+          if (g_verbose) {
+            for(vector<cSubpopulation>::iterator this_time = population.GetPopulation().begin(); this_time != population.GetPopulation().end(); this_time++) {
+              cout << "Genotype4: " << this_time->GetNode_id() << " Frequency4: " << this_time->GetNumber() << endl;
+            }
           }
           
           while( population.GetDivisionsUntilMutation() > 0 && (population.GetTransfers() < population.GetTotalTransfers())) 
           {
             
+            if (g_verbose) {
+              for(vector<cSubpopulation>::iterator this_time = population.GetPopulation().begin(); this_time != population.GetPopulation().end(); this_time++) {
+                cout << "Genotype5: " << this_time->GetNode_id() << " Frequency5: " << this_time->GetNumber() << endl;
+              }
+            }
+            
             //std::cout << population.GetTransfers() << " " << population.GetTotalTransfers() << " " << population.GetDivisionsUntilMutation() << std::endl;
             
             population.CalculateDivisions();
-               
+            
+            if (g_verbose) {
+              for(vector<cSubpopulation>::iterator this_time = population.GetPopulation().begin(); this_time != population.GetPopulation().end(); this_time++) {
+                cout << "Genotype7: " << this_time->GetNode_id() << " Frequency7: " << this_time->GetNumber() << endl;
+              }
+            }
+            
             if( population.GetDivisionsUntilMutation() <= 0 ) { 
-               
               if( !use_mute_num ) population.Mutate();
               
-              if( use_mute_num && number_of_mutations >= from_string<uint32_t>(options["mut_num"]) ) {
-                population.SetDivisionsUntilMutation( pow(2, from_string<double>(options["generations-per-transfer"])) );
-              }
               else if( use_mute_num && number_of_mutations <  from_string<uint32_t>(options["mut_num"]) ) {
                 population.Mutate();
                 number_of_mutations++;
-                cout << "This is the number of mutations: " << number_of_mutations << endl;
+                cout << "Number of mutations: " << number_of_mutations << endl;
               }
-              
               
             }
             
@@ -244,10 +268,12 @@ int main(int argc, char* argv[])
                 //population.CullPopulations();
               }
               
-              if( print_single_fit ) {
+              if( print_single_fit && !use_mute_num) {
                 population.PrintSingleFitness(options["output-folder"]);
                 //std::cout << "Population size: " << population.GetPopulationSize() << std::endl;
               }
+              
+              if( g_verbose ) std::cout << "Total pop size3: " << population.GetPopulationSize() <<std::endl;
               
               count++;
               std::cout << "Passing.... " << count << std::endl;
@@ -268,7 +294,7 @@ int main(int argc, char* argv[])
           }
         }
         
-        std::cout << std::endl << std::endl;
+        //std::cout << std::endl << std::endl;
         //population.RunSummary();
         population.PushBackRuns();
 
@@ -282,37 +308,48 @@ int main(int argc, char* argv[])
         else {
           //number_unique_genotypes_in_all_replicates.push_back(population.CurrentUniqueGenotypes());
           
+          if( use_mute_num ) {
+            std::cout << "Printing expectation value for set number of mutations.... \n";
+            population.PrintExpectationValue(options["output-folder"]);
+            cout << endl;
+          }
           if( print_screen ) {
-            std::cout << std::endl << std::endl << "Printing to screen.... " << std::endl;
+            std::cout << "Printing to screen.... \n";
             population.PrintFrequenciesToScreen(options["output-folder"]);
+            cout << endl;
           }
           
           if( print_max_diff ) {
-            std::cout << std::endl << std::endl << "Printing max difference of relevant mutations.... " << std::endl;
+            std::cout << "Printing max difference of relevant mutations.... \n";
             population.CalculateSimilarity(options["output-folder"]);
+            cout << endl;
           }
       
           if( print_time_to_sweep ) {
-            std::cout << std::endl << std::endl << "Printing time to sweep.... " << std::endl;
+            std::cout << "Printing time to sweep.... \n";
             population.TimeToSweep(options["output-folder"]);
+            cout << endl;
           }
           
           if( print_freq ) {
-            std::cout << std::endl << std::endl << "Printing to file.... " << std::endl;
+            std::cout << "Printing to file.... \n";
             population.PrintOut(options["output-folder"], on_run);
+            cout << endl;
           }
           
           if( on_run == 0 ) {
             
             if( print_average_fit ) {
-              std::cout << std::endl << std::endl << "Printing average fitness.... " << std::endl;
+              std::cout << "Printing average fitness.... \n";
               population.PrintFitness(options["output-folder"]);
+              cout << endl;
             }
         
             if( print_muller ) {
-              std::cout << std::endl << "Generating Muller Matrix.... " << std::endl;
+              std::cout << std::endl << "Generating Muller Matrix.... \n";
               std::vector< std::vector<int> > muller_matrix;
               population.DrawMullerMatrix(options["output-folder"], muller_matrix);
+              cout << endl;
             }
           }
         }

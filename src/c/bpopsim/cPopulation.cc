@@ -34,6 +34,9 @@ void cPopulation::SetParameters(AnyOption &options)
   SetCoarseGraining(
     from_string<uint16_t>(options["coarse-graining"])
     );
+  SetInitialFitness(
+    from_string<double>(options["initial-fitness"])
+    );
   
   // Simulation parameters that are pre-calculated
   SetDilutionFactor(exp(log(2)*GetGrowthPhaseGenerations()));
@@ -86,7 +89,7 @@ double cPopulation::TimeToNextWholeCell()
 
       //what is the time to get to the next whole number of cells?     
       double current_cells(it->GetNumber());
-      double next_whole_cells(floor(it->GetNumber())+1);
+      double next_whole_cells( floor(it->GetNumber())+1 );
       
       //cout << "Current cells: " << current_cells << " Next whole cells: " << next_whole_cells << endl;
       // N = No * exp(log(2) * growth_rate * t) 
@@ -256,7 +259,7 @@ void cPopulation::ConvertExternalData(const string &input_file) {
   
   while(!input_handle.getline(char_line,1000).eof()) {
     string line(char_line);
-    vector<string> line_pieces(split(line, " ")), preformat_tree(split(line_pieces[0], ","));
+    vector<string> line_pieces(split(line, "\t")), preformat_tree(split(line_pieces[0], "|"));
     
     tree<cGenotype>::iterator top, next;
     
@@ -315,13 +318,15 @@ void cPopulation::ConvertExternalData(const string &input_file) {
     cout << this_node->unique_node_id << " " << this_node->name << endl;
   }*/
   
-  PrintFreqsQuick();
-  PrintTree();
-  
+  //PrintFreqsQuick();
+  //PrintTree();
 }
 
 void cPopulation::PrintFreqsQuick() {
+  uint32_t time_keeper(0);
   for(vector< vector<cGenotypeFrequency> >::iterator this_time=m_frequencies.begin(); this_time!=m_frequencies.end(); ++this_time) {
+    time_keeper++;
+    cout << "Time: " << time_keeper << endl;
     for(vector<cGenotypeFrequency>::iterator this_genotype=this_time->begin(); this_genotype!=this_time->end(); ++this_genotype) {
       cout << this_genotype->unique_node_id << " " << this_genotype->name << " " << this_genotype->frequency << endl;
     }
@@ -419,7 +424,7 @@ double cPopulation::AssignChildFreq(tree<cGenotype>::sibling_iterator this_node,
 void cPopulation::DrawMullerMatrix(std::string output_folder,
                                    std::vector< std::vector<int> > muller_matrix){
   
-  std::vector< tree<cGenotype>::iterator > where(m_tree.size());
+  //std::vector< tree<cGenotype>::iterator > where(m_tree.size());
   std::map<uint32_t, uint32_t> renumber;
   uint32_t renumber_value(0);
   
@@ -430,8 +435,8 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
   //@JEB should we store this iterator in cGenotypeFrequency?
   //@AGM storing transient information like iterators in an object won't work
   
-  for (tree<cGenotype>::iterator node_loc = m_tree.begin(); node_loc != m_tree.end(); node_loc++)
-    where[(*node_loc).unique_node_id] = node_loc;
+  /*for (tree<cGenotype>::iterator node_loc = m_tree.begin(); node_loc != m_tree.end(); node_loc++)
+    where[(*node_loc).unique_node_id] = node_loc;*/
   
   std::string output_file;
   output_file.append(output_folder);
@@ -444,7 +449,7 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
   for (std::vector< std::vector<cGenotypeFrequency> >::iterator this_time_freq = m_frequencies.begin(); this_time_freq < m_frequencies.end(); ++this_time_freq) {
     std::cout << time << std::endl;
     time++;
-
+    
     std::vector<cFrequencySlice> child_freqs;
     
     tree<cGenotype>::sibling_iterator location;
@@ -453,8 +458,14 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
     AssignChildFreq(location, 0, 1, &child_freqs, *this_time_freq);
     sort(child_freqs.begin(), child_freqs.end(), cSortByLow());
     
-    uint32_t resolution(3000), last_node_meeting_span;
-    double pixel_step, span, min_step;
+    /*cout << "Time " << time << " Child freqs size: " << child_freqs.size() << endl;
+    for (uint32_t j=0; j<child_freqs.size(); j++) {
+      cout << child_freqs[j].low << " " << child_freqs[j].high << endl;
+    }
+    PrintTree();*/
+    
+    uint32_t resolution(2000), last_node_meeting_span;
+    double pixel_step, min_step;
     min_step = (double) 1/resolution;
     
     //@agm Here I first iterate through the number of pixels
@@ -464,11 +475,7 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
       pixel_step = (double) i/resolution;
       
       for (uint32_t j=0; j<child_freqs.size(); j++) {
-        span = child_freqs[j].high - child_freqs[j].low;
         
-        //if the low value for some node is lower than the current pixel_step
-        //and the high value for the same node is higher than the current pixel_step
-        //then, print the node_id for that node
         if( child_freqs[j].high >= pixel_step ) {
           
           //if( span > min_step ) 
@@ -762,7 +769,7 @@ void cPopulation::SeedSubpopulationForRedWhite()
 {	
 	cGenotype r, w;
 	tree<cGenotype>::iterator top, red_side, white_side;
-	double starting_fitness = 1.0;
+	double starting_fitness = GetInitialFitness();
 	
 	//initialize object of cSubpopulation type
 	cSubpopulation red, white;
@@ -802,7 +809,7 @@ void cPopulation::SeedSubpopulationForRedWhite()
 
 void cPopulation::SeedPopulationWithOneColony() {
   tree<cGenotype>::iterator start_position;
-  double starting_fitness(1.0);
+  double starting_fitness(GetInitialFitness());
   
   cGenotype neutral;
   neutral.fitness = starting_fitness;

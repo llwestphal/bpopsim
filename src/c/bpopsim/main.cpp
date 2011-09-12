@@ -32,6 +32,7 @@ int main(int argc, char* argv[])
   ("transfer-interval-to-print,t", "Red/White Printing intervals.", 1)
   ("imv,x", "Initial Mutational Values.")
   ("coarse-graining,c", "Amount to coarse-grain output.", 1)
+  ("initial-fitness,z", "Initial Fitness.", 1.0)
   ("mut_num,y", "Specify an exact number of mutations per transfer.", 1)
   
   //Here are the output options

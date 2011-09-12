@@ -59,6 +59,7 @@ namespace bpopsim {
     double m_binomial_sampling_threshold; 
     double m_completed_divisions;
     double m_ratio;
+    double m_initial_fitness;
     
     //Other sporadic types
     bool m_keep_transferring;
@@ -101,7 +102,8 @@ namespace bpopsim {
     m_average_fitness(0),
     m_keep_transferring(true),
     m_mutations_since_last_transfer(0),
-    m_frequencies(0) { };
+    m_frequencies(0),
+    m_initial_fitness(1.0) { };
     
     //DESTRUCTOR
     virtual ~cPopulation() { };
@@ -110,6 +112,7 @@ namespace bpopsim {
     const double GetRatio() { return m_ratio; }
     
     const uint32_t GetPopulationSize() { return m_population_size; }; // don't delete @JEB
+    const double   GetInitialFitness() { return m_initial_fitness; };
     // "Calculate" the population size by iterating through subpops - slow, but to check if m_population_size is correct!
     const uint32_t CalculatePopulationSize(); // don't delete this one @JEB
     
@@ -177,6 +180,7 @@ namespace bpopsim {
     void SetSeedParams(uint16_t in_seed_type) { m_seed = in_seed_type; }
     void SetInitialMutVals(std::vector<double> in_mut_vals) { m_first_mutational_vals = in_mut_vals; }
     void SetCoarseGraining(uint16_t in_coarse) { m_coarse_graining = in_coarse; }
+    void SetInitialFitness(double in_initial_fitness ) { m_initial_fitness = in_initial_fitness; }
     
     void SetRNG(gsl_rng * in_rng) { m_rng = in_rng; } //@JEB
 

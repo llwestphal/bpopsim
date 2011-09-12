@@ -259,7 +259,7 @@ void cPopulation::ConvertExternalData(const string &input_file) {
   
   while(!input_handle.getline(char_line,1000).eof()) {
     string line(char_line);
-    vector<string> line_pieces(split(line, "\t")), preformat_tree(split(line_pieces[0], "|"));
+    vector<string> line_pieces(split(line, " ")), preformat_tree(split(line_pieces[0], ","));
     
     tree<cGenotype>::iterator top, next;
     

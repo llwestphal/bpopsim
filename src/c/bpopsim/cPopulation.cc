@@ -37,6 +37,9 @@ void cPopulation::SetParameters(AnyOption &options)
   SetInitialFitness(
     from_string<double>(options["initial-fitness"])
     );
+  SetMullerRez(
+    from_string<uint64_t>(options["muller_res"])
+    );
   
   // Simulation parameters that are pre-calculated
   SetDilutionFactor(exp(log(2)*GetGrowthPhaseGenerations()));
@@ -464,7 +467,7 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
     }
     PrintTree();*/
     
-    uint32_t resolution(2000), last_node_meeting_span;
+    uint32_t resolution(m_muller_rez), last_node_meeting_span;
     double pixel_step, min_step;
     min_step = (double) 1/resolution;
     
@@ -721,7 +724,14 @@ void cPopulation::CalculateDivisions()
   // How much time would we like to pass to achieve the desired number of divisions?
   // (Assuming the entire population has the maximum fitness, makes us underestimate by a few)
   // Can't change this log to ReturnLog with log table or nothing works
-  double update_time = log((desired_divisions+(double)GetPopulationSize()) / (double)GetPopulationSize()) / (GetMaxW());
+  
+  double update_time(0);
+  if( true ) {
+     update_time = log((desired_divisions+(double)GetPopulationSize()) / (double)GetPopulationSize()) / (GetMaxW());
+  }
+  else if( false ) {
+    //update_time = 1/(1+m_first_mutational_vals);
+  }
 
   // At a minumum, we want to make sure that one cell division took place
 

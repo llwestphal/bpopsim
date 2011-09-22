@@ -30,10 +30,11 @@ int main(int argc, char* argv[])
   ("seed,d", "Seed for random number generator")
   ("red-white,k", "Only care about red/white lineages. For marker divergence.", TAKES_NO_ARGUMENT)
   ("transfer-interval-to-print,t", "Red/White Printing intervals.", 1)
-  ("imv,x", "Initial Mutational Values.")
+  ("imv,x", "Fitness gain per mutation.")
   ("coarse-graining,c", "Amount to coarse-grain output.", 1)
   ("initial-fitness,z", "Initial Fitness.", 1.0)
   ("mut_num,y", "Specify an exact number of mutations per transfer.", 1)
+  ("muller_res,w", "Muller plot vertical resolution.", 2500)
   
   //Here are the output options
   //They are all set to false by default

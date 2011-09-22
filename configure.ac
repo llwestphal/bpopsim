@@ -46,8 +46,8 @@ AX_PATH_GSL(1.14, [], [AC_MSG_ERROR(["libgsl is required."])] )
 ##AC_CHECK_LIB([gsl], [gsl_rng_alloc])
 
 ## boost
-BOOST_REQUIRE([1.42])
-BOOST_PROGRAM_OPTIONS([s])
+#BOOST_REQUIRE([1.42])
+#BOOST_PROGRAM_OPTIONS([s])
 
 AC_SUBST([BPOPSIM], [src/c/bpopsim])
 

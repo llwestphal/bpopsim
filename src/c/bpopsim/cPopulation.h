@@ -43,6 +43,7 @@ namespace bpopsim {
     uint32_t m_total_subpopulations_lost; //Number of subpopulations that no longer exist
     uint16_t m_seed;                      //Random number generator
     uint32_t m_genotype_count;            //used to assign node ids in tree, should equal number of nodes
+    uint64_t m_muller_rez;                //Vertical Resolution of muller plot... set at command line (default: 2500)
     
     // @JEB: An uint16_t rather than a uint because this can go negative by a few cells
     //       when cells (usually the ancestors) divide simultaneously.
@@ -92,6 +93,7 @@ namespace bpopsim {
     m_seed(0),
     m_max_w(1),
     m_genotype_count(0),
+    m_muller_rez(0),
     m_divided_lineages(0),
     m_current_subpopulations(0),
     m_runs(0),
@@ -181,6 +183,7 @@ namespace bpopsim {
     void SetInitialMutVals(std::vector<double> in_mut_vals) { m_first_mutational_vals = in_mut_vals; }
     void SetCoarseGraining(uint16_t in_coarse) { m_coarse_graining = in_coarse; }
     void SetInitialFitness(double in_initial_fitness ) { m_initial_fitness = in_initial_fitness; }
+    void SetMullerRez(uint64_t in_muller_rez ) { m_muller_rez = in_muller_rez; }
     
     void SetRNG(gsl_rng * in_rng) { m_rng = in_rng; } //@JEB
 

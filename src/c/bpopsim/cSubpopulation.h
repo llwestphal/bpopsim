@@ -10,6 +10,8 @@ namespace bpopsim {
     string   name;
     double   fitness;
     uint8_t  mut_num;
+    double   m_timer;
+    bool     m_divided;
    };
 
   struct cGenotypeFrequency{
@@ -35,7 +37,7 @@ namespace bpopsim {
 
   private:
     double m_number;
-    char m_marker;
+    char   m_marker;
     tree<cGenotype>::iterator m_genotype;
 
   public:
@@ -44,17 +46,21 @@ namespace bpopsim {
     
     virtual ~cSubpopulation() { ; }; 
 
-    const double GetFitness() { return (*m_genotype).fitness; }
-    const string GetName() { return (*m_genotype).name; }
+    const double GetFitness() { return m_genotype->fitness; }
+    const string GetName() { return m_genotype->name; }
     tree<cGenotype>::iterator GetGenotypeIter() { return m_genotype; }
-    const uint32_t GetNode_id() { return (*m_genotype).unique_node_id; }
+    const uint32_t GetNode_id() { return m_genotype->unique_node_id; }
     const double GetNumber() { return m_number; }
     const char GetMarker() { return m_marker; }
-    const uint8_t GetMutNum() { return (*m_genotype).mut_num; }
+    const uint8_t GetMutNum() { return m_genotype->mut_num; }
+    const double GetTimer() { return m_genotype->m_timer; }
+    const bool GetDivided() { return m_genotype->m_divided; }
     
     void SetGenotype(tree<cGenotype>::iterator location) { m_genotype = location; }
     void SetNumber(const double in_number) { m_number = in_number; }
     void SetMarker(const char in_marker) { m_marker = in_marker; } 
+    void SetTimer(const double in_timer) { m_genotype->m_timer = in_timer; }
+    void SetDivided(const double in_divided) { m_genotype->m_divided = in_divided; }
     void Transfer(double success_prob, gsl_rng * randomgenerator);
     double MutantFitness(double in_fitness, 
                          double in_average_mutation_s, 

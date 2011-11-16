@@ -535,7 +535,7 @@ void cPopulation::Resample()
     if( it->GetMarker() == 'r' ) m_by_color[RED] += it->GetNumber();
     else if( it->GetMarker() == 'w' ) m_by_color[WHITE] += it->GetNumber();
     
-    //@agm This section is to delete new mutations from the tree that do not get passed 
+    //@agm This section is to delete new mutations from the tree that do not get passed, 
     //     it also deletes subpopulations from the list that have zero population
     
     m_population_size += floor(it->GetNumber());
@@ -780,10 +780,6 @@ void cPopulation::CalculateDivisionsNew() {
   //This will happen until the mutation time is breached at which point the next population to 
   //divide will get a mutation.
   
-  //How do I calculate mutation time?
-  
-  cout << "Size of population: " << m_population_size << endl;
-  
   double lowest_time(1.0);
   
   for(vector<cSubpopulation>::iterator this_time = m_current_subpopulations.begin(); this_time != m_current_subpopulations.end(); this_time++) {
@@ -808,6 +804,8 @@ void cPopulation::CalculateDivisionsNew() {
       this_time->SetTimer(1.0);
     }
   }
+  
+  //cout << "Size of population: " << m_population_size << " " << CalculatePopulationSize() << endl;
   
 }
 
@@ -956,61 +954,67 @@ void cPopulation::MutateNew() {
 	if (g_verbose) std::cout << "* Mutating!" << std::endl;
   if (g_verbose) std::cout << "Total population: " << CalculatePopulationSize() << std::endl;
   
+  vector< vector< cSubpopulation >::iterator > populations_to_mutate;
+  
   //find the subpopulation or subpopulations that just divided and mutate them
-  for(uint32_t pos = 0; pos < m_current_subpopulations.size(); pos++) {
-
-    cSubpopulation& ancestor = m_current_subpopulations[pos];
-    //cout << ancestor.GetNode_id() << " " << ancestor.GetNumber() << endl;
+  for(vector< cSubpopulation >::iterator pos = m_current_subpopulations.begin(); pos != m_current_subpopulations.end(); pos++) {
+    //cSubpopulation& ancestor = m_current_subpopulations[pos];
+    //cout << pos->GetNode_id() << " " << pos->GetNumber() << endl;
     
-    if( ancestor.GetDivided() ) {
-      cSubpopulation new_subpop;
+    if( pos->GetDivided() ) 
+      populations_to_mutate.push_back(pos);
+  }
+  
+  //find the subpopulation or subpopulations that just divided and mutate them
+  for(uint32_t pos = 0; pos < populations_to_mutate.size(); pos++) {
+
+    cSubpopulation& ancestor = (*populations_to_mutate[pos]);
+    //cout << ancestor.GetNode_id() << " " << ancestor.GetNumber() << endl;
+
+    cSubpopulation new_subpop;
       
       //std::cout << "Divided has number: " << ancestor.GetNumber() << std::endl;
       // There must be at least two cells for a mutation to have occurred...
-      //assert(ancestor.GetNumber() >= 2);
+      assert(ancestor.GetNumber() >= 2);
       
       //This is necessary so the first few mutation have a much larger fitness advantage
       
-      if( m_first_mutational_vals.size() > ancestor.GetMutNum() ) {
-        new_subpop.CreateDescendant(m_rng, 
-                                    ancestor, 
-                                    m_first_mutational_vals[ancestor.GetMutNum()], 
-                                    GetBeneficialMutationDistribution(),
-                                    m_tree,
-                                    m_genotype_count++);
-      }
-      else {
-        new_subpop.CreateDescendant(m_rng, 
-                                    ancestor, 
-                                    m_first_mutational_vals[m_first_mutational_vals.size()-1], 
-                                    GetBeneficialMutationDistribution(),
-                                    m_tree,
-                                    m_genotype_count++);
-      }
-      
-      if (g_verbose) std::cout << "  Color: " << new_subpop.GetMarker() << std::endl;
-      if (g_verbose) std::cout << "  New Fitness: " << new_subpop.GetFitness() << std::endl;
-      
-      AddSubpopulation(new_subpop);
-      
-      //@agm Since an existent cell is picked to mutate,
-      //     rather than doubling a cell and picking its
-      //     progeny to mutate... we should not add a new
-      //     cell to the population, but AddSubpopulation does.
-      m_population_size-=1;
-      
-      if(new_subpop.GetFitness() > GetMaxW()) SetMaxW(new_subpop.GetFitness());
-      
-      //ancestor.SetNumber(ancestor.GetNumber()-1);
-      
-      if (g_verbose) std::cout << "  New Number: " << new_subpop.GetNumber() << std::endl;
-      if (g_verbose) std::cout << "  Old Number: " << ancestor.GetNumber() << std::endl;
-      
-      m_total_mutations++;
-
-      break;
-
+    if( m_first_mutational_vals.size() > ancestor.GetMutNum() ) {
+      new_subpop.CreateDescendant(m_rng, 
+                                  ancestor, 
+                                  m_first_mutational_vals[ancestor.GetMutNum()], 
+                                  GetBeneficialMutationDistribution(),
+                                  m_tree,
+                                  m_genotype_count++);
     }
+    else {
+      new_subpop.CreateDescendant(m_rng, 
+                                  ancestor, 
+                                  m_first_mutational_vals[m_first_mutational_vals.size()-1], 
+                                  GetBeneficialMutationDistribution(),
+                                  m_tree,
+                                  m_genotype_count++);
+    }
+    
+    if (g_verbose) std::cout << "  Color: " << new_subpop.GetMarker() << std::endl;
+    if (g_verbose) std::cout << "  New Fitness: " << new_subpop.GetFitness() << std::endl;
+    
+    AddSubpopulation(new_subpop);
+    
+    //@agm Since an existent cell is picked to mutate,
+    //     rather than doubling a cell and picking its
+    //     progeny to mutate... we should not add a new
+    //     cell to the population, but AddSubpopulation does.
+    m_population_size-=1;
+    
+    if(new_subpop.GetFitness() > GetMaxW()) SetMaxW(new_subpop.GetFitness());
+    
+    ancestor.SetNumber(ancestor.GetNumber()-1);
+    
+    if (g_verbose) std::cout << "  New Number: " << new_subpop.GetNumber() << std::endl;
+    if (g_verbose) std::cout << "  Old Number: " << ancestor.GetNumber() << std::endl;
+    
+    m_total_mutations++;
   }
   
 }

@@ -12,6 +12,15 @@ namespace bpopsim {
     uint8_t  mut_num;
     double   m_timer;
     bool     m_divided;
+    
+    cGenotype() : 
+      unique_node_id(0),
+      name(""),
+      fitness(1.0),
+      mut_num(0),
+      m_timer(1.0),
+      m_divided(false) { };
+    
    };
 
   struct cGenotypeFrequency{

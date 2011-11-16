@@ -45,7 +45,8 @@ int main(int argc, char* argv[])
   ("time_sweep", "Print time to sweep for each mutation", TAKES_NO_ARGUMENT)
   ("max_diff", "Print max difference of sweeping mutations", TAKES_NO_ARGUMENT)
   ("single_fit", "Print the fitness of the single cell.", TAKES_NO_ARGUMENT)
-  ("convert_tree", "Convert an external phylogenetic tree>", TAKES_NO_ARGUMENT)
+  ("convert_tree", "Convert an external phylogenetic tree.", TAKES_NO_ARGUMENT)
+  ("new_simulator", "Use the new simulator type.", TAKES_NO_ARGUMENT)
   .processCommandArgs(argc, argv);
   
   if(options.count("help")
@@ -66,7 +67,7 @@ int main(int argc, char* argv[])
     
     bool print_freq(false), print_muller(false), print_average_fit(false),
     print_screen(false), print_max_diff(false), print_time_to_sweep(false),
-    print_single_fit(false), use_mute_num(false);
+    print_single_fit(false), use_mute_num(false), new_simulator(false);
     
     if( options.count("verbose") ) g_verbose = true;
     if( options.count("frequencies") ) print_freq = true;
@@ -77,6 +78,7 @@ int main(int argc, char* argv[])
     if( options.count("max_diff") ) print_max_diff = true;
     if( options.count("single_fit") ) print_single_fit = true;
     if( options.count("mut_num") ) use_mute_num = true;
+    if( options.count("new_simulator") ) new_simulator = true;
     
     if( options.count("convert_tree") ) {
       cPopulation access_to_functions;
@@ -91,6 +93,100 @@ int main(int argc, char* argv[])
     
     }
     
+    //@agm The new simulator
+    else if( new_simulator ) {
+      // @JEB: use one main RNG (so we don't reset for each replicate)
+      // Let cPopulation store a copy of it.
+      const gsl_rng_type *T;
+      gsl_rng * randgen;
+      gsl_rng_env_setup();
+      T = gsl_rng_taus2;
+      randgen = gsl_rng_alloc(T);
+      
+      uint16_t seed = 0;
+      if ( options.count("seed") ) {
+        seed = from_string<uint16_t>(options["seed"]);
+      } else {
+        seed = time(NULL) * getpid();
+      }
+      
+      gsl_rng_set(randgen, seed);
+      
+      for (uint32_t on_run=0; on_run < from_string<uint32_t>(options["replicates"]); on_run++)
+      {
+        
+        std::vector<double> current_ro_ratio;
+        
+        //Initialize Population object
+        cPopulation population;
+        
+        //Build lookup table for logs 
+        //Currently it is the the 15th, I should take it as a command line option
+        //population.ConstructLookUpTable();
+        
+        //Set cli options
+        population.SetParameters(options);
+        population.DisplayParameters();
+        
+        tree<cGenotype>::iterator_base loc;
+        std::vector< std::vector<cGenotypeFrequency> > subpops;
+        
+        population.SetRNG(randgen);
+        
+        std::cout << "Replicate " << on_run << std::endl;   
+        
+        //Initialize the population
+        if (g_ro_only) {
+          population.SeedSubpopulationForRedWhite(); 
+        } else {
+          population.SeedPopulationWithOneColony();
+        }
+        
+        //Get an initial time points
+        population.CalculateAverageFitness();
+        population.FrequenciesPerTransferPerNode();
+        
+        // Print the initial tree
+        //if (g_verbose) population.PrintTree();
+        
+        //std::cout << node_id << std::endl;
+        
+        //uint16_t number_of_mutations(0);
+        vector<uint32_t> mutation_division(0);
+        mutation_division.push_back(0);
+
+        while( population.GetTransfers() < population.GetTotalTransfers() ) {
+          //cout << "I'm Here." << endl;
+          population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + round(gsl_ran_exponential(randgen, population.GetLambda())));
+          //cout << "I'm Here." << endl;
+          while( population.GetDivisionsUntilMutation() > 0 && (population.GetTransfers() < population.GetTotalTransfers())) {
+            population.CalculateDivisionsNew();
+            //cout << "I'm Here." << endl;
+            if( population.GetDivisionsUntilMutation() <= 0 ) population.MutateNew();
+            //cout << "I'm Here." << endl;
+            if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
+              population.FrequenciesPerTransferPerNode();
+              
+              if( on_run == 0 ) 
+                population.CalculateAverageFitness();
+              
+              if( print_single_fit )
+                population.Deterministic_Resample();
+              else {
+                population.Resample();
+                //population.CullPopulations();
+              }
+              
+              if( print_single_fit && !use_mute_num) {
+                population.PrintSingleFitness(options["output-folder"]);
+                //std::cout << "Population size: " << population.GetPopulationSize() << std::endl;
+              }
+            }
+          }
+        }
+      }
+      
+    }
     else {
       
       //for testing!!!!

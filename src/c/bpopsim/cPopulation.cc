@@ -510,7 +510,7 @@ void cPopulation::Resample()
   
   SetTransfers(GetTransfers()+1);
  
-  if (g_verbose) std::cout << ">> Transfer!" << std::endl;
+  std::cout << ">> Transfer!" << std::endl;
   //Is there an exists() in C++?
   m_by_color[RED] = 0;
   m_by_color[WHITE] = 0;
@@ -726,12 +726,8 @@ void cPopulation::CalculateDivisions()
   // Can't change this log to ReturnLog with log table or nothing works
   
   double update_time(0);
-  if( true ) {
-     update_time = log((desired_divisions+(double)GetPopulationSize()) / (double)GetPopulationSize()) / (GetMaxW());
-  }
-  else if( false ) {
-    //update_time = 1/(1+m_first_mutational_vals);
-  }
+
+  update_time = log((desired_divisions+(double)GetPopulationSize()) / (double)GetPopulationSize()) / (GetMaxW());
 
   // At a minumum, we want to make sure that one cell division took place
 
@@ -771,6 +767,48 @@ void cPopulation::CalculateDivisions()
   //std::cout << "Divisions until mutation: " << GetDivisionsUntilMutation() << " Completed divisions: " << GetCompletedDivisions() << " Population Size: " << GetPopulationSize() << " Previous Population Size: " << previous_population_size << std::endl;
   SetDivisionsUntilMutation(GetDivisionsUntilMutation() - GetCompletedDivisions());
 
+}
+
+void cPopulation::CalculateDivisionsNew() {
+  //Calculate time to next division by having the initial time be 1
+  //The time remains 1 until a cell mutates
+  //at that point each population is iterated through and the time variable
+  //in each subpopulation is set by time = old_time - (elapsed_time * Fitness)
+  //Thus, every step is going to entail cycling through to find the smallest remaining time
+  //doubling that pop, updating the time in pops, then finding the smallest pop again.
+  
+  //This will happen until the mutation time is breached at which point the next population to 
+  //divide will get a mutation.
+  
+  //How do I calculate mutation time?
+  
+  cout << "Size of population: " << m_population_size << endl;
+  
+  double lowest_time(1.0);
+  
+  for(vector<cSubpopulation>::iterator this_time = m_current_subpopulations.begin(); this_time != m_current_subpopulations.end(); this_time++) {
+    this_time->SetTimer( this_time->GetTimer() - (m_elapsed_time * this_time->GetFitness()) );
+    this_time->SetDivided(false);
+    if( this_time->GetTimer() <= lowest_time ) {
+      lowest_time = this_time->GetTimer();
+    }
+  }
+  m_elapsed_time = lowest_time;
+  
+  for(vector<cSubpopulation>::iterator this_time = m_current_subpopulations.begin(); this_time != m_current_subpopulations.end(); this_time++) {
+    //cout << this_time->GetNode_id() << " " << this_time->GetNumber() << endl;
+    if( this_time->GetTimer() == lowest_time ) {
+      this_time->SetDivided(true);
+      
+      SetCompletedDivisions(GetCompletedDivisions() + this_time->GetNumber());
+      SetDivisionsUntilMutation(GetDivisionsUntilMutation() - this_time->GetNumber());
+      m_population_size += this_time->GetNumber();
+      
+      this_time->SetNumber(this_time->GetNumber()*2);
+      this_time->SetTimer(1.0);
+    }
+  }
+  
 }
 
 /*@agm The functions below should build a new tree using the tree.h header */
@@ -911,6 +949,70 @@ void cPopulation::Mutate()
   if (g_verbose) std::cout << "  Old Number: " << ancestor.GetNumber() << std::endl;
   
   m_total_mutations++;
+}
+
+void cPopulation::MutateNew() {
+	
+	if (g_verbose) std::cout << "* Mutating!" << std::endl;
+  if (g_verbose) std::cout << "Total population: " << CalculatePopulationSize() << std::endl;
+  
+  //find the subpopulation or subpopulations that just divided and mutate them
+  for(uint32_t pos = 0; pos < m_current_subpopulations.size(); pos++) {
+
+    cSubpopulation& ancestor = m_current_subpopulations[pos];
+    //cout << ancestor.GetNode_id() << " " << ancestor.GetNumber() << endl;
+    
+    if( ancestor.GetDivided() ) {
+      cSubpopulation new_subpop;
+      
+      //std::cout << "Divided has number: " << ancestor.GetNumber() << std::endl;
+      // There must be at least two cells for a mutation to have occurred...
+      //assert(ancestor.GetNumber() >= 2);
+      
+      //This is necessary so the first few mutation have a much larger fitness advantage
+      
+      if( m_first_mutational_vals.size() > ancestor.GetMutNum() ) {
+        new_subpop.CreateDescendant(m_rng, 
+                                    ancestor, 
+                                    m_first_mutational_vals[ancestor.GetMutNum()], 
+                                    GetBeneficialMutationDistribution(),
+                                    m_tree,
+                                    m_genotype_count++);
+      }
+      else {
+        new_subpop.CreateDescendant(m_rng, 
+                                    ancestor, 
+                                    m_first_mutational_vals[m_first_mutational_vals.size()-1], 
+                                    GetBeneficialMutationDistribution(),
+                                    m_tree,
+                                    m_genotype_count++);
+      }
+      
+      if (g_verbose) std::cout << "  Color: " << new_subpop.GetMarker() << std::endl;
+      if (g_verbose) std::cout << "  New Fitness: " << new_subpop.GetFitness() << std::endl;
+      
+      AddSubpopulation(new_subpop);
+      
+      //@agm Since an existent cell is picked to mutate,
+      //     rather than doubling a cell and picking its
+      //     progeny to mutate... we should not add a new
+      //     cell to the population, but AddSubpopulation does.
+      m_population_size-=1;
+      
+      if(new_subpop.GetFitness() > GetMaxW()) SetMaxW(new_subpop.GetFitness());
+      
+      //ancestor.SetNumber(ancestor.GetNumber()-1);
+      
+      if (g_verbose) std::cout << "  New Number: " << new_subpop.GetNumber() << std::endl;
+      if (g_verbose) std::cout << "  Old Number: " << ancestor.GetNumber() << std::endl;
+      
+      m_total_mutations++;
+
+      break;
+
+    }
+  }
+  
 }
 
 //Utilities Section

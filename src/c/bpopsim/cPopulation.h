@@ -61,6 +61,8 @@ namespace bpopsim {
     double m_completed_divisions;
     double m_ratio;
     double m_initial_fitness;
+    double m_mutation_timer;
+    double m_elapsed_time;
     
     //Other sporadic types
     bool m_keep_transferring;
@@ -105,7 +107,9 @@ namespace bpopsim {
     m_keep_transferring(true),
     m_mutations_since_last_transfer(0),
     m_frequencies(0),
-    m_initial_fitness(1.0) { };
+    m_initial_fitness(1.0),
+    m_mutation_timer(0),
+    m_elapsed_time(0) { };
     
     //DESTRUCTOR
     virtual ~cPopulation() { };
@@ -217,10 +221,12 @@ namespace bpopsim {
     void   RunSummary();
     void   DisplayParameters();
     void   CalculateDivisions();
+    void   CalculateDivisionsNew();
     void   SeedSubpopulationForRedWhite();
     void   SeedPopulationWithOneColony();
     void   AddSubpopulation(cSubpopulation& subpop);
     void   Mutate();
+    void   MutateNew();
     std::vector<uint16_t> CurrentUniqueGenotypes();
     void   PrintUniqueGenotypes(const std::string& output_folder,
                               std::vector< std::vector<uint16_t> > * number_of_unique_genotypes);

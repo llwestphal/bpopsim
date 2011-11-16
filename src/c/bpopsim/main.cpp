@@ -120,10 +120,6 @@ int main(int argc, char* argv[])
         //Initialize Population object
         cPopulation population;
         
-        //Build lookup table for logs 
-        //Currently it is the the 15th, I should take it as a command line option
-        //population.ConstructLookUpTable();
-        
         //Set cli options
         population.SetParameters(options);
         population.DisplayParameters();
@@ -154,16 +150,18 @@ int main(int argc, char* argv[])
         //uint16_t number_of_mutations(0);
         vector<uint32_t> mutation_division(0);
         mutation_division.push_back(0);
+        
+        uint32_t count(0);
 
         while( population.GetTransfers() < population.GetTotalTransfers() ) {
-          //cout << "I'm Here." << endl;
-          population.SetDivisionsUntilMutation(population.GetDivisionsUntilMutation() + round(gsl_ran_exponential(randgen, population.GetLambda())));
-          //cout << "I'm Here." << endl;
+          
+          population.SetDivisionsUntilMutation(round(gsl_ran_exponential(randgen, population.GetLambda())));
+          
           while( population.GetDivisionsUntilMutation() > 0 && (population.GetTransfers() < population.GetTotalTransfers())) {
             population.CalculateDivisionsNew();
-            //cout << "I'm Here." << endl;
+            
             if( population.GetDivisionsUntilMutation() <= 0 ) population.MutateNew();
-            //cout << "I'm Here." << endl;
+            
             if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
               population.FrequenciesPerTransferPerNode();
               
@@ -177,6 +175,9 @@ int main(int argc, char* argv[])
                 //population.CullPopulations();
               }
               
+              count++;
+              std::cout << "Passing.... " << count << std::endl;
+              
               if( print_single_fit && !use_mute_num) {
                 population.PrintSingleFitness(options["output-folder"]);
                 //std::cout << "Population size: " << population.GetPopulationSize() << std::endl;
@@ -184,6 +185,13 @@ int main(int argc, char* argv[])
             }
           }
         }
+        
+        if( print_freq ) {
+          std::cout << "Printing to file.... \n";
+          population.PrintOut(options["output-folder"], on_run);
+          cout << endl;
+        }
+        
       }
       
     }

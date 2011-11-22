@@ -16,8 +16,8 @@ namespace bpopsim {
     
     // Simulation parameters that should be arguments
     // Initialized outside of constructor
-    uint32_t m_initial_population_size;
-    uint32_t m_pop_size_after_dilution;
+    double m_initial_population_size;
+    double m_pop_size_after_dilution;
     uint32_t m_max_transfers_from_cli;
     uint16_t m_coarse_graining;
     double m_mutation_rate_per_division;
@@ -28,8 +28,8 @@ namespace bpopsim {
     std::vector<uint32_t> m_divided_lineages;
     std::vector< std::vector<double> > m_runs;
     std::vector<double> m_this_run;
-    std::vector<uint32_t> m_total_cells;
-    std::vector< std::vector<uint32_t> > m_all_subpopulations_at_all_times;
+    std::vector<double> m_total_cells;
+    std::vector< vector<double> > m_all_subpopulations_at_all_times;
     std::vector<double> m_first_mutational_vals;
     std::vector<double> m_average_fitness;
     std::vector<cSubpopulation>  m_mutations_since_last_transfer;
@@ -37,7 +37,6 @@ namespace bpopsim {
     
     //All of the following should be initialized in the constructor
     //@agm DO NOT MAKE A CLASS VARIABLE THAT IS NOT INITIALIZED AT THE CONSTRUCTOR!!!
-    uint32_t m_population_size;           //Current population size
     uint32_t m_num_completed_transfers;   //Number of transfers that have been completed thus far
     uint32_t m_total_mutations;           //Number of mutations so far
     uint32_t m_total_subpopulations_lost; //Number of subpopulations that no longer exist
@@ -49,6 +48,7 @@ namespace bpopsim {
     //       when cells (usually the ancestors) divide simultaneously.
     int64_t m_divisions_until_mutation; 
     
+    double m_population_size;           //Current population size
     double m_average_mutation_s;           //Not sure what this is... it is a returned value.
     double m_growth_phase_generations;     //Again not sure
     double m_pop_size_before_dilution;     //Self explanatory
@@ -117,10 +117,10 @@ namespace bpopsim {
     //GETTERS
     const double GetRatio() { return m_ratio; }
     
-    const uint32_t GetPopulationSize() { return m_population_size; }; // don't delete @JEB
+    const double GetPopulationSize() { return m_population_size; }; // don't delete @JEB
     const double   GetInitialFitness() { return m_initial_fitness; };
     // "Calculate" the population size by iterating through subpops - slow, but to check if m_population_size is correct!
-    const uint32_t CalculatePopulationSize(); // don't delete this one @JEB
+    const double CalculatePopulationSize(); // don't delete this one @JEB
     
     const uint32_t GetTransfers() { return m_num_completed_transfers; }
     const uint32_t GetTotalMutations() { return m_total_mutations; }
@@ -140,8 +140,8 @@ namespace bpopsim {
     const bool GetKeepTransferring() { return m_keep_transferring; }
     const char GetBeneficialMutationDistribution() { return m_beneficial_mutation_distribution; } 
 
-    const uint32_t GetInitialPopulationSize() {return m_initial_population_size; }
-    const uint32_t GetPopSizeAfterDilution() {return m_pop_size_after_dilution; }
+    const double GetInitialPopulationSize() {return m_initial_population_size; }
+    const double GetPopSizeAfterDilution() {return m_pop_size_after_dilution; }
     const double GetMutationRatePerDivision() {return m_mutation_rate_per_division; }
     const double GetAverageMutationS() {return m_average_mutation_s; }
     const double GetGrowthPhaseGenerations() { return m_growth_phase_generations; }
@@ -178,8 +178,8 @@ namespace bpopsim {
     void SetTotalTransfers(uint32_t in_total_transfers) { m_max_transfers_from_cli = in_total_transfers; }
     void SetMaxDivergenceFactor( double in_max_divergence_factor) { m_max_divergence_factor = in_max_divergence_factor; }
     void SetBinomialSamplingThreshold (double in_binomial_sampling_threshold) { m_binomial_sampling_threshold = in_binomial_sampling_threshold; }
-    void SetInitialPopulationSize(uint32_t in_initial_population_size) {m_initial_population_size = in_initial_population_size; }
-    void SetPopSizeAfterDilution(uint32_t in_pop_size_after_dilution) {m_pop_size_after_dilution = in_pop_size_after_dilution; }
+    void SetInitialPopulationSize(double in_initial_population_size) {m_initial_population_size = in_initial_population_size; }
+    void SetPopSizeAfterDilution(double in_pop_size_after_dilution) {m_pop_size_after_dilution = in_pop_size_after_dilution; }
     void SetMutationRatePerDivision(double in_mutation_rate_per_division) {m_mutation_rate_per_division = in_mutation_rate_per_division; }
     void SetGrowthPhaseGenerations(double in_growth_phase_generations) { m_growth_phase_generations= in_growth_phase_generations; }
     void SetBeneficialMutationDistribution(char in_beneficial_mutation_distribution) { m_beneficial_mutation_distribution = in_beneficial_mutation_distribution; }
@@ -206,6 +206,8 @@ namespace bpopsim {
                                                                 tree<cGenotype>::sibling_iterator this_node);
     double Find_Node_in_Freq_By_NodeID(std::vector<cGenotypeFrequency> &frequencies,
                                        uint32_t this_node);
+    cSubpopulation* Find_Node_in_Populations_By_NodeID(uint32_t this_node);
+    
     double AssignChildFreq(tree<cGenotype>::sibling_iterator child_node,
                            double parent_low,
                            double parent_high,
@@ -241,7 +243,7 @@ namespace bpopsim {
     
     uint32_t MutationAboveThreshold_2(float threshold);
     std::vector<uint32_t> MutationAboveThreshold(float threshold);
-    unsigned int CalculateSimilarity(std::string output_folder);
+    double CalculateSimilarity(std::string output_folder);
     double CountMutipleDivergedSubpops();
     void   TimeToSweep(std::string output_folder);
     void   CalculateAverageFitness();

@@ -50,7 +50,10 @@ namespace bpopsim {
     tree<cGenotype>::iterator m_genotype;
 
   public:
-    cSubpopulation();
+    cSubpopulation() :   //
+    m_number(0),
+    m_marker('n') { };
+    
     cSubpopulation(const cSubpopulation& in); // Copy constructor
     
     virtual ~cSubpopulation() { ; }; 

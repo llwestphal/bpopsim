@@ -16,12 +16,12 @@ int main(int argc, char* argv[])
   options
   ("help,h", "produce this help message", TAKES_NO_ARGUMENT)
   ("generations-per-transfer,T", "Generations per transfer", 6.64)
-  ("population-size-after-transfer,N", "Population size after transfer", uint32_t(5E6))
+  ("population-size-after-transfer,N", "Population size after transfer", double(5E6))
   ("number-of-transfers,n", "Max number of transfer to replicate", 50)
   ("output-folder,o", "Output folder")
   ("input_file,i", "Input file for converting external tree")
   ("mutation-rate-per-division,u", "Mutation rate per division", 0)
-  ("initial-population-size,p", "Initial Population Size", uint32_t(5E6))
+  ("initial-population-size,p", "Initial Population Size", double(5E6))
   ("replicates,r", "Replicates")
   ("marker-divergence,m", "Max divergence factor", 100)
   ("type-of-mutations,f", "Type of mutations", 'u')
@@ -147,10 +147,6 @@ int main(int argc, char* argv[])
         
         //std::cout << node_id << std::endl;
         
-        //uint16_t number_of_mutations(0);
-        vector<uint32_t> mutation_division(0);
-        mutation_division.push_back(0);
-        
         uint32_t count(0);
 
         while( population.GetTransfers() < population.GetTotalTransfers() ) {
@@ -162,7 +158,7 @@ int main(int argc, char* argv[])
             
             if( population.GetDivisionsUntilMutation() <= 0 ) population.MutateNew();
             
-            if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
+            if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution() ) {
               population.FrequenciesPerTransferPerNode();
               
               if( on_run == 0 ) 
@@ -275,8 +271,8 @@ int main(int argc, char* argv[])
         //std::cout << node_id << std::endl;
         
         uint16_t number_of_mutations(0);
-        vector<uint32_t> mutation_division(0);
-        mutation_division.push_back(0);
+        vector<uint32_t> mutation_division(1, 0);
+
         double division_of_mutation;
         
         if( use_mute_num ) {

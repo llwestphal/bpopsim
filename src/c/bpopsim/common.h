@@ -27,6 +27,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <limits>
 
 //Other Includes
 #include "tree.hh"

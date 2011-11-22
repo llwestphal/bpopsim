@@ -4,12 +4,6 @@
 using namespace std;
 using namespace bpopsim;
 
-/* */
-cSubpopulation::cSubpopulation() :
-  m_number(0),
-  m_marker(0),
-  m_genotype(0) { };
-
 /* Copy constructor */
 cSubpopulation::cSubpopulation(const cSubpopulation& in) :
   m_number(0),
@@ -81,7 +75,7 @@ void cSubpopulation::Transfer(double success_prob,
 		
 	uint32_t random_gsl_int = gsl_ran_binomial(randomgenerator, 
                                              success_prob, 
-                                             uint32_t(GetNumber()));
+                                             double(GetNumber()));
 	
 
 	//if ( random_gsl_int > 10 ) std::cout << std::endl << "This is gsl out: " << " " << 

@@ -133,6 +133,8 @@ void cPopulation::FrequenciesPerTransferPerNode()
   // Genotype number (mutations at each node of tree)
 	vector<double> number_with_genotype( m_genotype_count, 0.0 );
   vector<double> subpops( m_genotype_count, 0.0 );
+  
+  m_cell_equivalents = 0;
 
 	tree<cGenotype>::iterator update_location;
   for (uint32_t it = 0; it<m_current_subpopulations.size(); ++it) {
@@ -145,56 +147,30 @@ void cPopulation::FrequenciesPerTransferPerNode()
     // this subpopulation to every mutational node along the way
 		while(update_location != NULL) {
       
-			number_with_genotype[update_location->unique_node_id] += (double) this_pop.GetNumber();
+			number_with_genotype[update_location->unique_node_id] += this_pop.GetNumber()*this_pop.GetTimer();
       update_location = m_tree.parent(update_location);
 		}
+    
+    m_cell_equivalents += this_pop.GetNumber()*this_pop.GetTimer();
 	}
   
   cout << m_population_size << endl;
-  m_total_cells.push_back(m_population_size); // shouldn't need to save this, remove later @JEB
-  m_all_subpopulations_at_all_times.push_back(subpops);
+  m_total_cells.push_back(m_cell_equivalents); // shouldn't need to save this, remove later @JEB
   
-  /*for (std::vector<uint32_t>::iterator it = number_per_subpop.begin(); it!=number_per_subpop.end(); ++it) {
-    Cout << *it << " ";
-  }*/
-  
+  //@agm I'm not sure what this is for?
+  //m_all_subpopulations_at_all_times.push_back(subpops);
 	
-  //@agm It is critical to iterate over the number_per_subpop vector here rather than the m_current_subpopulations
-  //     iterating over m_current_subpopulations will cause you to lose populations after 350 or so transfers
-  //     This is necessary because eventually there are no cells left who ONLY have red or white causing
-  //     them to be dropped.
-  //for (std::vector<cGenotypeFrequency>::iterator it = freq_per_node.begin(); it!=freq_per_node.end(); ++it) total_cells += (*it).subpop_size;
-  //std::cout << total_cells << " " << number_per_subpop[0] << std::endl;
-  int count(0);
-  double total_freqs(0);
-	for (uint32_t i=0; i < subpops.size(); i++) {
+	for (uint32_t i=0; i < number_with_genotype.size(); i++) {
 		cGenotypeFrequency this_node;
     
     this_node.unique_node_id = i;
-    this_node.frequency = number_with_genotype[i]/m_population_size;
+    this_node.frequency = number_with_genotype[i]/m_cell_equivalents;
     
     if( this_node.frequency > 0 ) {
       freq_per_node[i] = (this_node);
     }
-		
-		total_freqs += this_node.frequency;
-    // /*if (g_verbose) */std::cout << this_node.unique_node_id << "  " << this_node.frequency << std::endl;
-    count++;
 	}
-
-  if (g_verbose) std::cout << std::endl << "There are " << m_population_size << " cells, in " << m_genotype_count << " nodes."<< std::endl;
-
-	//@agm Printing sum of frequencies and building the doubly deep vector
-	//Cout << Endl << "Sum of all freqs: " << total_freqs << Endl;
 	m_frequencies.push_back(freq_per_node);
-  
-  if (g_verbose) {
-    std::cout << "Completed divisions: " << GetCompletedDivisions() << std::endl;
-    for(vector<cSubpopulation>::iterator this_time = m_current_subpopulations.begin(); this_time != m_current_subpopulations.end(); this_time++) {
-      cout << "Genotype2: " << this_time->GetNode_id() << " Frequency2: " << this_time->GetNumber() << endl;
-    }
-  }
-  
 }
 
 void cPopulation::CalculateAverageFitness() {
@@ -792,7 +768,7 @@ void cPopulation::CalculateDivisionsNew() {
   //This will happen until the mutation time is breached at which point the next population to 
   //divide will get a mutation.
   
-  double gets_to_double(1.0);
+  double gets_to_double(numeric_limits<double>::max());
   double number_of_resources_here(0);
   double number_of_resources_to_transfer(m_pop_size_before_dilution - m_population_size);
   
@@ -800,34 +776,38 @@ void cPopulation::CalculateDivisionsNew() {
     cSubpopulation&  this_time(m_current_subpopulations[time]);
     this_time.SetDivided(false);
     
-    double a_time( this_time.GetTimer() * this_time.GetFitness() );
+    double a_time( ( 2.0 - this_time.GetTimer() ) / this_time.GetFitness() );
+    this_time.SetTimer( 2.0 - a_time );
     
-    if( a_time > gets_to_double ) {
+    if( a_time < gets_to_double ) {
       gets_to_double = a_time;
     }
   }
   
-  m_elapsed_time = 2.0 - gets_to_double;
+  m_elapsed_time = gets_to_double;
   
   for(uint32_t time = 0; time < m_current_subpopulations.size(); time++) {
     cSubpopulation&  this_time(m_current_subpopulations[time]);
     
-    double a_time( this_time.GetTimer() * this_time.GetFitness() );
+    double a_time( ( 2.0 - this_time.GetTimer() ) / this_time.GetFitness() );
     
-    this_time.SetTimer( this_time.GetTimer() + m_elapsed_time );
-    
-    if( a_time == gets_to_double ) {
+    if( a_time == m_elapsed_time ) {
       number_of_resources_here += this_time.GetNumber();
       this_time.SetDivided(true);
       //cout << "Node id of next doubling: " << this_time.GetNode_id() << " " << m_elapsed_time << endl;
     }
   }
   
+  //cout << " Doubled! " << endl;
+  
   if( number_of_resources_here < number_of_resources_to_transfer ) {
   
     for(uint32_t time = 0; time < m_current_subpopulations.size(); time++) {
       cSubpopulation&  this_time(m_current_subpopulations[time]);
-      //cout << this_time.GetNode_id() << " " << this_time.GetNumber() << endl;
+      //cout << this_time.GetNode_id() << " " << this_time.GetNumber() << " " << this_time.GetFitness() << endl;
+      
+      this_time.SetTimer( this_time.GetTimer() + m_elapsed_time );
+      assert(this_time.GetTimer() <= 2);
       
       if( this_time.GetDivided()  ) {
         
@@ -835,14 +815,16 @@ void cPopulation::CalculateDivisionsNew() {
         SetDivisionsUntilMutation( GetDivisionsUntilMutation() - this_time.GetNumber() );
         m_population_size += this_time.GetNumber();
         
-        this_time.SetNumber( this_time.GetNumber() * 2.0 );
+        this_time.SetNumber( this_time.GetNumber() * this_time.GetTimer() );
         
         this_time.SetTimer(1.0);
       }
     }
   }
   
-  
+  //@agm To fix the stair-steppy thing going on in the frequency
+  //     In the frequency vector, simply multiply the Timer and
+  //     number of cells to get the number of cell equivalents
   
   else if( number_of_resources_to_transfer < number_of_resources_here ) {
     double population_size_now = m_population_size;
@@ -851,17 +833,18 @@ void cPopulation::CalculateDivisionsNew() {
       cSubpopulation&  this_time(m_current_subpopulations[time]);
       //cout << this_time.GetNode_id() << " " << this_time.GetNumber() << endl;
       
-      double number_cells_added(this_time.GetNumber() * number_of_resources_to_transfer / population_size_now);
+      double number_cells_added( number_of_resources_to_transfer * this_time.GetNumber() / population_size_now );
       
       SetCompletedDivisions( GetCompletedDivisions() + number_cells_added );
       SetDivisionsUntilMutation( GetDivisionsUntilMutation() - number_cells_added );
       m_population_size += number_cells_added;
       
       this_time.SetNumber( this_time.GetNumber() + number_cells_added );
-      this_time.SetTimer(this_time.GetTimer() + number_cells_added / (this_time.GetNumber()*this_time.GetFitness()) );
-      
+      this_time.SetTimer( this_time.GetTimer() - number_cells_added * this_time.GetFitness() / this_time.GetNumber() );
+      assert(this_time.GetTimer() <= 2);
+
       this_time.SetDivided(false);
-      
+    
     }
     
   }

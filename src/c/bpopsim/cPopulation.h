@@ -63,6 +63,7 @@ namespace bpopsim {
     double m_initial_fitness;
     double m_mutation_timer;
     double m_elapsed_time;
+    double m_cell_equivalents;
     
     //Other sporadic types
     bool m_keep_transferring;
@@ -109,7 +110,8 @@ namespace bpopsim {
     m_frequencies(0),
     m_initial_fitness(1.0),
     m_mutation_timer(0),
-    m_elapsed_time(0) { };
+    m_elapsed_time(0),
+    m_cell_equivalents(0) { };
     
     //DESTRUCTOR
     virtual ~cPopulation() { };

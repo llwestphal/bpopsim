@@ -33,7 +33,7 @@ namespace bpopsim {
     std::vector<double> m_first_mutational_vals;
     std::vector<double> m_average_fitness;
     std::vector<cSubpopulation>  m_mutations_since_last_transfer;
-    std::vector< std::vector<cGenotypeFrequency> > m_frequencies;
+    vector< vector<cGenotypeFrequency> > m_frequencies;
     
     //All of the following should be initialized in the constructor
     //@agm DO NOT MAKE A CLASS VARIABLE THAT IS NOT INITIALIZED AT THE CONSTRUCTOR!!!
@@ -43,6 +43,7 @@ namespace bpopsim {
     uint16_t m_seed;                      //Random number generator
     uint64_t m_genotype_count;            //used to assign node ids in tree, should equal number of nodes
     uint64_t m_muller_rez;                //Vertical Resolution of muller plot... set at command line (default: 2500)
+    uint64_t m_time;
     
     // @JEB: An uint16_t rather than a uint because this can go negative by a few cells
     //       when cells (usually the ancestors) divide simultaneously.
@@ -111,7 +112,8 @@ namespace bpopsim {
     m_initial_fitness(1.0),
     m_mutation_timer(0),
     m_elapsed_time(0),
-    m_cell_equivalents(0) { };
+    m_cell_equivalents(0),
+    m_time(0) { };
     
     //DESTRUCTOR
     virtual ~cPopulation() { };

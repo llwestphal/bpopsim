@@ -47,6 +47,7 @@ void cPopulation::SetParameters(AnyOption &options)
   SetPopSizeBeforeDilution(GetPopSizeAfterDilution() * GetDilutionFactor());
   SetLambda(1/GetMutationRatePerDivision());
   SetBinomialSamplingThreshold(1000);
+  m_frequencies.resize(m_max_transfers_from_cli);
 }
 
 void cPopulation::UpdateSubpopulations(double update_time) 
@@ -175,7 +176,7 @@ void cPopulation::FrequenciesPerTransferPerNode()
     }
 
 	}
-	m_frequencies.push_back(freq_per_node);
+	m_frequencies[m_num_completed_transfers] = freq_per_node;
 }
 
 void cPopulation::CalculateAverageFitness() {
@@ -499,7 +500,7 @@ void cPopulation::Resample()
   //When it is time for a transfer, resample population
   assert(m_rng);
   
-  SetTransfers(GetTransfers()+1);
+  m_num_completed_transfers++;
  
   std::cout << ">> Transfer!" << std::endl;
   //Is there an exists() in C++?

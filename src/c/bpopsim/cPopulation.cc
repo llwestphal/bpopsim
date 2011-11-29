@@ -132,7 +132,6 @@ void cPopulation::FrequenciesPerTransferPerNode()
   
   // Genotype number (mutations at each node of tree)
 	vector<double> number_with_genotype( m_genotype_count, 0.0 );
-  vector<double> subpops( m_genotype_count, 0.0 );
   
   m_cell_equivalents = 0;
 
@@ -146,7 +145,6 @@ void cPopulation::FrequenciesPerTransferPerNode()
     // traverse up the tree to the first ancestor, adding the number in
     // this subpopulation to every mutational node along the way
 		while(update_location != NULL) {
-      
 			number_with_genotype[update_location->unique_node_id] += this_pop.GetNumber()*this_pop.GetTimer();
       update_location = m_tree.parent(update_location);
 		}
@@ -154,21 +152,28 @@ void cPopulation::FrequenciesPerTransferPerNode()
     m_cell_equivalents += this_pop.GetNumber()*this_pop.GetTimer();
 	}
   
-  cout << m_population_size << endl;
+  //cout << m_population_size << endl;
   m_total_cells.push_back(m_cell_equivalents); // shouldn't need to save this, remove later @JEB
-  
-  //@agm I'm not sure what this is for?
-  //m_all_subpopulations_at_all_times.push_back(subpops);
 	
-	for (uint32_t i=0; i < number_with_genotype.size(); i++) {
-		cGenotypeFrequency this_node;
+	for (uint32_t i=0; i < m_genotype_count; i++) {
     
-    this_node.unique_node_id = i;
-    this_node.frequency = number_with_genotype[i]/m_cell_equivalents;
-    
-    if( this_node.frequency > 0 ) {
-      freq_per_node[i] = (this_node);
+    if( number_with_genotype[i] > 0 ) {
+      cGenotypeFrequency this_node;
+      
+      this_node.unique_node_id = i;
+      this_node.frequency = number_with_genotype[i]/m_cell_equivalents;
+      
+      freq_per_node[i] = this_node;
     }
+    else {
+      cGenotypeFrequency this_node;
+      
+      this_node.unique_node_id = i;
+      this_node.frequency = 0.0;
+      
+      freq_per_node[i]=this_node;
+    }
+
 	}
 	m_frequencies.push_back(freq_per_node);
 }
@@ -556,7 +561,7 @@ void cPopulation::Resample()
     }
   }
   
-  cout << "Pop size: " << m_population_size << endl;
+  //cout << "Pop size: " << m_population_size << endl;
 }
 
 //Currently this only works for picking one cell after resample
@@ -769,7 +774,7 @@ void cPopulation::CalculateDivisionsNew() {
   //divide will get a mutation.
   
   double gets_to_double(numeric_limits<double>::max());
-  double number_of_resources_here(0);
+  double number_of_resources_here(0), mean_weighted_fitness(0);
   double number_of_resources_to_transfer(m_pop_size_before_dilution - m_population_size);
   
   for(uint32_t time = 0; time < m_current_subpopulations.size(); time++) {
@@ -791,12 +796,16 @@ void cPopulation::CalculateDivisionsNew() {
     
     double a_time( ( 2.0 - this_time.GetTimer() ) / this_time.GetFitness() );
     
+    mean_weighted_fitness += this_time.GetNumber()*this_time.GetFitness();
+    
     if( a_time == m_elapsed_time ) {
       number_of_resources_here += this_time.GetNumber();
       this_time.SetDivided(true);
       //cout << "Node id of next doubling: " << this_time.GetNode_id() << " " << m_elapsed_time << endl;
     }
   }
+  
+  mean_weighted_fitness /= m_population_size;
   
   //cout << " Doubled! " << endl;
   
@@ -833,18 +842,17 @@ void cPopulation::CalculateDivisionsNew() {
       cSubpopulation&  this_time(m_current_subpopulations[time]);
       //cout << this_time.GetNode_id() << " " << this_time.GetNumber() << endl;
       
-      double number_cells_added( number_of_resources_to_transfer * this_time.GetNumber() / population_size_now );
+      double number_cells_added( this_time.GetNumber() * number_of_resources_to_transfer / population_size_now );
       
       SetCompletedDivisions( GetCompletedDivisions() + number_cells_added );
       SetDivisionsUntilMutation( GetDivisionsUntilMutation() - number_cells_added );
       m_population_size += number_cells_added;
       
       this_time.SetNumber( this_time.GetNumber() + number_cells_added );
-      this_time.SetTimer( this_time.GetTimer() - number_cells_added * this_time.GetFitness() / this_time.GetNumber() );
+      this_time.SetTimer( this_time.GetTimer() - number_cells_added / this_time.GetNumber() );
       assert(this_time.GetTimer() <= 2);
 
       this_time.SetDivided(false);
-    
     }
     
   }
@@ -1152,16 +1160,17 @@ void cPopulation::PrintOut(const std::string& output_folder, uint32_t on_run)
   output_file.append(".dat");
 	output_handle.open(output_file.c_str(),std::ios_base::app);
   
-  for (uint16_t a_node=0; a_node<all_relevant_nodes.size(); a_node++) {
+  for (uint32_t a_node=0; a_node<all_relevant_nodes.size(); a_node++) {
     output_handle << "Genotype_" << all_relevant_nodes[a_node] << " ";
   }
   
   output_handle << endl;
   
-  for (std::vector< std::vector<cGenotypeFrequency> >::iterator this_time = m_frequencies.begin(); this_time < m_frequencies.end(); ++this_time) {
-    for (uint16_t a_node=0; a_node<all_relevant_nodes.size(); a_node++) {
+  for (uint32_t i = 0; i < m_frequencies.size(); ++i) {
+    vector< cGenotypeFrequency >& this_time( m_frequencies[i] );
+    for (uint32_t a_node=0; a_node<all_relevant_nodes.size(); a_node++) {
       //cout << a_node << endl;
-      double frequency( Find_Node_in_Freq_By_NodeID(*this_time, all_relevant_nodes[a_node]) );
+      double frequency( Find_Node_in_Freq_By_NodeID(this_time, all_relevant_nodes[a_node]) );
       output_handle << frequency << " ";
     }
     output_handle << endl;
@@ -1418,7 +1427,7 @@ uint32_t cPopulation::MutationAboveThreshold_2(float threshold) {
 
 std::vector<uint32_t> cPopulation::MutationAboveThreshold(float threshold) {
   
-  std::vector<uint32_t> Fixed;
+  vector< uint32_t > Fixed;
   
   for (vector< vector< cGenotypeFrequency > >::iterator it_time = m_frequencies.begin(); it_time!=m_frequencies.end(); ++it_time) {
     for( vector<cGenotypeFrequency>::iterator it_node = it_time->begin(); it_node != it_time->end(); ++it_node) {

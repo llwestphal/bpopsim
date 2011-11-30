@@ -1149,11 +1149,11 @@ void cPopulation::PrintUniqueGenotypes(const std::string& output_folder,
 void cPopulation::PrintOut(const std::string& output_folder, uint32_t on_run)
 {  
   
-  std::vector<uint32_t> all_relevant_nodes( MutationAboveThreshold(1.0) );
+  vector<uint32_t> all_relevant_nodes( MutationAboveThreshold(1.0) );
   
   //Print everything out
-	std::ofstream output_handle;
-  std::string output_file;
+	ofstream output_handle;
+  string output_file;
   
   output_file.append(output_folder);
   output_file.append("/Genotype_Frequencies_");
@@ -1161,24 +1161,28 @@ void cPopulation::PrintOut(const std::string& output_folder, uint32_t on_run)
   output_file.append(".dat");
 	output_handle.open(output_file.c_str(),std::ios_base::app);
   
-  for (uint32_t a_node=0; a_node<all_relevant_nodes.size(); a_node++) {
+  for (uint16_t a_node=0; a_node<all_relevant_nodes.size(); a_node++) {
     output_handle << "Genotype_" << all_relevant_nodes[a_node] << " ";
   }
   
   output_handle << endl;
   
-  for (uint32_t i = 0; i < m_frequencies.size(); ++i) {
-    vector< cGenotypeFrequency >& this_time( m_frequencies[i] );
-    for (uint32_t a_node=0; a_node<all_relevant_nodes.size(); a_node++) {
-      //cout << a_node << endl;
-      double frequency( Find_Node_in_Freq_By_NodeID(this_time, all_relevant_nodes[a_node]) );
-      output_handle << frequency << " ";
+  uint32_t count(0);
+  
+  for (std::vector< std::vector<cGenotypeFrequency> >::iterator this_time = m_frequencies.begin(); this_time < m_frequencies.end(); ++this_time) {
+    if( count % m_coarse_graining == 0 ) {
+      for (uint16_t a_node=0; a_node<all_relevant_nodes.size(); a_node++) {
+        //cout << a_node << endl;
+        double frequency( Find_Node_in_Freq_By_NodeID(*this_time, all_relevant_nodes[a_node]) );
+        output_handle << frequency << " ";
+      }
+      output_handle << endl;
     }
-    output_handle << endl;
+    count++;
   }
   
   output_handle.close();
-
+  
 }
 
 void cPopulation::PrintExpectationValue(const std::string& output_folder) {

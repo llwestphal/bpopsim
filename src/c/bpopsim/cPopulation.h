@@ -40,6 +40,7 @@ namespace bpopsim {
     uint32_t m_num_completed_transfers;   //Number of transfers that have been completed thus far
     uint32_t m_total_mutations;           //Number of mutations so far
     uint32_t m_total_subpopulations_lost; //Number of subpopulations that no longer exist
+    uint32_t m_culled;
     uint16_t m_seed;                      //Random number generator
     uint64_t m_genotype_count;            //used to assign node ids in tree, should equal number of nodes
     uint64_t m_muller_rez;                //Vertical Resolution of muller plot... set at command line (default: 2500)
@@ -113,7 +114,8 @@ namespace bpopsim {
     m_mutation_timer(0),
     m_elapsed_time(0),
     m_cell_equivalents(0),
-    m_time(0) { };
+    m_time(0),
+    m_culled(0) { };
     
     //DESTRUCTOR
     virtual ~cPopulation() { };

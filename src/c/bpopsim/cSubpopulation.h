@@ -6,7 +6,7 @@
 namespace bpopsim {
 
   struct cGenotype{
-    uint32_t unique_node_id;
+    uint16_t unique_node_id;
     string   name;
     double   fitness;
     uint8_t  mut_num;
@@ -20,7 +20,6 @@ namespace bpopsim {
       mut_num(0),
       m_timer(1.0),
       m_divided(false) { };
-    
    };
 
   struct cGenotypeFrequency{
@@ -88,8 +87,6 @@ namespace bpopsim {
     virtual void AddToTree(tree<cGenotype>& in_tree,
                            tree<cGenotype>::iterator parent,
                            cGenotype child);
-                           
-
   };
   
 }

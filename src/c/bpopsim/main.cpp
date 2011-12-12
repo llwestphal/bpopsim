@@ -239,7 +239,7 @@ int main(int argc, char* argv[])
         cPopulation population;
         
         //Build lookup table for logs 
-        //Currently it is the the 15th, I should take it as a command line option
+        //Currently it is to the 15th, I should take it as a command line option
         //population.ConstructLookUpTable();
         
         //Set cli options
@@ -367,7 +367,7 @@ int main(int argc, char* argv[])
                 population.Deterministic_Resample();
               else {
                 population.Resample();
-                //population.CullPopulations();
+                population.CullPopulations();
               }
               
               if( print_single_fit && !use_mute_num) {

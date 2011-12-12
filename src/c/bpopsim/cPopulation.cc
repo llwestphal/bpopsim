@@ -201,7 +201,7 @@ void cPopulation::PrintFitness(std::string output_folder) {
   for (uint16_t time = 0; time<m_average_fitness.size(); time++) {
     if( time%m_coarse_graining == 0 ) {
       output_handle << m_average_fitness[time] << "\t";
-      std::cout << m_average_fitness[time] << "\t";
+      //std::cout << m_average_fitness[time] << "\t";
     }
   }
   output_handle << "\n";
@@ -620,6 +620,8 @@ void cPopulation::CullPopulations() {
   
   std::cout << std::endl;
   
+  uint32_t num_deleted(0);
+  
   std::vector<cSubpopulation>::iterator this_mutation(m_mutations_since_last_transfer.begin());
   bool test(false);
   while( this_mutation != m_mutations_since_last_transfer.end() ) {
@@ -627,6 +629,7 @@ void cPopulation::CullPopulations() {
       if( this_mutation->GetNode_id() == it->GetNode_id() ) {
         this_mutation = m_mutations_since_last_transfer.erase(this_mutation);
         test = true;
+        num_deleted++;
         //std::cout << it->GetNode_id() << std::endl;
         break;
       }
@@ -649,7 +652,10 @@ void cPopulation::CullPopulations() {
 
     m_tree.erase(rit->GetGenotypeIter());
   }
+  //cout << "Mutations culled: " << m_culled << " Out of: " << m_total_mutations << endl;
+  m_culled += num_deleted;
   m_mutations_since_last_transfer.clear();
+  
 }
 
 void cPopulation::PushBackRuns()
@@ -754,7 +760,8 @@ void cPopulation::CalculateDivisions()
   if (g_verbose) {
     std::cout << "Completed divisions: " << GetCompletedDivisions() << std::endl;
     for(vector<cSubpopulation>::iterator this_time = m_current_subpopulations.begin(); this_time != m_current_subpopulations.end(); this_time++) {
-      cout << "Genotype: " << this_time->GetNode_id() << " Frequency: " << this_time->GetNumber() << endl;
+      //if( this_time->GetNumber() == 0 )
+        cout << "Genotype: " << this_time->GetNode_id() << " Frequency: " << this_time->GetNumber() << endl;
     }
   }
   
@@ -1283,7 +1290,7 @@ void cPopulation::PrintFrequenciesToScreen_RedWhiteOnly(std::string output_folde
 
 double cPopulation::CalculateSimilarity(std::string output_folder) {
   
-  uint32_t youngest_sweep(MutationAboveThreshold_2(.98));
+  uint32_t youngest_sweep(MutationAboveThreshold_2(.99));
   
   std::vector<uint32_t> all_sweep_ids;
   

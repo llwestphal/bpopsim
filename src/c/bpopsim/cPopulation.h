@@ -19,7 +19,7 @@ namespace bpopsim {
     double m_initial_population_size;
     double m_pop_size_after_dilution;
     uint32_t m_max_transfers_from_cli;
-    uint16_t m_coarse_graining;
+    uint32_t m_coarse_graining;
     double m_mutation_rate_per_division;
     double m_max_w; 
     
@@ -41,12 +41,12 @@ namespace bpopsim {
     uint32_t m_total_mutations;           //Number of mutations so far
     uint32_t m_total_subpopulations_lost; //Number of subpopulations that no longer exist
     uint32_t m_culled;
-    uint16_t m_seed;                      //Random number generator
-    uint64_t m_genotype_count;            //used to assign node ids in tree, should equal number of nodes
-    uint64_t m_muller_rez;                //Vertical Resolution of muller plot... set at command line (default: 2500)
-    uint64_t m_time;
+    uint32_t m_seed;                      //Random number generator
+    uint32_t m_genotype_count;            //used to assign node ids in tree, should equal number of nodes
+    uint32_t m_muller_rez;                //Vertical Resolution of muller plot... set at command line (default: 2500)
+    uint32_t m_time;
     
-    // @JEB: An uint16_t rather than a uint because this can go negative by a few cells
+    // @JEB: An uint32_t rather than a uint because this can go negative by a few cells
     //       when cells (usually the ancestors) divide simultaneously.
     int64_t m_divisions_until_mutation; 
     
@@ -152,7 +152,7 @@ namespace bpopsim {
     const double GetAverageMutationS() {return m_average_mutation_s; }
     const double GetGrowthPhaseGenerations() { return m_growth_phase_generations; }
     
-    const uint16_t GetSeed() { return m_seed; }
+    const uint32_t GetSeed() { return m_seed; }
 
     std::vector<cSubpopulation> GetPopulation() { return m_current_subpopulations; }
 
@@ -189,11 +189,11 @@ namespace bpopsim {
     void SetMutationRatePerDivision(double in_mutation_rate_per_division) {m_mutation_rate_per_division = in_mutation_rate_per_division; }
     void SetGrowthPhaseGenerations(double in_growth_phase_generations) { m_growth_phase_generations= in_growth_phase_generations; }
     void SetBeneficialMutationDistribution(char in_beneficial_mutation_distribution) { m_beneficial_mutation_distribution = in_beneficial_mutation_distribution; }
-    void SetSeedParams(uint16_t in_seed_type) { m_seed = in_seed_type; }
+    void SetSeedParams(uint32_t in_seed_type) { m_seed = in_seed_type; }
     void SetInitialMutVals(std::vector<double> in_mut_vals) { m_first_mutational_vals = in_mut_vals; }
-    void SetCoarseGraining(uint16_t in_coarse) { m_coarse_graining = in_coarse; }
+    void SetCoarseGraining(uint32_t in_coarse) { m_coarse_graining = in_coarse; }
     void SetInitialFitness(double in_initial_fitness ) { m_initial_fitness = in_initial_fitness; }
-    void SetMullerRez(uint64_t in_muller_rez ) { m_muller_rez = in_muller_rez; }
+    void SetMullerRez(uint32_t in_muller_rez ) { m_muller_rez = in_muller_rez; }
     
     void SetRNG(gsl_rng * in_rng) { m_rng = in_rng; } //@JEB
 
@@ -235,14 +235,14 @@ namespace bpopsim {
     void   AddSubpopulation(cSubpopulation& subpop);
     void   Mutate();
     void   MutateNew();
-    std::vector<uint16_t> CurrentUniqueGenotypes();
+    std::vector<uint32_t> CurrentUniqueGenotypes();
     void   PrintUniqueGenotypes(const std::string& output_folder,
-                              std::vector< std::vector<uint16_t> > * number_of_unique_genotypes);
+                              std::vector< std::vector<uint32_t> > * number_of_unique_genotypes);
     void   PrintOut(const std::string& output_folder, uint32_t on_run);
     void   PrintExpectationValue(const std::string& output_folder);
     void   PrintOut_RedWhiteOnly(const std::string& output_folder,
                                std::vector< std::vector<double> > *red_white_ratios,
-                               uint16_t transfer_interval_to_print);
+                               uint32_t transfer_interval_to_print);
     void   PrintFrequenciesToScreen(std::string output_folder);
     void   PrintFrequenciesToScreen_RedWhiteOnly(std::string output_folder);
     void   PrintSingleFitness(std::string out_folder);

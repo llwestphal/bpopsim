@@ -184,8 +184,8 @@ void cPopulation::CalculateAverageFitness() {
   uint16_t pop_counter(0);
   
   for (std::vector<cSubpopulation>::iterator it = m_current_subpopulations.begin(); it!=m_current_subpopulations.end(); ++it) {    
-    total_fitness += it->GetFitness();
-    pop_counter++;
+    total_fitness += it->GetFitness()*it->GetNumber();
+    pop_counter+=it->GetNumber();
   }
   m_average_fitness.push_back(total_fitness/pop_counter);
 }

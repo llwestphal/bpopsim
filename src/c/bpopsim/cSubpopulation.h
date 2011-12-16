@@ -6,10 +6,10 @@
 namespace bpopsim {
 
   struct cGenotype{
-    uint16_t unique_node_id;
+    uint32_t unique_node_id;
     string   name;
     double   fitness;
-    uint8_t  mut_num;
+    uint32_t  mut_num;
     double   m_timer;
     bool     m_divided;
     
@@ -22,10 +22,16 @@ namespace bpopsim {
       m_divided(false) { };
    };
 
-  struct cGenotypeFrequency{
+  struct cGenotypeFrequency {
     uint32_t unique_node_id;
     string name;
     double frequency;
+    
+    //constructor
+    cGenotypeFrequency() :
+    unique_node_id(-1),
+    name(""),
+    frequency(0) {};
   };
 
   struct cFrequencySlice {
@@ -63,7 +69,7 @@ namespace bpopsim {
     const uint32_t GetNode_id() { return m_genotype->unique_node_id; }
     const double GetNumber() { return m_number; }
     const char GetMarker() { return m_marker; }
-    const uint8_t GetMutNum() { return m_genotype->mut_num; }
+    const uint32_t GetMutNum() { return m_genotype->mut_num; }
     const double GetTimer() { return m_genotype->m_timer; }
     const bool GetDivided() { return m_genotype->m_divided; }
     

@@ -223,12 +223,12 @@ int main(int argc, char* argv[])
       
       //std::vector< std::vector<uint16_t> > number_unique_genotypes_in_all_replicates;
       
-      uint64_t replicates(0);
+      uint32_t replicates(0);
       
       if( use_mute_num && from_string<uint32_t>(options["mut_num"]) == 1) replicates = pow(2, from_string<double>(options["generations-per-transfer"]));
       else replicates = from_string<uint32_t>(options["replicates"]);
       
-      uint8_t start_num(0);
+      uint32_t start_num(0);
       if( use_mute_num ) start_num = 1;
       
       for (uint32_t on_run=start_num; on_run < replicates; on_run++)
@@ -367,7 +367,7 @@ int main(int argc, char* argv[])
                 population.Deterministic_Resample();
               else {
                 population.Resample();
-                population.CullPopulations();
+                //population.CullPopulations();
               }
               
               if( print_single_fit && !use_mute_num) {

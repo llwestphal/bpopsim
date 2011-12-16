@@ -1155,8 +1155,21 @@ void cPopulation::PrintUniqueGenotypes(const std::string& output_folder,
 
 void cPopulation::PrintOut(const std::string& output_folder, uint32_t on_run)
 {  
+  uint32_t youngest_sweep(MutationAboveThreshold_2(1.0));
   
-  vector<uint32_t> all_relevant_nodes( MutationAboveThreshold(1.0) );
+  std::vector<uint32_t> all_sweep_ids;
+  
+  for (tree<cGenotype>::iterator it = m_tree.begin(); it!=m_tree.end(); it++) {
+    if( it->unique_node_id == youngest_sweep ) {
+      while (it != NULL) {
+        all_sweep_ids.push_back(it->unique_node_id);
+        it = m_tree.parent(it);
+      }
+      break;
+    }
+  }
+  
+  std::sort(all_sweep_ids.begin(), all_sweep_ids.end());
   
   //Print everything out
 	ofstream output_handle;
@@ -1168,8 +1181,8 @@ void cPopulation::PrintOut(const std::string& output_folder, uint32_t on_run)
   output_file.append(".dat");
 	output_handle.open(output_file.c_str(),std::ios_base::app);
   
-  for (uint16_t a_node=0; a_node<all_relevant_nodes.size(); a_node++) {
-    output_handle << "Genotype_" << all_relevant_nodes[a_node] << " ";
+  for (uint16_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
+    output_handle << "Genotype_" << all_sweep_ids[a_node] << " ";
   }
   
   output_handle << endl;
@@ -1178,9 +1191,9 @@ void cPopulation::PrintOut(const std::string& output_folder, uint32_t on_run)
   
   for (std::vector< std::vector<cGenotypeFrequency> >::iterator this_time = m_frequencies.begin(); this_time < m_frequencies.end(); ++this_time) {
     if( count % m_coarse_graining == 0 ) {
-      for (uint16_t a_node=0; a_node<all_relevant_nodes.size(); a_node++) {
+      for (uint16_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
         //cout << a_node << endl;
-        double frequency( Find_Node_in_Freq_By_NodeID(*this_time, all_relevant_nodes[a_node]) );
+        double frequency( Find_Node_in_Freq_By_NodeID(*this_time, all_sweep_ids[a_node]) );
         output_handle << frequency << " ";
       }
       output_handle << endl;

@@ -181,11 +181,11 @@ void cPopulation::FrequenciesPerTransferPerNode()
 
 void cPopulation::CalculateAverageFitness() {
   double total_fitness(0);
-  uint16_t pop_counter(0);
+  double pop_counter(0);
   
   for (std::vector<cSubpopulation>::iterator it = m_current_subpopulations.begin(); it!=m_current_subpopulations.end(); ++it) {    
     total_fitness += it->GetFitness()*it->GetNumber();
-    pop_counter+=it->GetNumber();
+    pop_counter += it->GetNumber();
   }
   m_average_fitness.push_back(total_fitness/pop_counter);
 }

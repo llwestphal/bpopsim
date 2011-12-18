@@ -246,8 +246,9 @@ namespace bpopsim {
     void   PrintFrequenciesToScreen(std::string output_folder);
     void   PrintFrequenciesToScreen_RedWhiteOnly(std::string output_folder);
     void   PrintSingleFitness(std::string out_folder);
+    void   PrintWinningFitness(string out_folder, uint32_t on_run);
     
-    uint32_t MutationAboveThreshold_2(float threshold);
+    uint32_t Last_Sweep(float threshold);
     std::vector<uint32_t> MutationAboveThreshold(float threshold);
     double CalculateSimilarity(std::string output_folder);
     double CountMutipleDivergedSubpops();

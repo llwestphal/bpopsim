@@ -46,6 +46,7 @@ int main(int argc, char* argv[])
   ("max_diff", "Print max difference of sweeping mutations", TAKES_NO_ARGUMENT)
   ("single_fit", "Print the fitness of the single cell.", TAKES_NO_ARGUMENT)
   ("convert_tree", "Convert an external phylogenetic tree.", TAKES_NO_ARGUMENT)
+  ("sweeping_descent_fitness", "Output the average fitness of sweeping descent per time.", TAKES_NO_ARGUMENT)
   ("new_simulator", "Use the new simulator type.", TAKES_NO_ARGUMENT)
   .processCommandArgs(argc, argv);
   
@@ -57,6 +58,7 @@ int main(int argc, char* argv[])
      && !options.count("time_sweep")
      && !options.count("max_diff")
      && !options.count("single_fit")
+     && !options.count("sweeping_descent_fitness")
      ) {
     cout << "You have not chosen any output options." << endl;
 		options.printUsage();
@@ -67,7 +69,8 @@ int main(int argc, char* argv[])
     
     bool print_freq(false), print_muller(false), print_average_fit(false),
     print_screen(false), print_max_diff(false), print_time_to_sweep(false),
-    print_single_fit(false), use_mute_num(false), new_simulator(false);
+    print_single_fit(false), use_mute_num(false), new_simulator(false),
+    print_sweeping_descent_fitness(false);
     
     if( options.count("verbose") ) g_verbose = true;
     if( options.count("frequencies") ) print_freq = true;
@@ -79,6 +82,7 @@ int main(int argc, char* argv[])
     if( options.count("single_fit") ) print_single_fit = true;
     if( options.count("mut_num") ) use_mute_num = true;
     if( options.count("new_simulator") ) new_simulator = true;
+    if( options.count("sweeping_descent_fitness") ) print_sweeping_descent_fitness = true;
     
     if( options.count("convert_tree") ) {
       cPopulation access_to_functions;
@@ -436,6 +440,12 @@ int main(int argc, char* argv[])
           if( print_freq ) {
             std::cout << "Printing to file.... \n";
             population.PrintOut(options["output-folder"], on_run);
+            cout << endl;
+          }
+          
+          if( print_sweeping_descent_fitness ) {
+            cout << "Printing fitness of the winning line of descent.... \n";
+            population.PrintWinningFitness(options["output-folder"], on_run);
             cout << endl;
           }
           

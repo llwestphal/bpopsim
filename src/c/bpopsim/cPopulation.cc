@@ -1143,21 +1143,7 @@ void cPopulation::PrintUniqueGenotypes(const std::string& output_folder,
 
 void cPopulation::PrintOut(const std::string& output_folder, uint32_t on_run)
 {  
-  uint32_t youngest_sweep(MutationAboveThreshold_2(1.0));
-  
-  std::vector<uint32_t> all_sweep_ids;
-  
-  for (tree<cGenotype>::iterator it = m_tree.begin(); it!=m_tree.end(); it++) {
-    if( it->unique_node_id == youngest_sweep ) {
-      while (it != NULL) {
-        all_sweep_ids.push_back(it->unique_node_id);
-        it = m_tree.parent(it);
-      }
-      break;
-    }
-  }
-  
-  std::sort(all_sweep_ids.begin(), all_sweep_ids.end());
+  vector<uint32_t> all_sweep_ids(MutationAboveThreshold(1.0));
   
   for( vector<uint32_t>::iterator it = all_sweep_ids.begin(); it < all_sweep_ids.end(); ++it ) {
     cout << "This is the id: " << *it << endl;
@@ -1194,7 +1180,10 @@ void cPopulation::PrintOut(const std::string& output_folder, uint32_t on_run)
   }
   
   output_handle.close();
-  
+}
+
+void cPopulation::PrintWinningFitness(string out_folder, uint32_t on_run) {
+  vector<uint32_t> all_sweep_ids(MutationAboveThreshold(1.0));
 }
 
 void cPopulation::PrintExpectationValue(const std::string& output_folder) {
@@ -1295,21 +1284,7 @@ void cPopulation::PrintFrequenciesToScreen_RedWhiteOnly(std::string output_folde
 
 double cPopulation::CalculateSimilarity(std::string output_folder) {
   
-  uint32_t youngest_sweep(MutationAboveThreshold_2(.99));
-  
-  std::vector<uint32_t> all_sweep_ids;
-  
-  for (tree<cGenotype>::iterator it = m_tree.begin(); it!=m_tree.end(); it++) {
-    if( it->unique_node_id == youngest_sweep ) {
-      while (it != NULL) {
-        all_sweep_ids.push_back(it->unique_node_id);
-        it = m_tree.parent(it);
-      }
-      break;
-    }
-  }
-  
-  std::sort(all_sweep_ids.begin(), all_sweep_ids.end());
+  vector<uint32_t> all_sweep_ids(MutationAboveThreshold(.99));
   
   std::ofstream output_handle;
   std::string output_file;
@@ -1368,21 +1343,7 @@ double cPopulation::CalculateSimilarity(std::string output_folder) {
 
 void cPopulation::TimeToSweep(std::string output_folder) {
   
-  uint32_t youngest_sweep(MutationAboveThreshold_2(.98));
-  
-  std::vector<uint32_t> all_sweep_ids;
-  
-  for (tree<cGenotype>::iterator it = m_tree.begin(); it!=m_tree.end(); it++) {
-    if( it->unique_node_id == youngest_sweep ) {
-      while (it != NULL) {
-        all_sweep_ids.push_back(it->unique_node_id);
-        it = m_tree.parent(it);
-      }
-      break;
-    }
-  }
-  
-  std::sort(all_sweep_ids.begin(), all_sweep_ids.end());
+  vector<uint32_t> all_sweep_ids(MutationAboveThreshold(.98));
   
   std::ofstream output_handle;
   std::string output_file;
@@ -1425,7 +1386,28 @@ void cPopulation::TimeToSweep(std::string output_folder) {
   }
 }
 
-uint32_t cPopulation::MutationAboveThreshold_2(float threshold) {
+vector<uint32_t> cPopulation::MutationAboveThreshold(float threshold) {
+  
+  uint32_t youngest_sweep(Last_Sweep(threshold));
+  
+  std::vector<uint32_t> all_sweep_ids;
+  
+  for (tree<cGenotype>::iterator it = m_tree.begin(); it!=m_tree.end(); it++) {
+    if( it->unique_node_id == youngest_sweep ) {
+      while (it != NULL) {
+        all_sweep_ids.push_back(it->unique_node_id);
+        it = m_tree.parent(it);
+      }
+      break;
+    }
+  }
+  
+  std::sort(all_sweep_ids.begin(), all_sweep_ids.end());
+  
+  return all_sweep_ids;
+}
+
+uint32_t cPopulation::Last_Sweep(float threshold) {
   
   for( std::vector< std::vector<cGenotypeFrequency> >::reverse_iterator time = m_frequencies.rbegin(); time < m_frequencies.rend(); ++time ) {
     for( std::vector<cGenotypeFrequency>::reverse_iterator node = time->rbegin(); node < time->rend(); ++node) {
@@ -1437,26 +1419,6 @@ uint32_t cPopulation::MutationAboveThreshold_2(float threshold) {
   std::cout << "Nothing met threshold." << std::endl;
   
   return 0;
-}
-
-//@agm This function takes the frequency pointer and returns a boolean vector
-//     The boolean vector contains a true in the mutations that got above the passed threshold
-
-std::vector<uint32_t> cPopulation::MutationAboveThreshold(float threshold) {
-  
-  vector< uint32_t > Fixed;
-  
-  for (vector< vector< cGenotypeFrequency > >::iterator it_time = m_frequencies.begin(); it_time!=m_frequencies.end(); ++it_time) {
-    for( vector<cGenotypeFrequency>::iterator it_node = it_time->begin(); it_node != it_time->end(); ++it_node) {
-      if( it_node->frequency >= threshold && !binary_search(Fixed.begin(), Fixed.end(), it_node->unique_node_id)) {
-        Fixed.push_back(it_node->unique_node_id);
-        sort(Fixed.begin(), Fixed.end());
-        cout << it_node->unique_node_id << " ";
-      }
-    }
-  }
-  cout << endl;
-  return Fixed;
 }
 
 //@agm I wrote this based on the taylor series expansion... aren't we impressed

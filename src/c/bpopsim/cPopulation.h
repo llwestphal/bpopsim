@@ -254,7 +254,7 @@ namespace bpopsim {
     double CountMutipleDivergedSubpops();
     void   TimeToSweep(std::string output_folder);
     void   CalculateAverageFitness();
-    void   PrintFitness(std::string output_folder);
+    void   PrintFitness(string output_folder, uint32_t run_number);
     float  Logarithm(float mantissa);
     // Prints out the tree using bracket notation.
     void   PrintTree();

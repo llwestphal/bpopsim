@@ -362,16 +362,15 @@ int main(int argc, char* argv[])
             }
             
             if( population.GetPopulationSize() >= population.GetPopSizeBeforeDilution()) {
-              population.FrequenciesPerTransferPerNode();
               
-              if( on_run == 0 ) 
-                population.CalculateAverageFitness();
+              population.FrequenciesPerTransferPerNode();
+              population.CalculateAverageFitness();
               
               if( print_single_fit )
                 population.Deterministic_Resample();
               else {
                 population.Resample();
-                //population.CullPopulations();
+                population.CullPopulations();
               }
               
               if( print_single_fit && !use_mute_num) {
@@ -449,13 +448,13 @@ int main(int argc, char* argv[])
             cout << endl;
           }
           
+          if( print_average_fit ) {
+            std::cout << "Printing average fitness.... \n";
+            population.PrintFitness(options["output-folder"], on_run);
+            cout << endl;
+          }
+          
           if( on_run == 0 ) {
-            
-            if( print_average_fit ) {
-              std::cout << "Printing average fitness.... \n";
-              population.PrintFitness(options["output-folder"]);
-              cout << endl;
-            }
         
             if( print_muller ) {
               std::cout << std::endl << "Generating Muller Matrix.... \n";

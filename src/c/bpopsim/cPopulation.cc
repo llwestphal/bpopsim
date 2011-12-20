@@ -144,7 +144,7 @@ void cPopulation::FrequenciesPerTransferPerNode()
     // this subpopulation to every mutational node along the way
 		while(update_location != NULL) {
       freq_per_node[update_location->unique_node_id].unique_node_id = update_location->unique_node_id;
-      freq_per_node[update_location->unique_node_id].frequency += this_pop.GetNumber()*this_pop.GetTimer();
+      freq_per_node[update_location->unique_node_id].m_frequency += this_pop.GetNumber()*this_pop.GetTimer();
       
       update_location = m_tree.parent(update_location);
 		}
@@ -159,7 +159,7 @@ void cPopulation::FrequenciesPerTransferPerNode()
     
     cGenotypeFrequency& this_pop(freq_per_node[it]);
   
-    this_pop.frequency = this_pop.frequency/m_cell_equivalents;
+    this_pop.m_frequency = this_pop.m_frequency/m_cell_equivalents;
     
     //cout << "Node ID: " << this_pop.unique_node_id << endl;
     //cout << "Frequency: " << this_pop.frequency << endl;
@@ -178,12 +178,15 @@ void cPopulation::CalculateAverageFitness() {
   m_average_fitness.push_back(total_fitness/pop_counter);
 }
 
-void cPopulation::PrintFitness(std::string output_folder) {
-  std::string output_file;
-  std::ofstream output_handle;
+void cPopulation::PrintFitness(string output_folder, uint32_t run_number) {
+  //Print each average fitness
+	ofstream output_handle;
+  string output_file;
   
-  output_file = output_folder + "/AverageFitness.dat";
-  
+  output_file.append(output_folder);
+  output_file.append("/Average_Fitness_");
+  output_file.append(to_string(run_number));
+  output_file.append(".dat");
 	output_handle.open(output_file.c_str(),std::ios_base::app);
   
   for (uint32_t time = 0; time<m_average_fitness.size(); time++) {
@@ -254,7 +257,7 @@ void cPopulation::ConvertExternalData(const string &input_file) {
           cGenotypeFrequency temp_time;
           temp_time.unique_node_id = num_nodes;
           temp_time.name = *(preformat_tree.end()-1);
-          temp_time.frequency = from_string<double>(line_pieces[this_time+1]);
+          temp_time.m_frequency = from_string<double>(line_pieces[this_time+1]);
           m_frequencies[this_time].push_back(temp_time);
         }
       }
@@ -275,7 +278,7 @@ void cPopulation::ConvertExternalData(const string &input_file) {
               cGenotypeFrequency temp_time;
               temp_time.unique_node_id = num_nodes;
               temp_time.name = *(preformat_tree.end()-1);
-              temp_time.frequency = from_string<double>(line_pieces[this_time+1]);
+              temp_time.m_frequency = from_string<double>(line_pieces[this_time+1]);
               m_frequencies[this_time].push_back(temp_time);
             }
           }
@@ -302,7 +305,7 @@ void cPopulation::PrintFreqsQuick() {
     time_keeper++;
     cout << "Time: " << time_keeper << endl;
     for(vector<cGenotypeFrequency>::iterator this_genotype=this_time->begin(); this_genotype!=this_time->end(); ++this_genotype) {
-      cout << this_genotype->unique_node_id << " " << this_genotype->name << " " << this_genotype->frequency << endl;
+      cout << this_genotype->unique_node_id << " " << this_genotype->name << " " << this_genotype->m_frequency << endl;
     }
     cout << endl << endl;
   }
@@ -318,7 +321,7 @@ std::vector<cGenotypeFrequency>::iterator cPopulation::Find_Node_in_Freq(std::ve
       return a_node;
     }
     else
-      return_node.frequency = 0;
+      return_node.m_frequency = 0;
   }
   
   std::vector<cGenotypeFrequency> return_vector;
@@ -331,7 +334,7 @@ double cPopulation::Find_Node_in_Freq_By_NodeID(std::vector<cGenotypeFrequency> 
                                                 uint32_t this_node) {
   for( std::vector<cGenotypeFrequency>::iterator a_node = frequencies.begin(); a_node < frequencies.end(); ++a_node ) {
     if( a_node->unique_node_id == this_node )
-      return a_node->frequency;
+      return a_node->m_frequency;
   }
   
   return 0;
@@ -1149,7 +1152,7 @@ void cPopulation::PrintOut(const std::string& output_folder, uint32_t on_run)
     cout << "This is the id: " << *it << endl;
   }
   
-  //Print everything out
+  //Print each sweeping genotype and its frequency per time
 	ofstream output_handle;
   string output_file;
   
@@ -1182,8 +1185,51 @@ void cPopulation::PrintOut(const std::string& output_folder, uint32_t on_run)
   output_handle.close();
 }
 
-void cPopulation::PrintWinningFitness(string out_folder, uint32_t on_run) {
+//The goal here is the find the fitness of the winning line of descent at every time point
+//This allows comparison eventualy winners and losers style
+
+void cPopulation::PrintWinningFitness(string output_folder, uint32_t run_number) {
+  
   vector<uint32_t> all_sweep_ids(MutationAboveThreshold(1.0));
+  
+  ofstream output_handle;
+  string output_file;
+  
+  output_file.append(output_folder);
+  output_file.append("/Winning_Fitness_");
+  output_file.append(to_string(run_number));
+  output_file.append(".dat");
+	output_handle.open(output_file.c_str(),std::ios_base::app);
+  
+  uint32_t count(0);
+  
+  //First I iterate over the frequency vector per time
+  for (std::vector< std::vector<cGenotypeFrequency> >::iterator this_time = m_frequencies.begin(); this_time < m_frequencies.end(); ++this_time) {
+    if( count % m_coarse_graining == 0 ) {
+      
+      for (uint32_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
+        
+        //Here we grab the frequency of each of the nodes that are known to have swept by the END of the simulation
+        double frequency( Find_Node_in_Freq_By_NodeID( *this_time, all_sweep_ids[a_node]) );
+        
+        //On the first node that has zero frequency,
+        //Find the fitness in the tree of the one that came immediately before it
+        if( frequency == 0 ) {
+          for (tree<cGenotype>::iterator it = m_tree.begin(); it!=m_tree.end(); it++) {
+            if( it->unique_node_id == all_sweep_ids[a_node-1] )
+               output_handle << it->fitness << "\t";
+               
+          }
+          //After finding the youngest one at this time point in the winning line...
+          //Go to the next time point
+          break;
+        }
+      }
+    }
+    count++;
+  }
+  
+  output_handle.close();
 }
 
 void cPopulation::PrintExpectationValue(const std::string& output_folder) {
@@ -1199,7 +1245,7 @@ void cPopulation::PrintExpectationValue(const std::string& output_folder) {
 
   for ( std::vector<cGenotypeFrequency>::iterator it = m_frequencies[m_frequencies.size()-1].begin(); it!=m_frequencies[m_frequencies.size()-1].end(); ++it) {
     if( it->unique_node_id != 0 ) {
-      calculated_mutant_population_freq += it->frequency;
+      calculated_mutant_population_freq += it->m_frequency;
     }
   }
     
@@ -1263,13 +1309,13 @@ void cPopulation::PrintFrequenciesToScreen(std::string output_folder) {
 		double total_freqs = 0;
     for ( std::vector<cGenotypeFrequency>::iterator it = m_frequencies[i].begin(); it!=m_frequencies[i].end(); ++it) {
     //@agm set up a minimum frequency to report the print out the number so it isn't overwhelming.
-      if ((*it).frequency > 0.01) {
+      if ((*it).m_frequency > 0.01) {
         std::cout << "Frequency of mutation # " << std::right << std::setw(6) << (*it).unique_node_id << " at time ";
         output_handle << "Frequency of mutation # " << std::right << std::setw(6) << (*it).unique_node_id << " at time ";
-        std::cout << std::right << std::setw(4) << i << " is: " << std::left << std::setw(10) << (*it).frequency << std::endl;
-        output_handle << std::right << std::setw(4) << i << " is: " << std::left << std::setw(10) << (*it).frequency << std::endl;
+        std::cout << std::right << std::setw(4) << i << " is: " << std::left << std::setw(10) << (*it).m_frequency << std::endl;
+        output_handle << std::right << std::setw(4) << i << " is: " << std::left << std::setw(10) << (*it).m_frequency << std::endl;
       }
-      total_freqs += (*it).frequency;
+      total_freqs += (*it).m_frequency;
       count++;
     }
 		std::cout << "Round # " << i << " sum of frequencies is: " << total_freqs << std::endl << std::endl;
@@ -1411,7 +1457,7 @@ uint32_t cPopulation::Last_Sweep(float threshold) {
   
   for( std::vector< std::vector<cGenotypeFrequency> >::reverse_iterator time = m_frequencies.rbegin(); time < m_frequencies.rend(); ++time ) {
     for( std::vector<cGenotypeFrequency>::reverse_iterator node = time->rbegin(); node < time->rend(); ++node) {
-      if( node->frequency >= threshold )
+      if( node->m_frequency >= threshold )
         return node->unique_node_id;
     }
   }

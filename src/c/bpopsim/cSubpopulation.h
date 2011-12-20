@@ -25,13 +25,13 @@ namespace bpopsim {
   struct cGenotypeFrequency {
     uint32_t unique_node_id;
     string name;
-    double frequency;
+    double m_frequency;
     
     //constructor
     cGenotypeFrequency() :
     unique_node_id(-1),
     name(""),
-    frequency(0) {};
+    m_frequency(0) {};
   };
 
   struct cFrequencySlice {

@@ -52,9 +52,9 @@ location <- "/path/to/MullerMatrix.dat"
 muller_mat <- t(as.matrix((read.table(paste(location, "/MullerMatrix.dat", sep=""), header=F))))*10
 
 png(paste(location, "/Muller.png", sep=""), 
-width=4000, 
-height=1000, 
-units = "px")
+    width=4000, 
+    height=1000, 
+    units = "px")
 
 #opar <- par(ask=TRUE)
 
@@ -83,10 +83,10 @@ axis(1,
      lwd=5,
      tck=-0.01,
      cex.axis=5)
-  
+
 title(main='Bpopsim Muller Matrix', 
-  col.main="black", 
-  cex.main = 12)
+      col.main="black", 
+      cex.main = 12)
 
 dev.off()
 

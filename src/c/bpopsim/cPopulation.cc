@@ -451,12 +451,13 @@ void cPopulation::DrawMullerMatrix(std::string output_folder,
     PrintTree();*/
     
     uint32_t resolution(m_muller_rez), last_node_meeting_span;
+  
     double pixel_step, min_step;
     min_step = (double) 1/resolution;
     
     //@agm Here I first iterate through the number of pixels
     for (uint32_t i=1; i<=resolution; i++) {
-      
+  
       //Determine the position of the current pixel_step
       pixel_step = (double) i/resolution;
       

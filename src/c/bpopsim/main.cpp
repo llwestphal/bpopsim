@@ -87,6 +87,8 @@ int main(int argc, char* argv[])
     if( options.count("convert_tree") ) {
       cPopulation access_to_functions;
       
+      access_to_functions.SetMullerRez(from_string<uint32_t>(options["muller_res"]));
+      
       access_to_functions.ConvertExternalData(options["input_file"]);
         
       if( print_muller ) {

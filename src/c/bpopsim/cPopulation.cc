@@ -1147,7 +1147,7 @@ void cPopulation::PrintUniqueGenotypes(const std::string& output_folder,
 
 void cPopulation::PrintOut(const std::string& output_folder, uint32_t on_run)
 {  
-  vector<uint32_t> all_sweep_ids(MutationAboveThreshold(1.0));
+  vector<uint32_t> all_sweep_ids(MutationAboveThreshold(0.001));
   
   for( vector<uint32_t>::iterator it = all_sweep_ids.begin(); it < all_sweep_ids.end(); ++it ) {
     cout << "This is the id: " << *it << endl;

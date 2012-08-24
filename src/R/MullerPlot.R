@@ -53,7 +53,7 @@ image.matrix <- function(x, colorTable=NULL, xlab="x", ylab="y", ...) {
 
 muller_mat <- t(as.matrix(read.table("MullerMatrix.dat", header=F)))*10
 
-pdf("Muller.pdf", 
+svg("Muller.svg", 
     width=20,
     height=5)
 

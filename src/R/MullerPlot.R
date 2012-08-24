@@ -1,5 +1,9 @@
 #/usr/bin/R
 
+## Set the working directory
+
+setwd('.')
+
 ############################################################################
 # This script is for plotting the muller_matrix.dat file
 ############################################################################
@@ -47,21 +51,18 @@ image.matrix <- function(x, colorTable=NULL, xlab="x", ylab="y", ...) {
   image(x=1:ncol(x),y=1:nrow(x),z=rotate270.matrix(x), col=colorTable, xlab=xlab, ylab=ylab, ...)
 }
 
-location <- "/path/to/MullerMatrix.dat"
+muller_mat <- t(as.matrix(read.table("MullerMatrix.dat", header=F)))*10
 
-muller_mat <- t(as.matrix((read.table(paste(location, "/MullerMatrix.dat", sep=""), header=F))))*10
-
-png(paste(location, "/Muller.png", sep=""), 
-    width=4000, 
-    height=1000, 
-    units = "px")
+pdf("Muller.pdf", 
+    width=20,
+    height=5)
 
 #opar <- par(ask=TRUE)
 
 colors = c(hsv(runif(10000), 1, .65))
 
-par(mar=c(13,3,13,3))
-par(mgp=c(10,4,0))
+par(mar=c(6,1,1,1))
+par(mgp=c(4.75,2,0))
 
 xticksnames=seq(0,20000, by=1000)
 xticks=xticksnames/6.64
@@ -73,7 +74,7 @@ image.matrix(muller_mat,
              axes=FALSE,
              xaxt="n",
              yaxt="n",
-             cex.lab=6)
+             cex.lab=2.75)
 
 axis(1,
      at=xticks,
@@ -81,13 +82,11 @@ axis(1,
      col.axis="black", 
      adj=0,
      lwd=5,
-     tck=-0.01,
-     cex.axis=5)
+     tck=-0.05,
+     cex.axis=2)
 
-title(main='Bpopsim Muller Matrix', 
-      col.main="black", 
-      cex.main = 12)
+# title(main='Bpopsim Muller Matrix', 
+#       col.main="black", 
+#       cex.main = 5)
 
 dev.off()
-
-#par(opar)

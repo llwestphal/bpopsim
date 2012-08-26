@@ -32,6 +32,8 @@
 #include <queue>
 #include <algorithm>
 
+using namespace std;
+
 // HP-style construct/destroy have gone from the standard,
 // so here is a copy.
 
@@ -67,7 +69,7 @@ public:
   T data;
 }; // __attribute__((packed));
 
-template <class T, class tree_node_allocator = std::allocator<tree_node_<T> > >
+template <class T, class tree_node_allocator = allocator<tree_node_<T> > >
 class tree {
 protected:
   typedef tree_node_<T> tree_node;
@@ -100,7 +102,7 @@ public:
       typedef T&                              reference;
       typedef size_t                          size_type;
       typedef ptrdiff_t                       difference_type;
-      typedef std::bidirectional_iterator_tag iterator_category;
+      typedef bidirectional_iterator_tag iterator_category;
       
       iterator_base();
       iterator_base(tree_node *);
@@ -175,7 +177,7 @@ public:
       breadth_first_queued_iterator&  operator+=(unsigned int);
       
     private:
-      std::queue<tree_node *> traversal_queue;
+      queue<tree_node *> traversal_queue;
 		};
     
 		/// The default iterator types throughout the tree class.
@@ -347,7 +349,7 @@ public:
 		/// Merge with other tree, creating new branches and leaves only if they are not already present.
 		void     merge(sibling_iterator, sibling_iterator, sibling_iterator, sibling_iterator, 
                    bool duplicate_leaves=false);
-		/// Sort (std::sort only moves values of nodes, this one moves children as well).
+		/// Sort (sort only moves values of nodes, this one moves children as well).
 		void     sort(sibling_iterator from, sibling_iterator to, bool deep=false);
 		template<class StrictWeakOrdering>
 		void     sort(sibling_iterator from, sibling_iterator to, StrictWeakOrdering comp, bool deep=false);
@@ -434,7 +436,7 @@ public:
   //		bool operator()(const typename tree<T, tree_node_allocator>::iterator_base& one,
   //						  const typename tree<T, tree_node_allocator>::iterator_base& two) const
   //			{
-  //			txtout << "operatorclass<" << one.node < two.node << std::endl;
+  //			txtout << "operatorclass<" << one.node < two.node << endl;
   //			return one.node < two.node;
   //			}
   //};
@@ -443,7 +445,7 @@ public:
   // bool operator<(const typename tree<T, tree_node_allocator>::iterator& one,
   // 					const typename tree<T, tree_node_allocator>::iterator& two)
   // 	{
-  // 	txtout << "operator< " << one.node < two.node << std::endl;
+  // 	txtout << "operator< " << one.node < two.node << endl;
   // 	if(one.node < two.node) return true;
   // 	return false;
   // 	}
@@ -452,7 +454,7 @@ public:
   // bool operator==(const typename tree<T, tree_node_allocator>::iterator& one,
   // 					const typename tree<T, tree_node_allocator>::iterator& two)
   // 	{
-  // 	txtout << "operator== " << one.node == two.node << std::endl;
+  // 	txtout << "operator== " << one.node == two.node << endl;
   // 	if(one.node == two.node) return true;
   // 	return false;
   // 	}
@@ -461,7 +463,7 @@ public:
   // bool operator>(const typename tree<T, tree_node_allocator>::iterator_base& one,
   // 					const typename tree<T, tree_node_allocator>::iterator_base& two)
   // 	{
-  // 	txtout << "operator> " << one.node < two.node << std::endl;
+  // 	txtout << "operator> " << one.node < two.node << endl;
   // 	if(one.node > two.node) return true;
   // 	return false;
   // 	}
@@ -563,7 +565,7 @@ public:
   template<class T, class tree_node_allocator> 
   void tree<T, tree_node_allocator>::erase_children(const iterator_base& it)
 	{
-    //	std::cout << "erase_children " << it.node << std::endl;
+    //	cout << "erase_children " << it.node << endl;
     if(it.node==0) return;
     
     tree_node *cur=it.node->first_child;
@@ -578,7 +580,7 @@ public:
 		}
     it.node->first_child=0;
     it.node->last_child=0;
-    //	std::cout << "exit" << std::endl;
+    //	cout << "exit" << endl;
 	}
   
   template<class T, class tree_node_allocator> 
@@ -664,10 +666,10 @@ public:
           // try to walk up and then right again
           do {
             if(tmp==ret.top_node)
-              throw std::range_error("tree: begin_fixed out of range");
+              throw range_error("tree: begin_fixed out of range");
             tmp=tmp->parent;
             if(tmp==0) 
-              throw std::range_error("tree: begin_fixed out of range");
+              throw range_error("tree: begin_fixed out of range");
             --curdepth;
           } while(tmp->next_sibling==0);
 				}
@@ -691,7 +693,7 @@ public:
       while(tmp->first_child==0) {
         tmp=tmp->next_sibling;
         if(tmp==0)
-          throw std::range_error("tree: end_fixed out of range");
+          throw range_error("tree: end_fixed out of range");
 			}
       tmp=tmp->first_child;
       ++curdepth;
@@ -1116,9 +1118,9 @@ public:
     tree_node *current_to  =position.node;
     
     // replace the node at position with head of the replacement tree at from
-    //	std::cout << "warning!" << position.node << std::endl;
+    //	cout << "warning!" << position.node << endl;
     erase_children(position);	
-    //	std::cout << "no warning!" << std::endl;
+    //	cout << "no warning!" << endl;
     tree_node* tmp = alloc_.allocate(1,0);
     kp::constructor(&tmp->data, (*from));
     tmp->first_child=0;
@@ -1449,7 +1451,7 @@ public:
 	{
     sibling_iterator fnd;
     while(from1!=from2) {
-      if((fnd=std::find(to1, to2, (*from1))) != to2) { // element found
+      if((fnd=find(to1, to2, (*from1))) != to2) { // element found
         if(from1.begin()==from1.end()) { // full depth reached
           if(duplicate_leaves)
             append_child(parent(to1), (*from1));
@@ -1469,7 +1471,7 @@ public:
   template <class T, class tree_node_allocator>
   void tree<T, tree_node_allocator>::sort(sibling_iterator from, sibling_iterator to, bool deep)
 	{
-    std::less<T> comp;
+    less<T> comp;
     sort(from, to, comp, deep);
 	}
   
@@ -1482,7 +1484,7 @@ public:
     // make list of sorted nodes
     // CHECK: if multiset stores equivalent nodes in the order in which they
     // are inserted, then this routine should be called 'stable_sort'.
-    std::multiset<tree_node *, compare_nodes<StrictWeakOrdering> > nodes(comp);
+    multiset<tree_node *, compare_nodes<StrictWeakOrdering> > nodes(comp);
     sibling_iterator it=from, it2=to;
     while(it != to) {
       nodes.insert(it.node);
@@ -1494,7 +1496,7 @@ public:
     // prev and next are the nodes before and after the sorted range
     tree_node *prev=from.node->prev_sibling;
     tree_node *next=it2.node->next_sibling;
-    typename std::multiset<tree_node *, compare_nodes<StrictWeakOrdering> >::iterator nit=nodes.begin(), eit=nodes.end();
+    typename multiset<tree_node *, compare_nodes<StrictWeakOrdering> >::iterator nit=nodes.begin(), eit=nodes.end();
     if(prev==0) {
       if((*nit)->parent!=0) // to catch "sorting the head" situations, when there is no parent
         (*nit)->parent->first_child=(*nit);
@@ -1537,7 +1539,7 @@ public:
   template <typename iter>
   bool tree<T, tree_node_allocator>::equal(const iter& one_, const iter& two, const iter& three_) const
 	{
-    std::equal_to<T> comp;
+    equal_to<T> comp;
     return equal(one_, two, three_, comp);
 	}
   
@@ -1545,7 +1547,7 @@ public:
   template <typename iter>
   bool tree<T, tree_node_allocator>::equal_subtree(const iter& one_, const iter& two_) const
 	{
-    std::equal_to<T> comp;
+    equal_to<T> comp;
     return equal_subtree(one_, two_, comp);
 	}
   
@@ -1659,7 +1661,7 @@ public:
 	{
     int maxd=-1;
     for(tree_node *it = head->next_sibling; it!=feet; it=it->next_sibling)
-      maxd=std::max(maxd, max_depth(it));
+      maxd=max(maxd, max_depth(it));
     
     return maxd;
 	}
@@ -1689,7 +1691,7 @@ public:
 			}
       tmp=tmp->first_child;
       ++curdepth;
-      maxdepth=std::max(curdepth, maxdepth);
+      maxdepth=max(curdepth, maxdepth);
 		} 
 	}
   

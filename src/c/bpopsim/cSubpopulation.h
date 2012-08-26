@@ -10,7 +10,6 @@ namespace bpopsim {
     string   name;
     double   fitness;
     uint32_t  mut_num;
-    double   m_timer;
     bool     m_divided;
     
     cGenotype() : 
@@ -18,7 +17,6 @@ namespace bpopsim {
       name(""),
       fitness(1.0),
       mut_num(0),
-      m_timer(1.0),
       m_divided(false) { };
    };
 
@@ -55,9 +53,10 @@ namespace bpopsim {
     tree<cGenotype>::iterator m_genotype;
 
   public:
-    cSubpopulation() :   //
-    m_number(0),
-    m_marker('n') { };
+    cSubpopulation() 
+    : m_number(0)
+    , m_marker('n') 
+    { };
     
     cSubpopulation(const cSubpopulation& in); // Copy constructor
     
@@ -70,23 +69,21 @@ namespace bpopsim {
     const double GetNumber() { return m_number; }
     const char GetMarker() { return m_marker; }
     const uint32_t GetMutNum() { return m_genotype->mut_num; }
-    const double GetTimer() { return m_genotype->m_timer; }
     const bool GetDivided() { return m_genotype->m_divided; }
     
     void SetGenotype(tree<cGenotype>::iterator location) { m_genotype = location; }
     void SetNumber(const double in_number) { m_number = in_number; }
     void SetMarker(const char in_marker) { m_marker = in_marker; } 
-    void SetTimer(const double in_timer) { m_genotype->m_timer = in_timer; }
     void SetDivided(const double in_divided) { m_genotype->m_divided = in_divided; }
     void Transfer(double success_prob, gsl_rng * randomgenerator);
     double MutantFitness(double in_fitness, 
                          double in_average_mutation_s, 
-                         char in_type_of_mutation, 
+                         const string& in_type_of_mutation, 
                          gsl_rng * randomgenerator);  
     virtual void CreateDescendant(gsl_rng * randomgenerator, 
                                   cSubpopulation &ancestor, 
                                   double averageselectioncoefficient, 
-                                  char beneficialmutationdistribution, 
+                                  const string& beneficialmutationdistribution, 
                                   tree<cGenotype>& in_tree, 
                                   uint32_t node_id);
     

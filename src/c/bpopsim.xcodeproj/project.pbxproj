@@ -30,10 +30,10 @@
 		701E9218120134B800653784 /* cSubpopulation.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cSubpopulation.cc; path = bpopsim/cSubpopulation.cc; sourceTree = "<group>"; };
 		701E921A120134BD00653784 /* cSubpopulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cSubpopulation.h; path = bpopsim/cSubpopulation.h; sourceTree = "<group>"; };
 		70307F1C11F7E39E00BEFD1F /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = bpopsim/main.cpp; sourceTree = "<group>"; };
-		70684A90120A007300BE96CA /* cPopulation.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cPopulation.cc; path = bpopsim/cPopulation.cc; sourceTree = "<group>"; wrapsLines = 0; };
-		70684A91120A007300BE96CA /* cPopulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cPopulation.h; path = bpopsim/cPopulation.h; sourceTree = "<group>"; };
+		70684A90120A007300BE96CA /* cPopulation.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = cPopulation.cc; path = bpopsim/cPopulation.cc; sourceTree = "<group>"; wrapsLines = 0; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		70684A91120A007300BE96CA /* cPopulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = cPopulation.h; path = bpopsim/cPopulation.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		708EE7B21346E8F400E33511 /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = common.h; path = bpopsim/common.h; sourceTree = "<group>"; };
-		8DD76F6C0486A84900D96B5E /* popsim */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = popsim; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DD76F6C0486A84900D96B5E /* bpopsim */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bpopsim; sourceTree = BUILT_PRODUCTS_DIR; };
 		D952741B132EE0CB009223FC /* tree.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = tree.hh; path = bpopsim/tree.hh; sourceTree = "<group>"; };
 		D952741C132EE0D4009223FC /* tree_util.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = tree_util.hh; path = bpopsim/tree_util.hh; sourceTree = "<group>"; };
 		D9C6594A13EC4C7A00BFCCCB /* anyoption.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = anyoption.cpp; path = bpopsim/anyoption.cpp; sourceTree = "<group>"; };
@@ -66,7 +66,7 @@
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8DD76F6C0486A84900D96B5E /* popsim */,
+				8DD76F6C0486A84900D96B5E /* bpopsim */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -83,9 +83,9 @@
 			isa = PBXGroup;
 			children = (
 				708EE7B21346E8F400E33511 /* common.h */,
+				D952741B132EE0CB009223FC /* tree.hh */,
 				D952741C132EE0D4009223FC /* tree_util.hh */,
 				D9C6594C13EC4C8300BFCCCB /* anyoption.h */,
-				D952741B132EE0CB009223FC /* tree.hh */,
 				70684A91120A007300BE96CA /* cPopulation.h */,
 				701E921A120134BD00653784 /* cSubpopulation.h */,
 			);
@@ -138,7 +138,7 @@
 			name = popsim;
 			productInstallPath = "$(HOME)/bin";
 			productName = popsim;
-			productReference = 8DD76F6C0486A84900D96B5E /* popsim */;
+			productReference = 8DD76F6C0486A84900D96B5E /* bpopsim */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -198,7 +198,7 @@
 					/opt/local/lib,
 					"\"$(SRCROOT)\"",
 				);
-				PRODUCT_NAME = popsim;
+				PRODUCT_NAME = bpopsim;
 			};
 			name = Debug;
 		};
@@ -214,7 +214,7 @@
 					/opt/local/lib,
 					"\"$(SRCROOT)\"",
 				);
-				PRODUCT_NAME = popsim;
+				PRODUCT_NAME = bpopsim;
 			};
 			name = Release;
 		};

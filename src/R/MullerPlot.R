@@ -1,8 +1,10 @@
 #/usr/bin/R
 
 ## Set the working directory
-
 setwd('.')
+
+##Get filename from command line
+muller_matrix_file_name = "muller_matrix.dat";
 
 ############################################################################
 # This script is for plotting the muller_matrix.dat file
@@ -51,7 +53,7 @@ image.matrix <- function(x, colorTable=NULL, xlab="x", ylab="y", ...) {
   image(x=1:ncol(x),y=1:nrow(x),z=rotate270.matrix(x), col=colorTable, xlab=xlab, ylab=ylab, ...)
 }
 
-muller_mat <- t(as.matrix(read.table("MullerMatrix.dat", header=F)))*10
+muller_mat <- t(as.matrix(read.table(muller_matrix_file_name, header=F)))*10
 
 pdf("Muller.pdf", 
     width=20,

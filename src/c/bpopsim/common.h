@@ -33,7 +33,6 @@
 #include "tree.hh"
 #include "tree_util.hh"
 #include "icsilog.h"
-#include "anyoption.h"
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_matrix.h>
 
@@ -41,322 +40,321 @@ using namespace std;
 
 // Global variable for keeping track of verbosity
 extern bool g_verbose;
-extern bool g_ro_only;
 
-namespace bpopsim {
-  
-  // Utility functions
-  inline bool file_exists(const char *filename)
+
+// Utility functions
+inline bool file_exists(const char *filename)
+{
+  ifstream ifile(filename);
+  return ifile;
+}
+
+inline bool file_empty(const char *filename)
+{
+  ifstream ifile(filename);
+  string test;
+  getline(ifile, test);
+  return !ifile.eof();
+}
+
+inline uint32_t fix_flags(uint32_t flags)
+{
+  flags = ((flags >> 9) << 9) + flags % 128;
+  return flags;
+}
+
+template <typename T, typename U> struct make_map : public map<T,U>
+{
+public:
+  make_map(const T& key, const U& val) { (*this)(key, val); }
+  make_map<T, U>& operator()(const T& key, const U& val)
   {
-    ifstream ifile(filename);
-    return ifile;
+    (*this)[key] = val;
+    return *this;
   }
-  
-  inline bool file_empty(const char *filename)
-  {
-    ifstream ifile(filename);
-    string test;
-    getline(ifile, test);
-    return !ifile.eof();
+};
+
+template <typename T> struct make_list : public vector<T>
+{
+public:
+  make_list(const T& t) { (*this)(t); }
+  make_list& operator()(const T& t) {
+    this->push_back(t);
+    return *this;
   }
+};
+
+
+template <class T, class U> inline vector<T> get_keys(const map<T,U>& input)
+{
+  vector<T> retval;
+  for (class map<T,U>::const_iterator it = input.begin(); it != input.end(); it++)
+    retval.push_back(it->first);
+  return retval;
+}
+
+//!< Split a string on a delimiter into a vector
+inline vector<string> split(
+                            const  string  & theString,
+                            const  string  & theDelimiter
+                            ) {
+  assert(theDelimiter.size() > 0); // My own ASSERT macro.
+  assert(theString.size() != 1); //@GRC check that programmer hasn't switched variables in declaration.
   
-  inline uint32_t fix_flags(uint32_t flags)
+  size_t start = 0, end = 0;
+  vector<string> theStringVector;
+  
+  if (theString.size() == 0) return theStringVector;
+  // return empty list if the string is empty
+  
+  while (end != string::npos)
   {
-    flags = ((flags >> 9) << 9) + flags % 128;
-    return flags;
-  }
-  
-  template <typename T, typename U> struct make_map : public map<T,U>
-  {
-  public:
-    make_map(const T& key, const U& val) { (*this)(key, val); }
-    make_map<T, U>& operator()(const T& key, const U& val)
-    {
-      (*this)[key] = val;
-      return *this;
-    }
-  };
-  
-  template <typename T> struct make_list : public vector<T>
-  {
-  public:
-    make_list(const T& t) { (*this)(t); }
-    make_list& operator()(const T& t) {
-      this->push_back(t);
-      return *this;
-    }
-  };
-  
-  
-  template <class T, class U> inline vector<T> get_keys(const map<T,U>& input)
-  {
-    vector<T> retval;
-    for (class map<T,U>::const_iterator it = input.begin(); it != input.end(); it++)
-      retval.push_back(it->first);
-    return retval;
-  }
-  
-  //!< Split a string on a delimiter into a vector
-  inline vector<string> split(
-                              const  string  & theString,
-                              const  string  & theDelimiter
-                              ) {
-    assert(theDelimiter.size() > 0); // My own ASSERT macro.
-    assert(theString.size() != 1); //@GRC check that programmer hasn't switched variables in declaration.
+    end = theString.find( theDelimiter, start );
     
-    size_t start = 0, end = 0;
-    vector<string> theStringVector;
+    // If at end, use length=maxLength.  Else use length=end-start.
+    theStringVector.push_back(
+                              theString.substr(
+                                               start,
+                                               (end == string::npos) ? string::npos : end - start
+                                               )
+                              );
     
-    if (theString.size() == 0) return theStringVector;
-    // return empty list if the string is empty
+    // If at end, use start=maxSize.  Else use start=end+delimiter.
+    start =
+    (end > (string::npos - theDelimiter.size()))
+    ? string::npos
+    : end + theDelimiter.size();
+  }
+  return theStringVector;
+}
+
+//!< Split a string on any char in string of delimiters into a vector
+inline vector<string> split_on_any(
+                                   const  string  & theString,
+                                   const  string  & theDelimiters
+                                   ) {
+  assert(theDelimiters.size() > 0); // My own ASSERT macro.
+  
+  size_t start = 0, end = 0;
+  vector<string> theStringVector;
+  
+  while (end != string::npos)
+  {
+    end = theString.find_first_of( theDelimiters, start );
     
-    while (end != string::npos)
-    {
-      end = theString.find( theDelimiter, start );
-      
-      // If at end, use length=maxLength.  Else use length=end-start.
-      theStringVector.push_back(
-                                theString.substr(
-                                                 start,
-                                                 (end == string::npos) ? string::npos : end - start
-                                                 )
-                                );
-      
-      // If at end, use start=maxSize.  Else use start=end+delimiter.
-      start =
-      (end > (string::npos - theDelimiter.size()))
-      ? string::npos
-      : end + theDelimiter.size();
-    }
-    return theStringVector;
-  }
-  
-  //!< Split a string on any char in string of delimiters into a vector
-  inline vector<string> split_on_any(
-                                     const  string  & theString,
-                                     const  string  & theDelimiters
-                                     ) {
-    assert(theDelimiters.size() > 0); // My own ASSERT macro.
+    // If at end, use length=maxLength.  Else use length=end-start.
+    theStringVector.push_back(
+                              theString.substr(
+                                               start,
+                                               (end == string::npos) ? string::npos : end - start
+                                               )
+                              );
     
-    size_t start = 0, end = 0;
-    vector<string> theStringVector;
-    
-    while (end != string::npos)
-    {
-      end = theString.find_first_of( theDelimiters, start );
-      
-      // If at end, use length=maxLength.  Else use length=end-start.
-      theStringVector.push_back(
-                                theString.substr(
-                                                 start,
-                                                 (end == string::npos) ? string::npos : end - start
-                                                 )
-                                );
-      
-      // If at end, use start=maxSize.  Else use start=end+delimiter.
-      start =
-      (end > (string::npos - 1))
-      ? string::npos
-      : end + 1;
-    }
-    return theStringVector;
+    // If at end, use start=maxSize.  Else use start=end+delimiter.
+    start =
+    (end > (string::npos - 1))
+    ? string::npos
+    : end + 1;
   }
+  return theStringVector;
+}
+
+inline string join(const vector<string>& values, const string& separator)
+{
+  if(values.size() == 0)
+    return "";
   
-  inline string join(const vector<string>& values, const string& separator)
-  {
-    if(values.size() == 0)
-      return "";
-    
-    string::size_type size = separator.length() * values.size();
-    for(uint32_t i=0; i < values.size(); i++)
-      size += values[i].size();
-    
-    string retval;
-    retval.reserve(size);
-    retval = values[0];
-    for(uint32_t i = 1; i < values.size(); i++)
-      retval += separator + values[i];
-    
-    return retval;
-  }
+  string::size_type size = separator.length() * values.size();
+  for(uint32_t i=0; i < values.size(); i++)
+    size += values[i].size();
   
-  inline string join(string values[], const string& separator)
-  {
-    return join(vector<string> (values, values + sizeof(values) / sizeof(*values)), separator);
-  }
+  string retval;
+  retval.reserve(size);
+  retval = values[0];
+  for(uint32_t i = 1; i < values.size(); i++)
+    retval += separator + values[i];
   
-  inline string chomp(const string& str)
+  return retval;
+}
+
+inline string join(string values[], const string& separator)
+{
+  return join(vector<string> (values, values + sizeof(values) / sizeof(*values)), separator);
+}
+
+inline string chomp(const string& str)
+{
+  return str.substr(0, str.find_last_not_of("\n \t")-1);
+}
+
+
+inline ostream &operator << (ostream &stream, vector<string> lhs)
+{
+  stream << join(lhs, ",");
+  return stream;
+}
+/*istream &operator >> (istream &stream, vector<string>& lhs)
+ {
+ string value;
+ stream >> value;
+ lhs = split(value, ",");
+ return stream;
+ }*/
+template <typename T> inline istream &operator >> (istream &stream, vector<T>& rhs)
+{
+  rhs.clear();
+  string value;
+  // the different values are separated by newlines "\n" in the string
+  // so they are read out correctly this way! @JEB
+  while (!stream.eof())
   {
-    return str.substr(0, str.find_last_not_of("\n \t")-1);
-  }
-  
-  
-  inline ostream &operator << (ostream &stream, vector<string> lhs)
-  {
-    stream << join(lhs, ",");
-    return stream;
-  }
-  /*istream &operator >> (istream &stream, vector<string>& lhs)
-   {
-   string value;
-   stream >> value;
-   lhs = split(value, ",");
-   return stream;
-   }*/
-  template <typename T> inline istream &operator >> (istream &stream, vector<T>& rhs)
-  {
-    rhs.clear();
-    string value;
-    // the different values are separated by newlines "\n" in the string
-    // so they are read out correctly this way! @JEB
-    while (!stream.eof())
-    {
-      T t;
-      stream >> boolalpha >> t;
-      rhs.push_back(t);
-    }
-    return stream;
-  }
-  
-  
-  template <typename T> inline string to_string (const T& t)
-  {
-    stringstream ss;
-    ss << t;
-    return ss.str();
-  }
-  inline string to_string (const pair<int,int>& t)
-  {
-    return to_string(t.first) + '/' + to_string(t.second);
-  }
-  inline string to_string (const double& t, const uint32_t precision=1)
-  {
-    if(isnan(t)) {
-      return "NA";
-    } else {
-      ostringstream interpreter;
-      interpreter << fixed << setprecision(precision) << t;
-      return interpreter.str();
-    }
-  }
-  
-  // handle bool as either TRUE/FALSE or zero/non-zero number
-  // Does not handle single-character T/F correctly 
-  // @JEB this is never called
-  inline bool from_string(const string& s)
-  {
-    bool t = false;
-    istringstream iss1(s);
-    iss1 >> boolalpha >> t;
-    
-    int32_t t2;
-    istringstream iss2(s);
-    iss2 >> noboolalpha >> t2;
-    t = t || (t2 != 0);
-    
-    return t;
-  }
-  
-  template <typename T> inline T from_string(const string &s)
-  {
-    assert(!s.empty());
     T t;
-    istringstream iss(s);
-    iss >> boolalpha >> t;
-    return t;
+    stream >> boolalpha >> t;
+    rhs.push_back(t);
   }
+  return stream;
+}
+
+
+template <typename T> inline string to_string (const T& t)
+{
+  stringstream ss;
+  ss << t;
+  return ss.str();
+}
+inline string to_string (const pair<int,int>& t)
+{
+  return to_string(t.first) + '/' + to_string(t.second);
+}
+inline string to_string (const double& t, const uint32_t precision=1)
+{
+  if(isnan(t)) {
+    return "NA";
+  } else {
+    ostringstream interpreter;
+    interpreter << fixed << setprecision(precision) << t;
+    return interpreter.str();
+  }
+}
+
+// handle bool as either TRUE/FALSE or zero/non-zero number
+// Does not handle single-character T/F correctly 
+// @JEB this is never called
+inline bool from_string(const string& s)
+{
+  bool t = false;
+  istringstream iss1(s);
+  iss1 >> boolalpha >> t;
   
-  //! Returns true if exp matches anywhere in input
-  //! true regex expressions ie !^[\s](\w)+ do not work.
-  inline	bool regex_m(string exp, string input)
-  {
-    if(input.find(exp) != string::npos)
-      return true;
-    else
-      return false;
-  }
+  int32_t t2;
+  istringstream iss2(s);
+  iss2 >> noboolalpha >> t2;
+  t = t || (t2 != 0);
   
-  inline string to_upper(const string& input)
-	{
-		string str = input;
-		transform(str.begin(), str.end(),str.begin(), ::toupper);
-		return str;
-	}
-	
-	inline string to_lower(const string& input)
+  return t;
+}
+
+template <typename T> inline T from_string(const string &s)
+{
+  assert(!s.empty());
+  T t;
+  istringstream iss(s);
+  iss >> boolalpha >> t;
+  return t;
+}
+
+//! Returns true if exp matches anywhere in input
+//! true regex expressions ie !^[\s](\w)+ do not work.
+inline	bool regex_m(string exp, string input)
+{
+  if(input.find(exp) != string::npos)
+    return true;
+  else
+    return false;
+}
+
+inline string to_upper(const string& input)
+{
+  string str = input;
+  transform(str.begin(), str.end(),str.begin(), ::toupper);
+  return str;
+}
+
+inline string to_lower(const string& input)
+{
+  string str = input;
+  transform(str.begin(), str.end(),str.begin(), ::tolower);
+  return str;
+}
+
+inline string reverse_string(const string &in_string)
+{
+  string rev_string("");
+  for(string::const_reverse_iterator rit=in_string.rbegin(); rit<in_string.rend(); rit++)
   {
-    string str = input;
-    transform(str.begin(), str.end(),str.begin(), ::tolower);
-    return str;
+    rev_string+=*rit;
   }
+  return rev_string;
+}
+
+inline string repeat_char(const char char_to_append, const uint32_t num_times)
+{
+  string s;
+  // reserve memory to be a little more efficient
+  s.reserve(num_times);
+  for (uint32_t i=0; i< num_times; i++)
+  {
+    s += char_to_append;
+  }
+  return s;
+}
+
+inline string substitute(const string& in_s, const string& replace_this, const string& with_this)
+{
+  string s = in_s;
+  size_t pos = s.find(replace_this);
+  while (pos != string::npos)
+  {
+    s.replace(pos, replace_this.size(), with_this);
+    pos += with_this.size();
+    pos = s.find(replace_this, pos);
+  }
+  return s;
+}
+
+//! Applies regex_m to a vector of strings, returns a vector of strings
+//! that do/don't (dependent on bool match) contain an exp.
+//! true regex expressions ie !^[\s](\w)+ do not work.
+inline vector<string> grep(bool match, string exp, vector<string> lines)
+{
+  typedef vector<string> Lines;
+  Lines matching_lines;
   
-  inline string reverse_string(const string &in_string)
-  {
-    string rev_string("");
-    for(string::const_reverse_iterator rit=in_string.rbegin(); rit<in_string.rend(); rit++)
-    {
-      rev_string+=*rit;
-    }
-    return rev_string;
-  }
+  for(Lines::iterator line = lines.begin();
+      line != lines.end(); line ++)
+    if(match == regex_m(exp, (*line)))
+      matching_lines.push_back((*line));
+  return matching_lines;    
+}
+///! Returns first element, then removes it from container.
+template <typename T> inline T shift(vector<T>& input)
+{
+  assert(!input.empty());
+  class vector<T>::iterator first = input.begin();
+  T retval = (*first);
+  input.erase(first);
   
-  inline string repeat_char(const char char_to_append, const uint32_t num_times)
-  {
-    string s;
-    // reserve memory to be a little more efficient
-    s.reserve(num_times);
-    for (uint32_t i=0; i< num_times; i++)
-    {
-      s += char_to_append;
-    }
-    return s;
-  }
-  
-  inline string substitute(const string& in_s, const string& replace_this, const string& with_this)
-  {
-    string s = in_s;
-    size_t pos = s.find(replace_this);
-    while (pos != string::npos)
-    {
-      s.replace(pos, replace_this.size(), with_this);
-      pos += with_this.size();
-      pos = s.find(replace_this, pos);
-    }
-    return s;
-  }
-  
-  //! Applies regex_m to a vector of strings, returns a vector of strings
-  //! that do/don't (dependent on bool match) contain an exp.
-  //! true regex expressions ie !^[\s](\w)+ do not work.
-  inline vector<string> grep(bool match, string exp, vector<string> lines)
-  {
-    typedef vector<string> Lines;
-    Lines matching_lines;
-    
-    for(Lines::iterator line = lines.begin();
-        line != lines.end(); line ++)
-      if(match == regex_m(exp, (*line)))
-        matching_lines.push_back((*line));
-    return matching_lines;    
-  }
-  ///! Returns first element, then removes it from container.
-  template <typename T> inline T shift(vector<T>& input)
-  {
-    assert(!input.empty());
-    class vector<T>::iterator first = input.begin();
-    T retval = (*first);
-    input.erase(first);
-    
-    return retval;
-  }
-  
-  // Return the path of the file without the trailing forward-slash
-  inline string dirname(string file_name)
-  {
-    size_t found = file_name.rfind("/");
-    return ((found != string::npos) ? file_name.substr(0, found) : "");
-  }
-  
-} //bpopsim
+  return retval;
+}
+
+// Return the path of the file without the trailing forward-slash
+inline string dirname(string file_name)
+{
+  size_t found = file_name.rfind("/");
+  return ((found != string::npos) ? file_name.substr(0, found) : "");
+}
+
+// Must be included last because it relites on these functions
+#include "anyoption.h"
 
 #endif

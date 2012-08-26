@@ -2,7 +2,8 @@
 #include "cSubpopulation.h"
 
 using namespace std;
-using namespace bpopsim;
+
+namespace bpopsim {
 
 /* Copy constructor */
 cSubpopulation::cSubpopulation(const cSubpopulation& in) :
@@ -16,15 +17,15 @@ cSubpopulation::cSubpopulation(const cSubpopulation& in) :
 
 double cSubpopulation::MutantFitness(double in_fitness, 
                                      double in_average_mutation_s, 
-                                     char in_type_of_mutation, 
+                                     const string& in_type_of_mutation, 
                                      gsl_rng * randomgenerator) 
 {
-   if(in_type_of_mutation=='e')
+   if(in_type_of_mutation=="e")
    {
      return  gsl_ran_exponential(randomgenerator,in_average_mutation_s) + in_fitness;	
    }
 
-   if (in_type_of_mutation=='u')
+   if (in_type_of_mutation=="u")
    {
      return in_fitness + in_average_mutation_s;
    }
@@ -36,7 +37,7 @@ double cSubpopulation::MutantFitness(double in_fitness,
 void cSubpopulation::CreateDescendant(  gsl_rng * randomgenerator, 
                                         cSubpopulation &ancestor, 
                                         double averageselectioncoefficient, 
-                                        char beneficialmutationdistribution, 
+                                        const string& beneficialmutationdistribution, 
                                         tree<cGenotype>& in_tree, 
                                         uint32_t node_id
                                       ) 
@@ -64,9 +65,9 @@ void cSubpopulation::CreateDescendant(  gsl_rng * randomgenerator,
 	
 }
 
-void cSubpopulation::AddToTree(tree<bpopsim::cGenotype> &in_tree, 
+void cSubpopulation::AddToTree(tree<cGenotype> &in_tree, 
                                tree<cGenotype>::iterator parent, 
-                               bpopsim::cGenotype child) {
+                               cGenotype child) {
   in_tree.append_child(parent, child);
 }
 
@@ -78,9 +79,10 @@ void cSubpopulation::Transfer(double success_prob,
                                              double(GetNumber()));
 	
 
-	//if ( random_gsl_int > 10 ) std::cout << std::endl << "This is gsl out: " << " " << 
-		//randomgenerator << " " << success_prob << " " << random_gsl_int << " " << random_gsl_int << std::endl;
+	//if ( random_gsl_int > 10 ) cout << endl << "This is gsl out: " << " " << 
+		//randomgenerator << " " << success_prob << " " << random_gsl_int << " " << random_gsl_int << endl;
    
 	SetNumber(random_gsl_int);
 }
 
+}

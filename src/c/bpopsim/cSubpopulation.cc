@@ -76,13 +76,9 @@ void cSubpopulation::Transfer(double success_prob,
 		
 	uint32_t random_gsl_int = gsl_ran_binomial(randomgenerator, 
                                              success_prob, 
-                                             double(GetNumber()));
-	
-
-	//if ( random_gsl_int > 10 ) cout << endl << "This is gsl out: " << " " << 
-		//randomgenerator << " " << success_prob << " " << random_gsl_int << " " << random_gsl_int << endl;
+                                             GetIntegralNumber());
    
-	SetNumber(random_gsl_int);
+	m_number = random_gsl_int;
 }
 
 }

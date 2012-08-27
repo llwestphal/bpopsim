@@ -90,8 +90,6 @@ namespace bpopsim {
         //exact_mutations_until_division.push_back( division_of_mutation );
         */
         
-        // Populate hard-coded values
-        binomial_sampling_threshold = 1000;
       }
       
       void Print() {
@@ -129,10 +127,6 @@ namespace bpopsim {
       vector<double> exact_mutation_at_division;
       vector<double> exact_mutation_next_division_interval;
       */
-      
-      // Hard-coded
-      double binomial_sampling_threshold; // Perform binomial sampling on transfer if subpopulation has < this many cells.
-                                          // If > this many cells, just divide by transfer diluton.
 
     } simulation_parameters;
     

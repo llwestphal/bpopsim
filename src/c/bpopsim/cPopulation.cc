@@ -129,7 +129,7 @@ void cPopulation::OutputCladeFrequencies(double frequency_threshold)
   //Print each sweeping genotype and its frequency per time
 	ofstream output_file;
   string output_file_name = output_parameters.output_directory_name + "/clade_frequencies_" 
-    + to_string(frequency_threshold) + "_" + to_string(replicate) + ".dat";
+    + to_string(frequency_threshold, 4) + "_" + to_string(replicate) + ".dat";
 	output_file.open(output_file_name.c_str(),ios::out);
     
   cerr << "Output: " << output_file_name << endl;
@@ -162,7 +162,7 @@ void cPopulation::OutputGenotypeFrequencies(double frequency_threshold)
   //Print each sweeping genotype and its frequency per time
 	ofstream output_file;
   string output_file_name = output_parameters.output_directory_name + "/genotype_frequencies_" 
-  + to_string(frequency_threshold) + "_" + to_string(replicate) + ".dat";
+  + to_string(frequency_threshold, 4) + "_" + to_string(replicate) + ".dat";
 	output_file.open(output_file_name.c_str(),ios::out);
   
   cerr << "Output: " << output_file_name << endl;
@@ -608,25 +608,14 @@ void cPopulation::TransferResampleDilution()
   // @JEB: Move to main simulation loop
   num_completed_transfers++;
   
-  if (g_verbose) cerr << ">> Transfer!" << endl;
-	
+  if (g_verbose) cerr << "  Population size before transfer: " << current_population_size << endl;
+  
   current_population_size = 0; // recalculate population size
   for (vector<cSubpopulation>::iterator it = current_subpopulations.begin(); it!=current_subpopulations.end(); ++it) {
-    // Perform accurate binomial sampling only if below a certain population size
-    if (it->GetNumber() < simulation_parameters.binomial_sampling_threshold) {
-      if (g_verbose) cerr << "binomial " << it->GetNumber() << endl;
-      it->Transfer(simulation_parameters.binomial_sampling_transfer_probability, rng);
-    }
-    // Otherwise, treat as deterministic and take expectation...
-    else {
-      it->SetNumber(it->GetNumber() * simulation_parameters.binomial_sampling_transfer_probability);
-    }
     
-    if (g_verbose) { 
-      cerr << it->GetMarker() << endl;
-      cerr << it->GetNumber() << endl;
-      cerr << it->GetFitness() << endl;
-    }	
+    // Perform binomial sampling
+    it->Transfer(simulation_parameters.binomial_sampling_transfer_probability, rng);
+    
     if( it->GetMarker() == 'r' ) by_color[RED] += it->GetNumber();
     else if( it->GetMarker() == 'w' ) by_color[WHITE] += it->GetNumber();
     
@@ -642,6 +631,8 @@ void cPopulation::TransferResampleDilution()
       existing_genotype_count--;
     }
   }
+  
+  if (g_verbose) cerr << "  Population size after transfer: " << current_population_size << endl;
   
   // Check our calculated population size
   // Check how we have updated the population size

@@ -55,9 +55,9 @@ image.matrix <- function(x, colorTable=NULL, xlab="x", ylab="y", ...) {
 
 muller_mat <- t(as.matrix(read.table(muller_matrix_file_name, header=F)))*10
 
-pdf("Muller.pdf", 
-    width=20,
-    height=5)
+png("Muller.png", 
+    width=2000,
+    height=500)
 
 #opar <- par(ask=TRUE)
 

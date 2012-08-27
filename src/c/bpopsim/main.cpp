@@ -105,7 +105,8 @@ int bpopsim_default_action(int argc, char* argv[])
   g_verbose = options.count("verbose");
 
   // Use one main random number generator for entire program (don't reset for each replicate)
-  gsl_rng* rng = initialize_random_number_generator(from_string<int16_t>(options["rng-seed"]));
+  uint16_t rng_seed = from_string<int16_t>(options["rng-seed"]);
+  gsl_rng* rng = initialize_random_number_generator(rng_seed);
       
   bool use_new_simulator = options.count("new_simulator");
   
@@ -132,6 +133,7 @@ int bpopsim_default_action(int argc, char* argv[])
   cStatistics final_statistics(options);
   
   cout << endl << "***** Beginning Simulations *****" << endl;
+  cout << "(Random number generator seed = " << rng_seed << ")" << endl;
   
   for (uint32_t on_replicate=1; on_replicate <= replicates; on_replicate++)
   {
@@ -146,7 +148,7 @@ int bpopsim_default_action(int argc, char* argv[])
     
     // Output Per-Simulation Files
     if( options.count("output-clade-frequencies") ) {
-      population.OutputCladeFrequencies(0.001);
+      population.OutputCladeFrequencies(0.01);
     }
     
     if( options.count("output-genotype-frequencies") ) {

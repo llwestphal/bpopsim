@@ -63,18 +63,39 @@ namespace bpopsim {
         generations_per_transfer = from_string<double>(options["generations-per-transfer"]);
 
         initial_fitness = from_string<double>(options["initial-fitness"]);
-        beneficial_mutation_rate_per_division = from_string<double>(options["beneficial-mutation-rate"]);
-        beneficial_mutation_effect_model = options["beneficial-fitness-effect-model"];
-        beneficial_mutation_effect = from_string<double>(options["beneficial-fitness-effect"]);
+        mutation_rates_per_division = from_string<vector<double> >(options["mutation-rates"]);
+        mutation_fitness_effects = from_string<vector<double> >(options["fitness-effects"]);
+        mutation_fitness_effect_model = options["fitness-effect-model"];
         
-        if (options.count("first-beneficial-mutation-fitness-effects"))
-          first_beneficial_mutation_effects = from_string<vector< double > >(options["first-beneficial-mutation-fitness-effects"]);
+        if (mutation_rates_per_division.size() != mutation_fitness_effects.size()) {
+          
+          options.addUsage("");
+          options.addUsage("The number of mutation rates (-u) is not the same as the number of fitness effects (-s).");
+          options.printUsage();
+          exit(-1);
+        }
+        
+        if (options.count("first-mutation-fitness-effects"))
+          first_mutation_fitness_effects = from_string<vector< double > >(options["first-mutation-fitness-effects"]);
         
         // Populate calculated values
         transfer_dilution_factor = exp(log(2) * generations_per_transfer);
         final_population_size_at_transfer = transfer_dilution_factor * initial_population_size_after_transfer;
         binomial_sampling_transfer_probability = 1.0 / transfer_dilution_factor;
-        beneficial_mutation_rate_exponential_mean = 1.0 / beneficial_mutation_rate_per_division;
+        
+        // Sum mutation rates
+        total_mutation_rate_per_division = 0;
+        for(vector<double>::iterator it=mutation_rates_per_division.begin(); it!=mutation_rates_per_division.end(); it++)
+          total_mutation_rate_per_division += *it;
+        
+        total_mutation_rate_exponential_mean = 1.0 / total_mutation_rate_per_division;
+        
+        // Fill in the fractional table for deciding which category mutations belong in.
+        double on_mutation_rate_per_division = 0;
+        for(vector<double>::iterator it=mutation_rates_per_division.begin(); it!=mutation_rates_per_division.end(); it++) {
+          on_mutation_rate_per_division += *it;
+          fractional_chances_of_mutation_categories.push_back(on_mutation_rate_per_division/total_mutation_rate_per_division);
+        }
       
         // Exact mutation number - may want to implement within transfer loop, so divisions change. This way now for MA usage.
         /*
@@ -99,29 +120,31 @@ namespace bpopsim {
         cerr << "  Transfer dilution                             = " << transfer_dilution_factor << endl;
         cerr << "  Population size after transfer           (-N) = " << initial_population_size_after_transfer << endl;
         cerr << "  Population size at transfer                   = " << final_population_size_at_transfer << endl;
-        cerr << "  Beneficial mutation rate per division    (-u) = " << beneficial_mutation_rate_per_division << endl;
-        cerr << "  Beneficial mutation fitness effect model (-f) = " << beneficial_mutation_effect_model << endl;
-        cerr << "  Beneficial mutation fitness effect       (-s) = " << beneficial_mutation_effect << endl;
+        cerr << "  Mutation rates per division              (-u) = " << to_string(mutation_rates_per_division) << endl;
+        cerr << "  Mutation fitness effects                 (-s) = " << to_string(mutation_fitness_effects) << endl;
+        cerr << "  Mutation fitness effect model            (-f) = " << mutation_fitness_effect_model << endl;
       }
       
       // Input
-      double maximum_number_of_transfers;           // Maximum number of transfers before ending simulation. May end earlier for other reasons.
-      int64_t initial_population_size;               // Initial population size at the beginning of the simulation
-      int64_t initial_population_size_after_transfer;  // Initial population size after transfer dilution
-      double generations_per_transfer;              // Number of binary cell divisions per transfer
+      double maximum_number_of_transfers;               // Maximum number of transfers before ending simulation. May end earlier for other reasons.
+      double initial_population_size;                  // Initial population size at the beginning of the simulation
+      double initial_population_size_after_transfer;   // Initial population size after transfer dilution
+      double generations_per_transfer;                  // Number of binary cell divisions per transfer
       
-      double initial_fitness;                            // Fitness of cells at the beginning of the simulation
-      double beneficial_mutation_rate_per_division;      // Rate per cell division of beneficial mutations
-      string beneficial_mutation_effect_model;           // Model for drawing fitness effects: 'u' = uniform 
-      double beneficial_mutation_effect;                 // Effect of mutations = selection coefficient for uniform model
-      vector<double> first_beneficial_mutation_effects;  // If supplied, the sizes of the first mutational steps
-    
+      double initial_fitness;                           // Fitness of cells at the beginning of the simulation
+      vector<double> mutation_rates_per_division;       // Rate per cell division of mutations in each category
+      vector<double> mutation_fitness_effects;          // Effect of mutations in each category = selection coefficient for uniform model 
+      string mutation_fitness_effect_model;             // Model for drawing fitness effects: 'u' = uniform NOT FULLY IMPLEMENTED
+      vector<double> first_mutation_fitness_effects; // NOT FULLY IMPLEMENTED
+      
       // Calculated from Input 
-      double transfer_dilution_factor;                      // The transfer dilution fraction
-      double final_population_size_at_transfer;            // Final population size that triggers a transfer
-      double binomial_sampling_transfer_probability;        // Probability for binomial sampling
-      double beneficial_mutation_rate_exponential_mean;  // Mean for Poisson draws of divisions until next mut
-
+      double transfer_dilution_factor;                  // The transfer dilution fraction
+      double final_population_size_at_transfer;         // Final population size that triggers a transfer
+      double binomial_sampling_transfer_probability;    // Probability for binomial sampling
+      double total_mutation_rate_exponential_mean;              // Mean for Poisson draws of divisions until next mut
+      double total_mutation_rate_per_division;                  // Sum of all mutation rates
+      vector<double> fractional_chances_of_mutation_categories; // Fraction of mutations in each category
+      
       /* Finish re-implementing
       uint32_t exact_mutations_per_transfer;             // Exact number of mutations to uniformly distribute during transfer
       vector<double> exact_mutation_at_division;
@@ -136,10 +159,12 @@ namespace bpopsim {
       {
         output_directory_name = options["output-folder"];
         coarse_graining = from_string<uint32_t>(options["coarse-graining"]);
+        burn_in = from_string<uint32_t>(options["burn-in"]);
       }
       
       string output_directory_name;
       uint32_t coarse_graining;
+      int32_t burn_in;            // Number of transfers to perform before recording output
       uint32_t m_muller_rez;      // Vertical Resolution of Muller plot... set at command line (default: 2500)
 
     } output_parameters;
@@ -180,7 +205,7 @@ namespace bpopsim {
     
     // Total number of cell equivalents in population
     uint32_t total_cell_equivalents;    // @JEB: possibly not used
-    int64_t current_population_size;    // Current population size in terms of whole cells
+    double current_population_size;    // Current population size in terms of whole cells
     
     // Lineages that divided simultaneously and could all contain a mutation equally well
     vector<uint32_t> just_divided_lineages;
@@ -189,12 +214,13 @@ namespace bpopsim {
     vector<cSubpopulation>  mutations_since_last_transfer;  
                                                               
     // All of the following should be initialized in the constructor
-    uint32_t num_completed_transfers;   //Number of transfers that have been completed thus far
+    int32_t num_completed_transfers;   //Number of transfers that have been completed thus far, can be negative for burn-in
+    double average_subpopulation_fitness;
     bool run_end_condition_met;
     
-    // @JEB: An int64_t rather than a uint because this can go negative by a few cells
+    // @JEB: An double rather than a uint because this can go negative by a few cells
     //       when cells (usually the ancestors) divide simultaneously.
-    int64_t num_divisions_until_next_mutation; 
+    double num_divisions_until_next_mutation; 
     double num_completed_divisions;
 
     gsl_rng* rng;
@@ -242,14 +268,16 @@ namespace bpopsim {
       
     //! Move time forward by this increment, growing all subpopulations
     void   UpdateSubpopulationsForGrowth(double update_time);
+    void   UpdateSubpopulationsForGrowthExactWithFractionalCells(double update_time);
     
     //! Calculate the time until the next subpopulation divides (passes a whole number of cells)
     double TimeToNextWholeCell();
     
     //! Calculate an amount of time to divide that won't take us over the time until the next mutation
-    int64_t CalculateDivisionsUntilNextBeneficialMutation() 
-      { return static_cast<int64_t>(round(gsl_ran_exponential(rng, simulation_parameters.beneficial_mutation_rate_exponential_mean))); }
+    double CalculateDivisionsUntilNextBeneficialMutation() 
+      { return static_cast<double>(round(gsl_ran_exponential(rng, simulation_parameters.total_mutation_rate_exponential_mean))); }
     void   ProcessCellDivisionTimeStep();
+    void   ProcessCellDivisionTimeStepExactWithFractionalCells();
     void   ProcessCellDivisionTimeStepNew();
     
     //! Population transfer methods
@@ -261,8 +289,10 @@ namespace bpopsim {
     void   SeedPopulationWithOneGenotype();
     
     //! Methods for introducing mutants into the population
-    void   Mutate();
-    void   MutateNew();
+    uint32_t  DetermineMutationCategory();
+    void      Mutate();
+    void      MutateExactWithFractionalCells();
+    void      MutateNew();
     
     // General function used whenever a new subpopulation is added
     void   AddSubpopulation(cSubpopulation& subpop);
@@ -275,8 +305,9 @@ namespace bpopsim {
 
     //!!! Utility calculations - mainly used in debug mode
     
-    uint64_t CalculatePopulationSize();
+    double CalculatePopulationSize();
     double   CalculateMaximumSubpopulationFitness();
+    double   CalculateAverageSubpopulationFitness();
     
     double AssignChildFrequency(
                                 tree<cGenotype>::sibling_iterator child_node,

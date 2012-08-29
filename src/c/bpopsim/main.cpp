@@ -6,7 +6,7 @@ using namespace std;
 
 bool g_verbose;
 
-gsl_rng* initialize_random_number_generator(int16_t seed)
+gsl_rng* initialize_random_number_generator(uint16_t& seed)
 {
   const gsl_rng_type *T;
   gsl_rng * randgen;
@@ -35,34 +35,35 @@ int bpopsim_default_action(int argc, char* argv[])
   options.addUsage("");
   options("rng-seed,d", "Seed for random number generator. [0 = time x pid]", 0);
   options("replicates,r", "Replicates", 1);
-  options("initial-population-size,p", "Initial Population Size", "5E6");
+  options("initial-population-size,p", "Initial population size.", "5E6");
   options("generations-per-transfer,T", "Generations per transfer", 6.64);
   options("population-size-after-transfer,N", "Population size after transfer", "5E6");
   options("number-of-transfers,n", "Max number of transfer to replicate", 50);
-  options("initial-fitness,z", "Initial Fitness.", 1.0);
-  options("beneficial-mutation-rate,u", "Effective beneficial mutation rate per cell division", "1E-7");
-  options("beneficial-fitness-effect,s", "Fitness increment per beneficial mutation.", 0.1);
-  options("beneficial-fitness-effect-model,f", "Distribution of beneficial mutation fitness effects", 'u');
+  options("initial-fitness,z", "Initial fitness.", 1.0);
+  options("mutation-rates,u", "Mutation rate per cell division. Supply option multiple times to define categories of mutations.", "1E-7");
+  options("fitness-effects,s", "Fitness increment per mutation. Supply option multiple times to define categories of mutations.", 0.1);
+  options("fitness-effect-model,f", "Distribution of mutation fitness effects.", 'u');
   options.addUsage("");
   options.addUsage("==== Marker Divergence Options ====");
   options.addUsage("");
   options("marker-states,k", "Begin with the initial population divided equally into this many subpopulations each with a different state of a neutral genetic marker. Do not track genotypes. Only track the neutral marker state of each subpopulation. Default (0=OFF).", 0);
-  options("max-marker-divergence-ratio,m", "Stop if divergence factor between the subpopulations with the most abundant and next-most abundant marker state exceeds this factor", 100);
-  options("transfer-interval-to-print,t", "Marker divergence Printing intervals.", 1);
+  options("max-marker-divergence-ratio,m", "Stop if divergence factor between the subpopulations with the most abundant and next-most abundant marker state exceeds this factor.", 100);
+  options("transfer-interval-to-print,t", "Marker divergence printing intervals.", 1);
   options.addUsage("");
   options.addUsage("==== Output Files and Options ====");  
   options.addUsage("");  
   options("output-folder,o", "Base output folder. All output files will be created here.", ".");
+  options("burn-in,b", "Perform this number of transfers before beginning to output statistics (before transfer numbered 0).", 0);
   options("coarse-graining,c", "Only print stats every this many transfers to all output files.", 1);
-  options("output-average-fitness", "Output average fitness to file 'average_fitness.csv'",TAKES_NO_ARGUMENT);
-  options("output-clade-frequencies", "Print clade frequencies", TAKES_NO_ARGUMENT);
-  options("output-genotype-frequencies", "Print genotype frequencies", TAKES_NO_ARGUMENT);
-  options("output-muller", "Output Muller matrix to file 'muller.mat'. Cell values are ", TAKES_NO_ARGUMENT);
+  options("output-average-fitness", "Output average fitness to file 'average_fitness.tab'",TAKES_NO_ARGUMENT);
+  options("output-clade-frequencies", "Output clade (mutation) frequencies for replicate X to file 'clade_frequencies_X.tab'", TAKES_NO_ARGUMENT);
+  options("output-genotype-frequencies", "Print genotype frequencies for replicate X to file 'genotype_frequencies_X.tab'.", TAKES_NO_ARGUMENT);
+  options("output-muller", "Output Muller matrix to file 'muller.mat'. Cell values are genotypes to color.", TAKES_NO_ARGUMENT);
   options("muller-resolution,w", "Muller plot vertical resolution.", 200);
+  
+  // Not (re)implemented
 //  options("output-dominant-genotypes", "Output dominant genotype frequencies to file 'dominant_genotypes.csv'", TAKES_NO_ARGUMENT);
 //  options("dominant-genotype-frequency-cutoff", "Print Average Fitness", 0.001);
-
-// Not re-implemented
 //  ("output-time-to-sweep", "Print time to sweep for each mutation", TAKES_NO_ARGUMENT)
 //  ("output-max-diff", "Print max difference of sweeping mutations", TAKES_NO_ARGUMENT)
 //  ("output-single-fitness", "Print the fitness of the single cell.", TAKES_NO_ARGUMENT)
@@ -108,21 +109,9 @@ int bpopsim_default_action(int argc, char* argv[])
   uint16_t rng_seed = from_string<int16_t>(options["rng-seed"]);
   gsl_rng* rng = initialize_random_number_generator(rng_seed);
       
-  bool use_new_simulator = options.count("new_simulator");
+  bool use_new_simulator = options.count("new-simulator");
   
   uint32_t replicates = from_string<uint32_t>(options["replicates"]);
-
-  // Some options only work when there is one replicate...
-  /*
-  if (replicates != 1) {
-    if (options.count("output-muller")) {
-      options.addUsage("");
-      options.addUsage("Muller matrix output only works with a single replicate.");
-      options.printUsage();
-      return -1;
-    }
-  }
-   */
     
   // This is just to display settings
   {

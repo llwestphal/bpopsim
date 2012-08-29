@@ -193,13 +193,7 @@ inline ostream &operator << (ostream &stream, vector<string> lhs)
   stream << join(lhs, ",");
   return stream;
 }
-/*istream &operator >> (istream &stream, vector<string>& lhs)
- {
- string value;
- stream >> value;
- lhs = split(value, ",");
- return stream;
- }*/
+
 template <typename T> inline istream &operator >> (istream &stream, vector<T>& rhs)
 {
   rhs.clear();
@@ -226,7 +220,7 @@ inline string to_string (const pair<int,int>& t)
 {
   return to_string(t.first) + '/' + to_string(t.second);
 }
-inline string to_string (const double& t, const uint32_t precision=1)
+inline string to_string (const double& t, const uint32_t precision)
 {
   if(isnan(t)) {
     return "NA";
@@ -236,6 +230,18 @@ inline string to_string (const double& t, const uint32_t precision=1)
     return interpreter.str();
   }
 }
+
+
+template <typename T> inline string to_string (const vector<T>& t)
+{
+  vector<string> ts;
+  for (class vector<T>::const_iterator it = t.begin(); it!=t.end(); it++) {
+    ts.push_back(to_string(*it));
+  }
+  
+  return join(ts, ",");
+}
+
 
 // handle bool as either TRUE/FALSE or zero/non-zero number
 // Does not handle single-character T/F correctly 

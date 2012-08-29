@@ -14,7 +14,8 @@ cPopulation::cPopulation(AnyOption& options, gsl_rng* in_rng, uint32_t in_replic
 , existing_genotype_count(0)
 , maximum_subpopulation_fitness(simulation_parameters.initial_fitness)
 , current_population_size(0)
-, num_completed_transfers(0)
+, num_completed_transfers(-output_parameters.burn_in)   // This prevents recording
+, average_subpopulation_fitness(0)
 , run_end_condition_met(false)
 , num_divisions_until_next_mutation(0)
 , num_completed_divisions(0)
@@ -41,63 +42,72 @@ void cPopulation::RunSimulation(bool new_simulation_model)
   //Get an initial time points
   RecordStatisticsAtTransfer();
   
+  cerr << "    Replicate: " << setw(3) << replicate << "  Transfer: " << setw(4) << num_completed_transfers;
+  cerr << "  Fitness: " << setw(7) << fixed << setprecision(4) << average_subpopulation_fitness << "  Genotypes: " << setw(6) << existing_genotype_count; 
+  cerr << endl;
+  
   // Print the initial tree
   //if (g_verbose) population.PrintTree();
+  
+  // Get us started with a mutation
+  num_divisions_until_next_mutation += CalculateDivisionsUntilNextBeneficialMutation();
 
   while( num_completed_transfers < simulation_parameters.maximum_number_of_transfers ) {
+        
+    if (new_simulation_model)
+      ProcessCellDivisionTimeStepExactWithFractionalCells();
+    else
+      ProcessCellDivisionTimeStep();
     
-    num_divisions_until_next_mutation = CalculateDivisionsUntilNextBeneficialMutation();
+    //cerr << current_population_size << endl;
     
-    while( num_divisions_until_next_mutation > 0 && (num_completed_transfers < simulation_parameters.maximum_number_of_transfers)) {
-      
+    // Debug check on mutate function
+    double cells_before_mutate;
+    if (debug) cells_before_mutate = CalculatePopulationSize();
+    
+    // Slightly greater than one for floating point errors.
+    if ( num_divisions_until_next_mutation <= 0.00001 ) {
       if (new_simulation_model)
-        ProcessCellDivisionTimeStepNew();
+        MutateExactWithFractionalCells();
       else
-        ProcessCellDivisionTimeStep();
-      
-      // Debug check on mutate function
-      int64_t cells_before_mutate;
-      if (debug) cells_before_mutate = CalculatePopulationSize();
-      
-      if( num_divisions_until_next_mutation <= 0 ) {
-        if (new_simulation_model)
-          MutateNew();
-        else
-          Mutate();
-      }
-      
-      if (debug) {
-        int64_t cells_after_mutate = CalculatePopulationSize();
-        assert(cells_before_mutate == cells_after_mutate);
-      }
-        
-      if( current_population_size >= simulation_parameters.final_population_size_at_transfer ) {
-        
-        cerr << "    Replicate: " << setw(3) << replicate << "  Transfer: " << setw(4) << num_completed_transfers;
-        cerr << "  Current Genotypes: " << setw(6) << existing_genotype_count; 
-        cerr << endl;
-        
-        // Record statistics
-        RecordStatisticsAtTransfer();
+        Mutate();
+    }
+    num_divisions_until_next_mutation += CalculateDivisionsUntilNextBeneficialMutation();
 
-        // @JEB: Would need to re-implement mutation accumulation version
-        /*
-          if( print_single_fit )
-            TransferResampleExactlyOne();
-          else {
-        */ 
-        TransferResampleDilution();
-        CullSubpopulationsThatDidNotEstablish();
-        //  }
-          
-        /* @JEB: Would need to re-implement...
-         
-          if( print_single_fit && !use_mute_num) {
-            population.PrintSingleFitness(options["output-folder"]);
-            //cout << "Population size: " << population.GetPopulationSize() << endl;
-          }
-         */
-      }
+    
+    if (debug) {
+      double cells_after_mutate = CalculatePopulationSize();
+      assert( abs(cells_before_mutate - cells_after_mutate) < 0.00001);
+    }
+      
+    if( current_population_size >= simulation_parameters.final_population_size_at_transfer ) {
+              
+
+
+      // @JEB: Would need to re-implement mutation accumulation version
+      /*
+        if( print_single_fit )
+          TransferResampleExactlyOne();
+        else {
+      */ 
+      TransferResampleDilution();
+      CullSubpopulationsThatDidNotEstablish();
+      //  }
+      
+      // Record statistics after the transfer
+      RecordStatisticsAtTransfer();
+        
+      /* @JEB: Would need to re-implement...
+       
+        if( print_single_fit && !use_mute_num) {
+          population.PrintSingleFitness(options["output-folder"]);
+          //cout << "Population size: " << population.GetPopulationSize() << endl;
+        }
+       */
+      
+      cerr << "    Replicate: " << setw(3) << replicate << "  Transfer: " << setw(4) << num_completed_transfers;
+      cerr << "  Fitness: " << setw(7) << fixed << setprecision(4) << average_subpopulation_fitness << "  Genotypes: " << setw(6) << existing_genotype_count; 
+      cerr << endl;
     }
   }
 }
@@ -141,7 +151,7 @@ void cPopulation::OutputCladeFrequencies(double frequency_threshold)
   output_file << endl;
   
   for (uint32_t transfer=0; transfer<replicate_statistics.clade_frequencies.size(); transfer++) {
-    output_file << transfer;
+    output_file << transfer * output_parameters.coarse_graining;
     vector<cGenotypeFrequency>& transfer_clade_frequencies = replicate_statistics.clade_frequencies[transfer];
     if( transfer % output_parameters.coarse_graining == 0 ) {
       for (uint32_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
@@ -175,7 +185,7 @@ void cPopulation::OutputGenotypeFrequencies(double frequency_threshold)
   
   
   for (uint32_t transfer=0; transfer<replicate_statistics.genotype_frequencies.size(); transfer++) {
-    output_file << transfer;
+    output_file << transfer * output_parameters.coarse_graining;
     vector<cGenotypeFrequency>& transfer_genotype_frequencies = replicate_statistics.genotype_frequencies[transfer];
     if( transfer % output_parameters.coarse_graining == 0 ) {
       for (uint32_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
@@ -249,7 +259,7 @@ void cPopulation::OutputMullerMatrix(uint32_t frequency_resolution)
   //step through simulation time
   for (vector< vector<cGenotypeFrequency> >::iterator this_time_freq = replicate_statistics.clade_frequencies.begin(); 
        this_time_freq < replicate_statistics.clade_frequencies.end(); ++this_time_freq) {
-    cerr << " Writing Transfer: " << setw(4) << time << endl;
+    cerr << " Writing Transfer: " << setw(4) << time * output_parameters.coarse_graining << endl;
     time++;
     vector<cFrequencySlice> child_freqs;
     
@@ -310,6 +320,8 @@ void cStatistics::OutputAveragePopulationFitness() {
   
   cerr << "Output: " << output_file_name << endl;
   
+  int32_t num_entries = (*this)[0].average_population_fitness.size();
+  
   int32_t max_transfers_printed = 0;
   for (uint32_t replicate = 0; replicate < this->size(); ++replicate) {
     cReplicateStatistics& replicate_statistics = (*this)[replicate];
@@ -318,9 +330,9 @@ void cStatistics::OutputAveragePopulationFitness() {
   }
   
   output_file << "replicate";
-  for (uint32_t transfer = 0; transfer < max_transfers_printed; ++transfer) {
+  for (uint32_t transfer = 0; transfer < num_entries; ++transfer) {
     if( transfer % coarse_graining == 0 )
-      output_file << "\t" << transfer;
+      output_file << "\t" << transfer * coarse_graining;
   }
   output_file << endl;
   
@@ -329,7 +341,7 @@ void cStatistics::OutputAveragePopulationFitness() {
     cReplicateStatistics& replicate_statistics = (*this)[replicate];
     output_file << (replicate+1);
     
-    for (uint32_t transfer = 0; transfer < max_transfers_printed; ++transfer) {
+    for (uint32_t transfer = 0; transfer < num_entries; ++transfer) {
       
       if( transfer % coarse_graining == 0 ) {
         
@@ -359,9 +371,6 @@ void cPopulation::UpdateSubpopulationsForGrowth(double update_time)
   current_population_size = 0; // Update the population size.
   for (vector<cSubpopulation>::iterator it = current_subpopulations.begin(); it!=current_subpopulations.end(); ++it) {
     i++; // must advance iterator before continue statement
-    
-    // @JEB: It doesn't seem like this is possible...
-    assert(it->GetNumber() != 0);
 
     // N = No * exp(log(2) * relative_growth_rate * t) 
     double new_number = it->GetNumber() * exp(log_2 * it->GetFitness() * update_time);     
@@ -374,8 +383,22 @@ void cPopulation::UpdateSubpopulationsForGrowth(double update_time)
   
   // Check how we have updated the population size
   if (debug) {
-    int64_t calculated_population_size = CalculatePopulationSize();
+    double calculated_population_size = CalculatePopulationSize();
     assert(calculated_population_size == current_population_size);
+  }
+}
+
+void cPopulation::UpdateSubpopulationsForGrowthExactWithFractionalCells(double update_time) 
+{
+  uint32_t i=-1;
+  current_population_size = 0; // Update the population size.
+  for (vector<cSubpopulation>::iterator it = current_subpopulations.begin(); it!=current_subpopulations.end(); ++it) {
+    i++; // must advance iterator before continue statement
+    
+    // N = No * exp(log(2) * relative_growth_rate * t) 
+    double new_number = it->GetNumber() * exp(log_2 * it->GetFitness() * update_time);     
+    it->SetNumber(new_number);
+    current_population_size += new_number;
   }
 }
 
@@ -392,7 +415,7 @@ double cPopulation::TimeToNextWholeCell()
       
       //cout << "Current cells: " << current_cells << " Next whole cells: " << next_whole_cells << endl;
       // N = No * exp(log(2) * growth_rate * t) 
-      double this_time_to_next_whole_cell = (log(next_whole_cells / current_cells) / (it->GetFitness())) / log(2);   
+      double this_time_to_next_whole_cell = log2(next_whole_cells / current_cells) / (it->GetFitness());   
 
       if ( time_to_next_whole_cell == -1 || (this_time_to_next_whole_cell < time_to_next_whole_cell) ) {
         time_to_next_whole_cell = this_time_to_next_whole_cell;
@@ -450,11 +473,13 @@ void cPopulation::ProcessCellDivisionTimeStep()
   
   // How much time would we like to pass to achieve the desired number of divisions?
   // (Assuming the entire population has the maximum fitness, makes us underestimate by a few)
-  // Can't change this log to ReturnLog with log table or nothing works
   
   double update_time(0);
   
+  
+  // @JEB: log instead of log2 is to give slow approach to time when division happens
   update_time = log((desired_divisions+current_population_size) / current_population_size) / maximum_subpopulation_fitness;
+ // update_time = log((desired_divisions+current_population_size) / current_population_size) / CalculateAverageSubpopulationFitness();
   
   // At a minumum, we want to make sure that one cell division took place
   
@@ -471,32 +496,103 @@ void cPopulation::ProcessCellDivisionTimeStep()
     cout << "Update time: " << update_time <<endl;    
   }
   
-  //Now update all lineages by the time that actually passed
-  
-  //FIX THIS!!!!
-  //Population size shouldn't have to be recaculated here
-  //I think this is fixed... the problem was in the AddSubpopulation() method
-  //m_population_size = CalculatePopulationSize();
-  
+  //Now update all lineages by the time that actually passed  
   double previous_population_size = current_population_size;
-  
   UpdateSubpopulationsForGrowth(update_time);
-  
   double completed_divisions = current_population_size - previous_population_size;
+  //assert(completed_divisions != 0);
   
   if (g_verbose) {
-    cout << "Completed divisions: " << completed_divisions << endl;
+    cerr << "Completed divisions: " << completed_divisions << endl;
     for(vector<cSubpopulation>::iterator this_time = current_subpopulations.begin(); this_time != current_subpopulations.end(); this_time++) {
-      //if( this_time->GetNumber() == 0 )
-      cout << "Genotype: " << this_time->GetNode_id() << " Frequency: " << this_time->GetNumber() << endl;
+      cerr << "Genotype: " << this_time->GetNode_id() << " Frequency: " << this_time->GetIntegralNumber() << endl;
     }
   }
   
-  //cout << "Divisions until mutation: " << GetDivisionsUntilMutation() << " Completed divisions: " << GetCompletedDivisions() << " Population Size: " << GetPopulationSize() << " Previous Population Size: " << previous_population_size << endl;
   num_divisions_until_next_mutation -= completed_divisions;
+  
+  /*
+  if (num_divisions_until_next_mutation <= 0)
+    if (completed_divisions > 3)
+      cerr << completed_divisions << endl;
+  */ // We should really backtrack so that all pops divided simultaneously, this is slightly off.
+  // We could move time forward by the number of mutations and then weight which subpop it occurs in by the number of divisions in each one
+   
+  if (g_verbose) {
+    cerr << "Divisions until mutation: " << num_divisions_until_next_mutation << endl;
+  }
 }
 
-//@JEB: Not sure what "new" is doing differently
+
+void cPopulation::ProcessCellDivisionTimeStepExactWithFractionalCells()
+{
+  
+  if (g_verbose) {
+    for(vector<cSubpopulation>::iterator this_time = current_subpopulations.begin(); this_time != current_subpopulations.end(); this_time++) {
+      cout << "Genotype: " << this_time->GetNode_id() << " Fitness: " << this_time->GetFitness() << " Number: " << this_time->GetNumber() << endl;
+    }
+  }
+  
+  double desired_divisions = num_divisions_until_next_mutation;
+  
+  // Adjust divisions to be to the end of the transfer if it is larger
+  if (desired_divisions + current_population_size > simulation_parameters.final_population_size_at_transfer) {
+    desired_divisions = simulation_parameters.final_population_size_at_transfer - current_population_size;
+  }
+  
+  // Note: we underestimate by a few divisions so that we can step forward by single division increments
+  // as we get close to the one where the mutation happened (or right before a transfer).      
+  
+  if (desired_divisions < 1) {
+    desired_divisions = 1;
+  }
+  
+  if (g_verbose) {
+    cout << "Total pop size: " << current_population_size <<endl;
+    cout << "Desired divisions: " << desired_divisions <<endl;
+  }
+  
+  // How much time would we like to pass to achieve the desired number of divisions?
+  // (Assuming the entire population has the maximum fitness, makes us underestimate by a few)
+  
+  double update_time(0);
+  
+  
+  // This is the exact amount of time to be sure that this many fractional cells were produced
+  update_time = log2((desired_divisions+current_population_size) / current_population_size) / CalculateAverageSubpopulationFitness();  
+
+  if (g_verbose) {
+    cout << "Update time: " << update_time <<endl;    
+  }
+  
+  //Now update all lineages by the time that actually passed  
+  double previous_population_size = current_population_size;
+  UpdateSubpopulationsForGrowthExactWithFractionalCells(update_time);
+  double completed_divisions = current_population_size - previous_population_size;
+  //assert(completed_divisions != 0);
+  
+  if (g_verbose) {
+    cerr << "Completed divisions: " << completed_divisions << endl;
+    for(vector<cSubpopulation>::iterator this_time = current_subpopulations.begin(); this_time != current_subpopulations.end(); this_time++) {
+      cerr << "Genotype: " << this_time->GetNode_id() << " Frequency: " << this_time->GetNumber() << " Fitness: " << this_time->GetFitness() << endl;
+    }
+  }
+  
+  num_divisions_until_next_mutation -= completed_divisions;
+  
+  /*
+   if (num_divisions_until_next_mutation <= 0)
+   if (completed_divisions > 3)
+   cerr << completed_divisions << endl;
+   */ // We should really backtrack so that all pops divided simultaneously, this is slightly off.
+  // We could move time forward by the number of mutations and then weight which subpop it occurs in by the number of divisions in each one
+  
+  if (g_verbose) {
+    cerr << "Divisions until mutation: " << num_divisions_until_next_mutation << endl;
+  }
+}
+
+//@JEB: Not sure what "new" is doing differently. It's something with resources.
 
 void cPopulation::ProcessCellDivisionTimeStepNew() 
 {
@@ -622,7 +718,7 @@ void cPopulation::TransferResampleDilution()
     //@agm This section is to delete new mutations from the tree that do not get passed, 
     //     it also deletes subpopulations from the list that have zero population
     
-    current_population_size += floor(it->GetNumber());
+    current_population_size += it->GetNumber();
     
     if( it->GetNumber() == 0 ) {
       it = current_subpopulations.erase(it);
@@ -637,7 +733,7 @@ void cPopulation::TransferResampleDilution()
   // Check our calculated population size
   // Check how we have updated the population size
   if (debug) {
-    int64_t calculated_population_size = CalculatePopulationSize();
+    double calculated_population_size = CalculatePopulationSize();
     assert(calculated_population_size == current_population_size);
   }
   
@@ -841,6 +937,25 @@ void cPopulation::CullSubpopulationsThatDidNotEstablish() {
   
 }
 
+
+uint32_t cPopulation::DetermineMutationCategory()
+{
+  // Don't draw a random number if there is only one category
+  if (simulation_parameters.fractional_chances_of_mutation_categories.size() == 0) 
+    return 0;
+  
+  double random_fraction = gsl_rng_uniform(rng);
+  uint32_t category = 0;
+  while (random_fraction > simulation_parameters.fractional_chances_of_mutation_categories[category]) {
+    random_fraction -= simulation_parameters.fractional_chances_of_mutation_categories[category];
+    category++;
+  }
+    
+  assert(category <= simulation_parameters.fractional_chances_of_mutation_categories.size());
+  return category;
+}
+
+
 //Generates new mutant and adds it to the tree
 void cPopulation::Mutate() 
 {	
@@ -859,34 +974,109 @@ void cPopulation::Mutate()
   // There must be at least two cells for a mutation to have occurred...
   assert(ancestor.GetNumber() >= 2);
 	
-  //This is necessary so the first few mutation have a much larger fitness advantage
+  // This is necessary so the first few mutation have a much larger fitness advantage, only works for the first category of mutation,
+  // and not implemented as an option yet.
   
+  /*
   if( simulation_parameters.first_beneficial_mutation_effects.size() > ancestor.GetMutNum() ) {
     new_subpop.CreateDescendant(rng, 
                                 ancestor, 
                                 simulation_parameters.first_beneficial_mutation_effects[ancestor.GetMutNum()], 
-                                simulation_parameters.beneficial_mutation_effect_model,
+                                simulation_parameters.mutation_fitness_effect_model,
                                 genotype_tree,
                                 unique_genotype_count++);
   }
   else {
-    new_subpop.CreateDescendant(rng, 
-                                ancestor, 
-                                simulation_parameters.beneficial_mutation_effect, 
-                                simulation_parameters.beneficial_mutation_effect_model,
-                                genotype_tree,
-                                unique_genotype_count++);
-  }
+  */
+  new_subpop.CreateDescendant(rng, 
+                              ancestor, 
+                              simulation_parameters.mutation_fitness_effects[DetermineMutationCategory()], 
+                              simulation_parameters.mutation_fitness_effect_model,
+                              genotype_tree,
+                              unique_genotype_count++);
+  //}
   
 	if (g_verbose) cout << "  Color: " << new_subpop.GetMarker() << endl;
 	if (g_verbose) cout << "  New Fitness: " << new_subpop.GetFitness() << endl;
   
 	AddSubpopulation(new_subpop);
   
-  //@agm Since an existent cell is picked to mutate,
-  //     rather than doubling a cell and picking its
-  //     progeny to mutate, the population size does not change.
+  // Update the maximum subpopulation fitness
+  maximum_subpopulation_fitness = max(maximum_subpopulation_fitness, new_subpop.GetFitness());
+  
+  if (g_verbose) cout << "  New Number: " << new_subpop.GetNumber() << endl;
+  if (g_verbose) cout << "  Old Number: " << ancestor.GetNumber() << endl;
+  
+  replicate_statistics.total_mutations++;
+}
+
+//Generates new mutant and adds it to the tree
+void cPopulation::MutateExactWithFractionalCells() 
+{	
+	if (g_verbose) cout << "* Mutating!" << endl;
+  if (g_verbose) cout << "Total population: " << CalculatePopulationSize() << endl;
 	
+  // Mutation depends on instantaneuous Fitness * population size of subpopulations
+  vector<double> fractional_chances_per_subpopulation(current_subpopulations.size());
+  
+  double total = 0;
+  for(uint32_t i=0; i<current_subpopulations.size(); i++) {
+    fractional_chances_per_subpopulation[i] = (current_subpopulations[i].GetNumber() > 1) ? current_subpopulations[i].GetFitness() * current_subpopulations[i].GetNumber() : 0;
+    total += fractional_chances_per_subpopulation[i];
+  }
+  
+  for(uint32_t i=0; i<fractional_chances_per_subpopulation.size(); i++) {
+    fractional_chances_per_subpopulation[i] /= total;
+  }
+  
+  // Gets a random number in range [0,1)
+  double random_fraction = gsl_rng_uniform(rng);
+  uint32_t chosen_subpopulation = 0;
+  while (random_fraction > fractional_chances_per_subpopulation[chosen_subpopulation]) {
+    random_fraction -= fractional_chances_per_subpopulation[chosen_subpopulation];
+    chosen_subpopulation++;
+  }
+  
+	//Mutation happened in the one that just divided
+	//Break ties randomly here.
+	cSubpopulation& ancestor = current_subpopulations[chosen_subpopulation];          
+	cSubpopulation new_subpop;
+  
+  //cout << "Divided has number: " << ancestor.GetNumber() << endl;
+  // There must be at least two cells for a mutation to have occurred...
+  if (ancestor.GetNumber() <= 1) {
+    cout << "Died: " << ancestor.GetNumber() << " " << chosen_subpopulation << " / "  << current_subpopulations.size() << " " << random_fraction << endl;
+  }
+  assert(ancestor.GetNumber() > 1.0);
+	
+  
+  
+  // This is necessary so the first few mutation have a much larger fitness advantage, only works for the first category of mutation,
+  // and not implemented as an option yet.
+  
+  /*
+   if( simulation_parameters.first_beneficial_mutation_effects.size() > ancestor.GetMutNum() ) {
+   new_subpop.CreateDescendant(rng, 
+   ancestor, 
+   simulation_parameters.first_beneficial_mutation_effects[ancestor.GetMutNum()], 
+   simulation_parameters.mutation_fitness_effect_model,
+   genotype_tree,
+   unique_genotype_count++);
+   }
+   else {
+   */
+  new_subpop.CreateDescendant(rng, 
+                              ancestor, 
+                              simulation_parameters.mutation_fitness_effects[DetermineMutationCategory()], 
+                              simulation_parameters.mutation_fitness_effect_model,
+                              genotype_tree,
+                              unique_genotype_count++);
+  //}
+  
+	if (g_verbose) cout << "  Color: " << new_subpop.GetMarker() << endl;
+	if (g_verbose) cout << "  New Fitness: " << new_subpop.GetFitness() << endl;
+  
+	AddSubpopulation(new_subpop);
   
   // Update the maximum subpopulation fitness
   maximum_subpopulation_fitness = max(maximum_subpopulation_fitness, new_subpop.GetFitness());
@@ -990,9 +1180,26 @@ void cPopulation::MutateNew() {
 
 void cPopulation::RecordStatisticsAtTransfer()
 {	
+  
+  /////////////////////////////////////////
+  /// Statistic: average_population_fitness
+  /////////////////////////////////////////
+  
+  average_subpopulation_fitness = CalculateAverageSubpopulationFitness();
+  
+  // Only record if we are past a burn_in period
+  if (num_completed_transfers <0) return;
+  
+  // Only record if we are on the coarse-graining interval
+  if (num_completed_transfers % output_parameters.coarse_graining != 0)
+    return;
+  
+  replicate_statistics.average_population_fitness.push_back(average_subpopulation_fitness);
+
+  
   //  Debug: this checks to see if our population size was correct.
   if (debug) {
-    uint64_t calculated_population_size = CalculatePopulationSize();
+    double calculated_population_size = CalculatePopulationSize();
     assert(current_population_size == calculated_population_size);
   }
   
@@ -1016,14 +1223,14 @@ void cPopulation::RecordStatisticsAtTransfer()
     
     cGenotypeFrequency& current_genotype_frequency = current_genotype_frequency_map[update_location->unique_node_id];
     current_genotype_frequency.unique_node_id = update_location->unique_node_id;
-    current_genotype_frequency.m_frequency = floor(this_pop.GetNumber()) / current_population_size;
+    current_genotype_frequency.m_frequency = this_pop.GetNumber() / current_population_size;
     
     // Add frequency to all parents to get clade numbers
 		while(update_location != NULL) {
       
       cGenotypeFrequency& current_clade_frequency = current_clade_frequency_map[update_location->unique_node_id];
       current_clade_frequency.unique_node_id = update_location->unique_node_id;
-      current_clade_frequency.m_frequency += floor(this_pop.GetNumber());
+      current_clade_frequency.m_frequency += this_pop.GetNumber();
       
       //current_clade_frequencies[update_location->unique_node_id].unique_node_id = update_location->unique_node_id;
       //current_clade_frequencies[update_location->unique_node_id].m_frequency += floor(this_pop.GetNumber());
@@ -1054,17 +1261,6 @@ void cPopulation::RecordStatisticsAtTransfer()
   // Push to record
 	replicate_statistics.genotype_frequencies.push_back(current_genotype_frequencies);
 	replicate_statistics.clade_frequencies.push_back(current_clade_frequencies);
-  
-   
-  /////////////////////////////////////////
-  /// Statistic: average_population_fitness
-  /////////////////////////////////////////
-  
-  double total_fitness(0);
-  for (vector<cSubpopulation>::iterator it = current_subpopulations.begin(); it!=current_subpopulations.end(); ++it) {    
-    total_fitness += it->GetFitness()*floor(it->GetNumber());
-  }
-  replicate_statistics.average_population_fitness.push_back(total_fitness/current_population_size);
 }
 
 
@@ -1073,11 +1269,11 @@ void cPopulation::RecordStatisticsAtTransfer()
 
 // Calculates the total population size by iterating over subpops. 
 // This is really for debug checking of code only. Normally, use current_population_size.
-uint64_t cPopulation::CalculatePopulationSize() 
+double cPopulation::CalculatePopulationSize() 
 {
-  uint64_t calculated_population_size = 0;
+  double calculated_population_size = 0;
   for (vector<cSubpopulation>::iterator it = current_subpopulations.begin(); it!=current_subpopulations.end(); ++it) {
-    calculated_population_size += floor(it->GetNumber());
+    calculated_population_size += it->GetNumber();
   }  
   return calculated_population_size;
 }
@@ -1087,10 +1283,18 @@ uint64_t cPopulation::CalculatePopulationSize()
 
 double cPopulation::CalculateMaximumSubpopulationFitness() {
   double max_fitness = 0.0;
-  for(vector<cSubpopulation>::iterator it=current_subpopulations.begin(); it!=current_subpopulations.begin(); ++it) {
+  for(vector<cSubpopulation>::iterator it=current_subpopulations.begin(); it!=current_subpopulations.end(); ++it) {
     max_fitness = max(max_fitness, it->GetFitness());
   }
   return max_fitness;
+}
+
+double cPopulation::CalculateAverageSubpopulationFitness() {
+  double avg_fitness = 0.0;
+  for(vector<cSubpopulation>::iterator it=current_subpopulations.begin(); it!=current_subpopulations.end(); ++it) {
+    avg_fitness += it->GetNumber() * it->GetFitness();
+  }
+  return avg_fitness/current_population_size;
 }
 
 

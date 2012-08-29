@@ -67,7 +67,7 @@ namespace bpopsim {
     tree<cGenotype>::iterator GetGenotypeIter() { return m_genotype; }
     const uint32_t GetNode_id() { return m_genotype->unique_node_id; }
     const double GetNumber() { return m_number; }
-    const uint64_t GetIntegralNumber() { return floor(m_number); }
+    const double GetIntegralNumber() { return floor(m_number); }
     const char GetMarker() { return m_marker; }
     const uint32_t GetMutNum() { return m_genotype->mut_num; }
     const bool GetDivided() { return m_genotype->m_divided; }

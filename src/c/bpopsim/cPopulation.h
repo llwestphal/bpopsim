@@ -14,10 +14,10 @@ namespace bpopsim {
   public:
     // Returns zero if not found
     double GetFrequency(uint32_t in_genotype_id) {
-      map<uint32_t,cGenotypeFrequency>::iterator found = find(in_genotype_id);
-      if (found == end()) 
-        return 0;
-      return found->second.m_frequency;
+      if (!count(in_genotype_id))
+        return 0.0;
+      
+      return (*this)[in_genotype_id].m_frequency;
     }
     
   };
@@ -32,7 +32,8 @@ namespace bpopsim {
     vector< GenotypeFrequencyMap > genotype_frequencies;  // Frequencies of each genotype, map by genotype_id
     vector< GenotypeFrequencyMap > clade_frequencies;     // Frequencies of each clade with the given genotype as its ancestor, map by genotype_id
     
-    vector< vector<double> > diverged_frequencies_by_depth; // percent of population diverged from dominant lineage by a certain depth or more
+    vector< vector<double> > diverged_frequencies_by_depth; // percent of population diverged from dominant lineage by
+                                                            // certain depth (number of mutations) or more
     
     uint32_t total_mutations;                             // Number of mutations so far
     uint32_t total_subpopulations_lost;                   // Number of subpopulations that no longer exist
@@ -51,6 +52,7 @@ namespace bpopsim {
     
     void OutputAveragePopulationFitness();
     void OutputAveragePopulationMutationCounts();
+    void OutputDivergedFrequenciesByDepth();
 
     string output_directory_name;
     uint32_t coarse_graining;   // Only used for calculating statistics and ignoring intermediate time points
@@ -365,11 +367,10 @@ namespace bpopsim {
                                                            );
     
     uint32_t Last_Sweep(float threshold);
-    vector<uint32_t> GenotypesFromAncestorToFinalDominant(float threshold);
+    tree<cGenotype>::iterator FindGenotypeInTreeByID(uint32_t id);
+    set<uint32_t> GenotypesFromAncestorToFinalDominant();
     vector<uint32_t> GenotypesAboveThreshold(float threshold);
     vector<uint32_t> CladesAboveThreshold(float threshold);
-
-    vector<uint32_t> CurrentUniqueGenotypes();
     
     double CalculateSimilarity(string output_folder);
     double CountMutipleDivergedSubpops();

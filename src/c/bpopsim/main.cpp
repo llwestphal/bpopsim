@@ -136,6 +136,9 @@ int bpopsim_default_action(int argc, char* argv[])
     // Save the statistics
     final_statistics.push_back(population.replicate_statistics);
     
+    
+    cout << endl << "***** Replicate Output *****" << endl;
+
     // Output Per-Simulation Files
     if( options.count("output-clade-frequencies") ) {
       population.OutputCladeFrequencies(0.01);
@@ -145,8 +148,9 @@ int bpopsim_default_action(int argc, char* argv[])
       population.OutputGenotypeFrequencies(0.01);
     }
     
-    cout << endl << "***** Replicate Output *****" << endl;
-
+    if( options.count("output-muller") ) {
+      population.OutputMullerMatrix(from_string<uint32_t>(options["muller-resolution"]));
+    }
     
     /*
     if( use_mute_num ) {
@@ -176,9 +180,7 @@ int bpopsim_default_action(int argc, char* argv[])
     }
      */
     
-    if( options.count("output-muller") ) {
-      population.OutputMullerMatrix(from_string<uint32_t>(options["muller-resolution"]));
-    }
+
   }
    
   
@@ -192,6 +194,10 @@ int bpopsim_default_action(int argc, char* argv[])
   
   if( options.count("output-average-mutations")  ) {
     final_statistics.OutputAveragePopulationMutationCounts();
+  }
+  
+  if (options.count("output-diverged-frequencies") ) {
+    final_statistics.OutputDivergedFrequenciesByDepth();
   }
   
   /*

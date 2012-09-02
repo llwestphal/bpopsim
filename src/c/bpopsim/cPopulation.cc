@@ -145,14 +145,12 @@ void cPopulation::OutputCladeFrequencies(double frequency_threshold)
   output_file << endl;
   
   for (uint32_t transfer=0; transfer<replicate_statistics.clade_frequencies.size(); transfer++) {
-    output_file << transfer * output_parameters.coarse_graining;
+    output_file << (transfer * output_parameters.coarse_graining);
     GenotypeFrequencyMap& transfer_clade_frequencies = replicate_statistics.clade_frequencies[transfer];
-    if( transfer % output_parameters.coarse_graining == 0 ) {
-      for (uint32_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
-        output_file << "\t" << transfer_clade_frequencies.GetFrequency(all_sweep_ids[a_node]);
-      }
-      output_file << endl;
+    for (uint32_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
+      output_file << "\t" << transfer_clade_frequencies.GetFrequency(all_sweep_ids[a_node]);
     }
+    output_file << endl;
   }
   
   output_file.close();
@@ -177,14 +175,12 @@ void cPopulation::OutputGenotypeFrequencies(double frequency_threshold)
   output_file << endl;
   
   for (uint32_t transfer=0; transfer<replicate_statistics.genotype_frequencies.size(); transfer++) {
-    output_file << transfer * output_parameters.coarse_graining;
+    output_file << (transfer * output_parameters.coarse_graining);
     GenotypeFrequencyMap& transfer_genotype_frequencies = replicate_statistics.genotype_frequencies[transfer];
-    if( transfer % output_parameters.coarse_graining == 0 ) {
-      for (uint32_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
-        output_file << "\t" << transfer_genotype_frequencies.GetFrequency(all_sweep_ids[a_node]);
-      }
-      output_file << endl;
+    for (uint32_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
+      output_file << "\t" << transfer_genotype_frequencies.GetFrequency(all_sweep_ids[a_node]);
     }
+    output_file << endl;
   }
   
   output_file.close();
@@ -250,7 +246,7 @@ void cPopulation::OutputMullerMatrix(uint32_t frequency_resolution)
   //step through simulation time
   for (vector<GenotypeFrequencyMap>::iterator this_time_freq = replicate_statistics.clade_frequencies.begin(); 
        this_time_freq != replicate_statistics.clade_frequencies.end(); ++this_time_freq) {
-    cerr << " Writing Transfer: " << setw(4) << time * output_parameters.coarse_graining << endl;
+    cerr << " Writing Transfer: " << setw(4) << (time * output_parameters.coarse_graining) << endl;
     time++;
     vector<cFrequencySlice> child_freqs;
     
@@ -322,8 +318,7 @@ void cStatistics::OutputAveragePopulationFitness() {
   
   output_file << "replicate";
   for (uint32_t transfer = 0; transfer < num_entries; ++transfer) {
-    if( transfer % coarse_graining == 0 )
-      output_file << "\t" << transfer * coarse_graining;
+    output_file << "\t" << (transfer * coarse_graining);
   }
   output_file << endl;
   
@@ -333,15 +328,12 @@ void cStatistics::OutputAveragePopulationFitness() {
     output_file << (replicate+1);
     
     for (uint32_t transfer = 0; transfer < num_entries; ++transfer) {
-      
-      if( transfer % coarse_graining == 0 ) {
-        
-        if (transfer < replicate_statistics.average_population_fitness.size() )
-          output_file << "\t" << replicate_statistics.average_population_fitness[transfer];
-        else
-          output_file << "\t" << "NA" << endl;
+              
+      if (transfer < replicate_statistics.average_population_fitness.size() )
+        output_file << "\t" << replicate_statistics.average_population_fitness[transfer];
+      else
+        output_file << "\t" << "NA" << endl;
 
-      }
     }
     output_file << endl;
   }
@@ -372,8 +364,7 @@ void cStatistics::OutputAveragePopulationMutationCounts() {
   
   output_file << "replicate";
   for (uint32_t transfer = 0; transfer < num_entries; ++transfer) {
-    if( transfer % coarse_graining == 0 )
-      output_file << "\t" << transfer * coarse_graining;
+    output_file << "\t" << (transfer * coarse_graining);
   }
   output_file << endl;
   
@@ -384,14 +375,11 @@ void cStatistics::OutputAveragePopulationMutationCounts() {
     
     for (uint32_t transfer = 0; transfer < num_entries; ++transfer) {
       
-      if( transfer % coarse_graining == 0 ) {
-        
-        if (transfer < replicate_statistics.average_total_mutation_count.size() )
-          output_file << "\t" << replicate_statistics.average_total_mutation_count[transfer];
-        else
-          output_file << "\t" << "NA" << endl;
-        
-      }
+      if (transfer < replicate_statistics.average_total_mutation_count.size() )
+        output_file << "\t" << replicate_statistics.average_total_mutation_count[transfer];
+      else
+        output_file << "\t" << "NA" << endl;
+      
     }
     output_file << endl;
   }
@@ -411,8 +399,55 @@ void cStatistics::OutputAveragePopulationMutationCounts() {
     
     output_file << "replicate";
     for (uint32_t transfer = 0; transfer < num_entries; ++transfer) {
-      if( transfer % coarse_graining == 0 )
-        output_file << "\t" << transfer * coarse_graining;
+      output_file << "\t" << (transfer * coarse_graining);
+    }
+    output_file << endl;
+    
+    for (uint32_t replicate = 0; replicate < this->size(); ++replicate) {
+      
+      cReplicateStatistics& replicate_statistics = (*this)[replicate];
+      output_file << (replicate+1);
+      
+      for (uint32_t transfer = 0; transfer < num_entries; ++transfer) {
+                  
+        if (transfer < replicate_statistics.average_mutation_counts.size() )
+          output_file << "\t" << replicate_statistics.average_mutation_counts[transfer][mutation_category];
+        else
+          output_file << "\t" << "NA" << endl;          
+      }
+      output_file << endl;
+    }
+    output_file.close();
+  }
+  
+}
+
+void cStatistics::OutputDivergedFrequenciesByDepth()
+{
+  //
+  // Output files for each depth of mutational divergence
+  //
+  
+  int32_t num_entries = (*this)[0].diverged_frequencies_by_depth.size();
+  
+  int32_t max_transfers_printed = 0;
+  for (uint32_t replicate = 0; replicate < this->size(); ++replicate) {
+    cReplicateStatistics& replicate_statistics = (*this)[replicate];
+    if (replicate_statistics.diverged_frequencies_by_depth.size() > max_transfers_printed)
+      max_transfers_printed = replicate_statistics.diverged_frequencies_by_depth.size();
+  }
+  
+  for(uint32_t divergence_depth=0; divergence_depth<(*this)[0].diverged_frequencies_by_depth[0].size() ; divergence_depth++) {
+    
+    ofstream output_file;
+    string output_file_name = output_directory_name + "/mutation_divergence_depth_frequency_" + to_string(divergence_depth+1) + ".tab";
+    output_file.open(output_file_name.c_str(),ios::out);
+    
+    cerr << "Output: " << output_file_name << endl;
+    
+    output_file << "replicate";
+    for (uint32_t transfer = 0; transfer < num_entries; ++transfer) {
+      output_file << "\t" << (transfer * coarse_graining);
     }
     output_file << endl;
     
@@ -423,20 +458,16 @@ void cStatistics::OutputAveragePopulationMutationCounts() {
       
       for (uint32_t transfer = 0; transfer < num_entries; ++transfer) {
         
-        if( transfer % coarse_graining == 0 ) {
-          
-          if (transfer < replicate_statistics.average_mutation_counts.size() )
-            output_file << "\t" << replicate_statistics.average_mutation_counts[transfer][mutation_category];
-          else
-            output_file << "\t" << "NA" << endl;
-          
-        }
+        if (transfer < replicate_statistics.average_mutation_counts.size() )
+          output_file << "\t" << replicate_statistics.diverged_frequencies_by_depth[transfer][divergence_depth];
+        else
+          output_file << "\t" << "NA" << endl;
+        
       }
       output_file << endl;
     }
     output_file.close();
   }
-  
 }
 
 void cPopulation::UpdateSubpopulationsForGrowthExactWithFractionalCells(double update_time) 
@@ -913,7 +944,7 @@ void cPopulation::RecordStatisticsAtTransfer()
       
       cGenotypeFrequency& current_clade_frequency = current_clade_frequency_map[update_location->unique_node_id];
       current_clade_frequency.unique_node_id = update_location->unique_node_id;
-      current_clade_frequency.m_frequency += this_pop.GetNumber();
+      current_clade_frequency.m_frequency += this_pop.GetNumber() / current_population_size;
       
       //current_clade_frequencies[update_location->unique_node_id].unique_node_id = update_location->unique_node_id;
       //current_clade_frequencies[update_location->unique_node_id].m_frequency += floor(this_pop.GetNumber());
@@ -929,10 +960,35 @@ void cPopulation::RecordStatisticsAtTransfer()
 
 void cPopulation::RecordStatisticsAtEnd()
 {	
-  // Record mutations diverged by diverged_mutation_depth at each transfer
-  // Fill this in...
-  //diverged_frequencies_by_depth
   
+  // Record mutations diverged by diverged_mutation_depth at each transfer
+  uint32_t max_depth = output_parameters.diverged_mutation_depth;
+  
+  // Determine the dominant line of descent.
+  set<uint32_t> dominant_clade_set = GenotypesFromAncestorToFinalDominant();
+  
+  // Step through each transfer (well, each recorded time point)
+  for (uint32_t transfer=0; transfer < replicate_statistics.genotype_frequencies.size(); transfer++) {
+    GenotypeFrequencyMap& this_genotype_frequencies = replicate_statistics.genotype_frequencies[transfer];
+    vector<double> add_frequencies(max_depth, 0);    
+    
+    // Determine the number of steps back to the line of descent and add to this category and higher ones
+    for (GenotypeFrequencyMap::iterator it=this_genotype_frequencies.begin(); it!= this_genotype_frequencies.end(); it++) {
+      uint32_t this_node_id = it->first;
+      
+      tree<cGenotype>::iterator itt = FindGenotypeInTreeByID(this_node_id);
+
+      int32_t this_depth = 0;
+      while ((this_depth < max_depth) && (!dominant_clade_set.count(itt->unique_node_id))) {
+        add_frequencies[this_depth] += this_genotype_frequencies[this_node_id].m_frequency;
+
+        itt = genotype_tree.parent(itt); 
+        this_depth++;
+      }
+    } // end genotype loop
+    
+    replicate_statistics.diverged_frequencies_by_depth.push_back(add_frequencies);
+  } // end transfer loop
   
 }
 
@@ -989,7 +1045,7 @@ double cPopulation::AssignChildFrequency(tree<cGenotype>::sibling_iterator this_
   double size_depth1_children(0), half_size_parent_swath((this_high-this_low)/2);
   
   for (tree<cGenotype>::sibling_iterator it_node = genotype_tree.begin(this_node); it_node!=genotype_tree.end(this_node); ++it_node) {
-    size_depth1_children += frequencies.GetFrequency(this_node->unique_node_id);;
+    size_depth1_children += frequencies.GetFrequency(it_node->unique_node_id);
   }
   /*if(size_depth1_children != 0)
    cout << size_depth1_children << endl;*/
@@ -1030,30 +1086,54 @@ double cPopulation::AssignChildFrequency(tree<cGenotype>::sibling_iterator this_
 
 
 
+tree<cGenotype>::iterator cPopulation::FindGenotypeInTreeByID(uint32_t id) 
+{
+  
+  tree<cGenotype>::iterator it;
+  for(it = genotype_tree.begin(); it != genotype_tree.end(); ++it) {
+    if (it->unique_node_id == id)
+      break;
+  }
+  
+  assert(it != genotype_tree.end());
+  return(it);
+}
 
 
 // JEB: This is leftover from Austin's MutationsAboveThreshold. 
 // Not exactly sure what it is doing...
 // It appears to collect all genotypes leading to the final dominant and return their id's
 
-vector<uint32_t> cPopulation::GenotypesFromAncestorToFinalDominant(float threshold) {
+set<uint32_t> cPopulation::GenotypesFromAncestorToFinalDominant() 
+{
   
-  uint32_t youngest_sweep(Last_Sweep(threshold));
+  // Go through current clades and find the one 
+  set<uint32_t> genotype_set;
   
-  vector<uint32_t> all_sweep_ids;
+  // Find the most derived clade that is 100% of the population 
+  tree<cGenotype>::iterator final_sweeping_clade = genotype_tree.end();
   
-  for (tree<cGenotype>::iterator it = genotype_tree.begin(); it!=genotype_tree.end(); it++) {
-    if( it->unique_node_id == youngest_sweep ) {
-      while (it != NULL) {
-        all_sweep_ids.push_back(it->unique_node_id);
-        it = genotype_tree.parent(it);
-      }
-      break;
-    }
+  uint32_t final_dominant_clade_id = 0;
+  
+  for (GenotypeFrequencyMap::iterator it = replicate_statistics.clade_frequencies.back().begin(); 
+       it != replicate_statistics.clade_frequencies.back().end(); it++) {
+    if (it->second.m_frequency != 1.0) 
+      continue;
+    
+    final_dominant_clade_id = max(final_dominant_clade_id, it->first);
   }
   
-  sort(all_sweep_ids.begin(), all_sweep_ids.end());
-  return all_sweep_ids;
+  // Find it in the tree
+  tree<cGenotype>::iterator it = FindGenotypeInTreeByID(final_dominant_clade_id);
+  
+  // Now add it and all parents to the set
+  
+  while (it != NULL) {
+    genotype_set.insert(it->unique_node_id);
+    it = genotype_tree.parent(it);
+  }
+  
+  return genotype_set;
 }
 
 // Returns a list of all clades that were ever above the
@@ -1256,57 +1336,6 @@ cSubpopulation* cPopulation::Find_Node_in_Populations_By_NodeID(uint32_t this_no
 
 
 //Utilities Section
-
-vector<uint32_t> cPopulation::CurrentUniqueGenotypes() {
-  
-  /*
-  vector<uint32_t> number_of_unique_genotypes;
-  
-  for (uint32_t time = 0; time<m_all_subpopulations_at_all_times.size(); time++) {
-    uint32_t current_number(0);
-    for (uint32_t this_one = 0; this_one < sizeof(m_all_subpopulations_at_all_times[time]); this_one++) {
-      double& this_pop = m_all_subpopulations_at_all_times[time][this_one];
-      if( (double) this_pop / m_total_cells[time] > .1 ) current_number++;
-    }
-    number_of_unique_genotypes.push_back(current_number);
-  }
-  return number_of_unique_genotypes;
-}
-
-void cPopulation::PrintUniqueGenotypes(const string& output_folder,
-                                       vector< vector<uint32_t> > * number_of_unique_genotypes) {
-  //Will print out only red and white
-	ofstream output_handle;
-  string output_file;
-  
-  output_file = output_folder + "/Number_Unique_Genotypes.dat";
-  
-	output_handle.open(output_file.c_str(),ios_base::app);
-  
-  uint32_t largest_replicate(0);
-  for (uint32_t replicate=0; replicate<(*number_of_unique_genotypes).size(); replicate++) {
-    if( (*number_of_unique_genotypes)[replicate].size() > (*number_of_unique_genotypes)[largest_replicate].size() ) largest_replicate = replicate;
-  }
-  
-  output_handle << "transfer";
-  for (uint32_t replicate = 0; replicate<(*number_of_unique_genotypes).size(); replicate++) {
-    output_handle << "\t" << replicate ;
-  }
-  
-  output_handle << endl;
-  
-  for (uint32_t time = 0; time<(*number_of_unique_genotypes)[largest_replicate].size(); time++) {
-    output_handle << time;
-    for (uint32_t replicate = 0; replicate<(*number_of_unique_genotypes).size(); replicate++) {
-      if( time >= (*number_of_unique_genotypes)[replicate].size() )
-        output_handle << "\t";
-      else
-        output_handle << "\t" << (*number_of_unique_genotypes)[replicate][time];
-    }
-    output_handle << endl;
-	}
- */ 
-}
 
 //The goal here is the find the fitness of the winning line of descent at every time point
 //This allows comparison eventualy winners and losers style

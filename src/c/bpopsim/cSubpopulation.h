@@ -5,19 +5,36 @@
 
 namespace bpopsim {
 
+  // Predef
+  class SimulationParameters;
+  
+  // Defined
   struct cGenotype{
     uint32_t unique_node_id;
     string   name;
     double   fitness;
-    uint32_t  mut_num;
-    bool     m_divided;
+    uint32_t  total_mutation_count;   // total number of mutations
+    vector<uint32_t> mutation_counts; // number of mutations in each category
+    bool    marked_for_deletion;      // do individuals of this type still exist?
     
-    cGenotype() : 
-      unique_node_id(0),
-      name(""),
-      fitness(1.0),
-      mut_num(0),
-      m_divided(false) { };
+    cGenotype(
+              SimulationParameters& in_simulation_parameters, 
+              uint32_t in_node_id
+              );
+    
+    // Constructor for children, initializes wrt acnestor correctly.
+    cGenotype(
+              SimulationParameters& in_simulation_parameters, 
+              uint32_t in_node_id,
+              cGenotype& in_ancestor
+              );
+    
+    // Applies one (random) mutation to genotype.
+    void AddOneMutation(
+                        SimulationParameters& in_simulation_parameters,
+                        gsl_rng * rng
+                        );
+    
    };
 
   struct cGenotypeFrequency {
@@ -65,17 +82,17 @@ namespace bpopsim {
     const double GetFitness() { return m_genotype->fitness; }
     const string GetName() { return m_genotype->name; }
     tree<cGenotype>::iterator GetGenotypeIter() { return m_genotype; }
+    cGenotype& GetGenotype() { return *m_genotype; }
     const uint32_t GetNode_id() { return m_genotype->unique_node_id; }
     const double GetNumber() { return m_number; }
     const double GetIntegralNumber() { return floor(m_number); }
     const char GetMarker() { return m_marker; }
-    const uint32_t GetMutNum() { return m_genotype->mut_num; }
-    const bool GetDivided() { return m_genotype->m_divided; }
+    const uint32_t GetTotalMutationCount() { return m_genotype->total_mutation_count; }
+    const uint32_t GetMutationCountInCategory(size_t in_category) { return m_genotype->mutation_counts[in_category]; }
     
     void SetGenotype(tree<cGenotype>::iterator location) { m_genotype = location; }
     void SetNumber(const double in_number) { m_number = in_number; }
     void SetMarker(const char in_marker) { m_marker = in_marker; } 
-    void SetDivided(const double in_divided) { m_genotype->m_divided = in_divided; }
     void Transfer(double success_prob, gsl_rng * randomgenerator);
     double MutantFitness(double in_fitness, 
                          double in_average_mutation_s, 
@@ -83,8 +100,7 @@ namespace bpopsim {
                          gsl_rng * randomgenerator);  
     virtual void CreateDescendant(gsl_rng * randomgenerator, 
                                   cSubpopulation &ancestor, 
-                                  double averageselectioncoefficient, 
-                                  const string& beneficialmutationdistribution, 
+                                  SimulationParameters& simulation_parameters, 
                                   tree<cGenotype>& in_tree, 
                                   uint32_t node_id);
     

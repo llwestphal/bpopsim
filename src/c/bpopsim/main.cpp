@@ -56,8 +56,11 @@ int bpopsim_default_action(int argc, char* argv[])
   options("burn-in,b", "Perform this number of transfers before beginning to output statistics (before transfer numbered 0).", 0);
   options("coarse-graining,c", "Only print stats every this many transfers to all output files.", 1);
   options("output-average-fitness", "Output average fitness to file 'average_fitness.tab'",TAKES_NO_ARGUMENT);
+  options("output-average-mutations", "Output mutation numbers to file 'average_mutations_count.tab'",TAKES_NO_ARGUMENT);
   options("output-clade-frequencies", "Output clade (mutation) frequencies for replicate X to file 'clade_frequencies_X.tab'", TAKES_NO_ARGUMENT);
   options("output-genotype-frequencies", "Print genotype frequencies for replicate X to file 'genotype_frequencies_X.tab'.", TAKES_NO_ARGUMENT);
+  options("output-diverged-frequencies", "Output frequencies of clades that differ by at least X mutations from the line of descent to the final dominant to 'diverged_frequencies_X.tab'",TAKES_NO_ARGUMENT);
+  options("diverged-mutation-depth", "Maximum depth of diverged mutations to output.", 10);
   options("output-muller", "Output Muller matrix to file 'muller.mat'. Cell values are genotypes to color.", TAKES_NO_ARGUMENT);
   options("muller-resolution,w", "Muller plot vertical resolution.", 200);
   
@@ -70,11 +73,11 @@ int bpopsim_default_action(int argc, char* argv[])
 //  ("output-convert-tree", "Convert an external phylogenetic tree.", TAKES_NO_ARGUMENT)
 //  ("output-sweeping-descent-fitness", "Output the average fitness of sweeping descent per time.", TAKES_NO_ARGUMENT)
   
-  options.addUsage("");
-  options.addUsage("==== Other Options ====");
-  options.addUsage("");
-  options("exact-mutations-per-transfer,y", "Cause exactly this number of mutations each transfer --beneficial-mutation-rate will not be used. (0=OFF)", 0);
-  options("new-simulator", "Use the new simulator type.", TAKES_NO_ARGUMENT);
+ // options.addUsage("");
+ // options.addUsage("==== Other Options ====");
+ // options.addUsage("");
+ // options("exact-mutations-per-transfer,y", "Cause exactly this number of mutations each transfer --beneficial-mutation-rate will not be used. (0=OFF)", 0);
+ // options("new-simulator", "Use the new simulator type.", TAKES_NO_ARGUMENT);
   
   options.processCommandArgs(argc, argv);
   
@@ -89,7 +92,7 @@ int bpopsim_default_action(int argc, char* argv[])
     && !options.count("output-clade-frequencies")
     && !options.count("output-muller")
     && !options.count("output-average-fitness")
-    && !options.count("output-dominant-genotypes")
+   // && !options.count("output-dominant-genotypes")
    // && !options.count("print-screen")
    // && !options.count("time-sweep")
    // && !options.count("max-diff")
@@ -98,7 +101,7 @@ int bpopsim_default_action(int argc, char* argv[])
     ) {
     
     options.addUsage("");
-    options.addUsage("You must provide at least one output option. Use -i to print to screen only.");
+    options.addUsage("You must provide at least one output option.");
     options.printUsage();
 		return -1;
   }
@@ -108,9 +111,7 @@ int bpopsim_default_action(int argc, char* argv[])
   // Use one main random number generator for entire program (don't reset for each replicate)
   uint16_t rng_seed = from_string<int16_t>(options["rng-seed"]);
   gsl_rng* rng = initialize_random_number_generator(rng_seed);
-      
-  bool use_new_simulator = options.count("new-simulator");
-  
+        
   uint32_t replicates = from_string<uint32_t>(options["replicates"]);
     
   // This is just to display settings
@@ -130,7 +131,7 @@ int bpopsim_default_action(int argc, char* argv[])
     cPopulation population(options, rng, on_replicate);
     
     // Perform Simulation
-    population.RunSimulation(use_new_simulator);
+    population.RunSimulation();
     
     // Save the statistics
     final_statistics.push_back(population.replicate_statistics);
@@ -183,10 +184,14 @@ int bpopsim_default_action(int argc, char* argv[])
   
   // Output Per-Execution Files
   
-  cout << endl << "***** Replicate Output *****" << endl;
+  cout << endl << "***** Summary Output *****" << endl;
   
   if( options.count("output-average-fitness")  ) {
     final_statistics.OutputAveragePopulationFitness();
+  }
+  
+  if( options.count("output-average-mutations")  ) {
+    final_statistics.OutputAveragePopulationMutationCounts();
   }
   
   /*

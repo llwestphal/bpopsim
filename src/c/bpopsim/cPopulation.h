@@ -359,6 +359,7 @@ namespace bpopsim {
     uint32_t Last_Sweep(float threshold);
     tree<cGenotype>::iterator FindGenotypeInTreeByID(uint32_t id);
     set<uint32_t> GenotypesFromAncestorToFinalSweep();
+    set<uint32_t> GenotypesFromAncestorToFinalDominant();
     vector<uint32_t> GenotypesAboveThreshold(float threshold);
     vector<uint32_t> CladesAboveThreshold(float threshold);
     

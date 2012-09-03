@@ -562,6 +562,9 @@ void cPopulation::ProcessCellDivisionTimeStepExactWithFractionalCells()
   double completed_divisions = current_population_size - previous_population_size;
   //assert(completed_divisions != 0);
   
+  // Check approximation -- it's very good.
+  //cerr << completed_divisions << " " << desired_divisions << endl;
+  
   if (g_verbose) {
     cerr << "Completed divisions: " << completed_divisions << endl;
     for(vector<cSubpopulation>::iterator this_time = current_subpopulations.begin(); this_time != current_subpopulations.end(); this_time++) {
@@ -966,8 +969,8 @@ void cPopulation::RecordStatisticsAtEnd()
   uint32_t max_depth = output_parameters.diverged_mutation_depth;
   
   // Determine the dominant line of descent.
-  set<uint32_t> dominant_clade_set = GenotypesFromAncestorToFinalSweep();
-  
+  //set<uint32_t> dominant_clade_set = GenotypesFromAncestorToFinalSweep();
+  set<uint32_t> dominant_clade_set = GenotypesFromAncestorToFinalDominant();
   //cerr << "Number in dominant clade: " << dominant_clade_set.size() << endl;
   
   // @JEB - there are two ways to think about this
@@ -1173,6 +1176,44 @@ set<uint32_t> cPopulation::GenotypesFromAncestorToFinalSweep()
     genotype_set.insert(it->unique_node_id);
     it = genotype_tree.parent(it);
   }
+  
+  return genotype_set;
+}
+
+// Start at ancestor and take the greatest clade at each step
+// to give genotypes on the line of descent to the final dominant
+
+set<uint32_t> cPopulation::GenotypesFromAncestorToFinalDominant() 
+{
+  // Start at ancestor and take the greatest clade at each step
+  
+  // Go through current clades and find the one 
+  set<uint32_t> genotype_set;
+  
+  GenotypeFrequencyMap& frequencies = replicate_statistics.clade_frequencies.back();
+  
+  tree<cGenotype>::iterator parent_node = genotype_tree.begin();
+  genotype_set.insert(parent_node->unique_node_id);
+
+  while (genotype_tree.number_of_children(parent_node) > 0) {
+    
+    double biggest_child_frequency = -1.0;
+    tree<cGenotype>::iterator biggest_child = NULL;
+    for (tree<cGenotype>::sibling_iterator it_node = genotype_tree.begin(parent_node); 
+         it_node!=genotype_tree.end(parent_node); ++it_node) {
+      
+      double this_frequency = frequencies.GetFrequency(it_node->unique_node_id);
+      if (this_frequency > biggest_child_frequency) {
+        biggest_child = it_node;
+        biggest_child_frequency = this_frequency;
+      }
+    }
+    
+    parent_node = biggest_child;
+    genotype_set.insert(parent_node->unique_node_id);
+  }
+  
+  cerr << genotype_set.size() << endl;
   
   return genotype_set;
 }

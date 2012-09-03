@@ -938,16 +938,14 @@ void cPopulation::RecordStatisticsAtTransfer()
     assert(update_location != NULL);
     
     
-    cGenotypeFrequency& current_genotype_frequency = current_genotype_frequency_map[update_location->unique_node_id];
-    current_genotype_frequency.unique_node_id = update_location->unique_node_id;
-    current_genotype_frequency.m_frequency = this_pop.GetNumber() / current_population_size;
+    double& current_genotype_frequency = current_genotype_frequency_map[update_location->unique_node_id];
+    current_genotype_frequency = this_pop.GetNumber() / current_population_size;
     
     // Add frequency to all parents to get clade numbers
 		while(update_location != NULL) {
       
-      cGenotypeFrequency& current_clade_frequency = current_clade_frequency_map[update_location->unique_node_id];
-      current_clade_frequency.unique_node_id = update_location->unique_node_id;
-      current_clade_frequency.m_frequency += this_pop.GetNumber() / current_population_size;
+      double& current_clade_frequency = current_clade_frequency_map[update_location->unique_node_id];
+      current_clade_frequency += this_pop.GetNumber() / current_population_size;
       
       //current_clade_frequencies[update_location->unique_node_id].unique_node_id = update_location->unique_node_id;
       //current_clade_frequencies[update_location->unique_node_id].m_frequency += floor(this_pop.GetNumber());
@@ -968,8 +966,19 @@ void cPopulation::RecordStatisticsAtEnd()
   uint32_t max_depth = output_parameters.diverged_mutation_depth;
   
   // Determine the dominant line of descent.
-  set<uint32_t> dominant_clade_set = GenotypesFromAncestorToFinalDominant();
+  set<uint32_t> dominant_clade_set = GenotypesFromAncestorToFinalSweep();
   
+  //cerr << "Number in dominant clade: " << dominant_clade_set.size() << endl;
+  
+  // @JEB - there are two ways to think about this
+  //       1) Sum all genotypes that are this many steps diverged from the dominant LOD
+  //             use 
+  //       2) Count the size of the maximum clade that is diverged by this many mutations from the dominant LOD
+  //  #2 is more like the LTEE results we are comparing to.
+  
+  
+  // METHOD 1:
+  /*
   // Step through each transfer (well, each recorded time point)
   for (uint32_t transfer=0; transfer < replicate_statistics.genotype_frequencies.size(); transfer++) {
     GenotypeFrequencyMap& this_genotype_frequencies = replicate_statistics.genotype_frequencies[transfer];
@@ -982,17 +991,54 @@ void cPopulation::RecordStatisticsAtEnd()
       tree<cGenotype>::iterator itt = FindGenotypeInTreeByID(this_node_id);
 
       int32_t this_depth = 0;
-      while ((this_depth < max_depth) && (!dominant_clade_set.count(itt->unique_node_id))) {
-        add_frequencies[this_depth] += this_genotype_frequencies[this_node_id].m_frequency;
+      while ((itt != NULL) && (!dominant_clade_set.count(itt->unique_node_id))) {
+        
 
+        
+        if (this_depth < max_depth) {
+          add_frequencies[this_depth] += this_genotype_frequencies[this_node_id];
+        }
+        
         itt = genotype_tree.parent(itt); 
         this_depth++;
       }
+      
+      assert(itt != NULL);
     } // end genotype loop
     
     replicate_statistics.diverged_frequencies_by_depth.push_back(add_frequencies);
   } // end transfer loop
+   */
   
+  // METHOD 2:
+  // Step through each transfer (well, each recorded time point)
+  for (uint32_t transfer=0; transfer < replicate_statistics.clade_frequencies.size(); transfer++) {
+    GenotypeFrequencyMap& this_clade_frequencies = replicate_statistics.clade_frequencies[transfer];
+    vector<double> add_frequencies(max_depth, 0);    
+   
+    // Determine the number of steps back to the line of descent and add to this category and higher ones
+    for (GenotypeFrequencyMap::iterator it=this_clade_frequencies.begin(); it!= this_clade_frequencies.end(); it++) {
+      uint32_t this_node_id = it->first;
+   
+      tree<cGenotype>::iterator itt = FindGenotypeInTreeByID(this_node_id);
+   
+      int32_t this_depth = 0;
+      while ((itt != NULL) && (!dominant_clade_set.count(itt->unique_node_id))) {
+   
+        if (this_depth < max_depth) {
+          add_frequencies[this_depth] = max(add_frequencies[this_depth],this_clade_frequencies[this_node_id]);
+        }
+   
+      itt = genotype_tree.parent(itt); 
+      this_depth++;
+    }
+   
+     assert(itt != NULL);
+   } // end genotype loop
+   
+   replicate_statistics.diverged_frequencies_by_depth.push_back(add_frequencies);
+  } // end transfer loop
+   
 }
 
 //////////  Utility Functions //////////
@@ -1095,11 +1141,9 @@ tree<cGenotype>::iterator cPopulation::FindGenotypeInTreeByID(uint32_t id)
 }
 
 
-// JEB: This is leftover from Austin's MutationsAboveThreshold. 
-// Not exactly sure what it is doing...
-// It appears to collect all genotypes leading to the final dominant and return their id's
+// Collect a set of all genotypes from the ancestor to the final clade that achieved 100% of the population
 
-set<uint32_t> cPopulation::GenotypesFromAncestorToFinalDominant() 
+set<uint32_t> cPopulation::GenotypesFromAncestorToFinalSweep() 
 {
   
   // Go through current clades and find the one 
@@ -1110,12 +1154,14 @@ set<uint32_t> cPopulation::GenotypesFromAncestorToFinalDominant()
   
   uint32_t final_dominant_clade_id = 0;
   
+  const double epsilon = 0.000001;
   for (GenotypeFrequencyMap::iterator it = replicate_statistics.clade_frequencies.back().begin(); 
        it != replicate_statistics.clade_frequencies.back().end(); it++) {
-    if (it->second.m_frequency != 1.0) 
-      continue;
     
-    final_dominant_clade_id = max(final_dominant_clade_id, it->first);
+    // If the clade frequency is 1.0, then we keep the highest genotype ID (guaranteed to be latest)
+    if ( abs(it->second - 1.0) < epsilon ) {
+      final_dominant_clade_id = max(final_dominant_clade_id, it->first);
+    }
   }
   
   // Find it in the tree
@@ -1143,7 +1189,7 @@ vector<uint32_t> cPopulation::CladesAboveThreshold(float threshold) {
     GenotypeFrequencyMap& transfer_clade_frequencies = replicate_statistics.clade_frequencies[transfer];
     
     for (GenotypeFrequencyMap::iterator it = transfer_clade_frequencies.begin(); it != transfer_clade_frequencies.end(); ++it) {
-      if (it->second.m_frequency >= threshold)
+      if (it->second >= threshold)
         genotype_set.insert(it->first);
     }
   }
@@ -1165,7 +1211,7 @@ vector<uint32_t> cPopulation::GenotypesAboveThreshold(float threshold) {
     GenotypeFrequencyMap& transfer_genotype_frequencies = replicate_statistics.clade_frequencies[transfer];
     
     for (GenotypeFrequencyMap::iterator it = transfer_genotype_frequencies.begin(); it != transfer_genotype_frequencies.end(); ++it) {
-      if (it->second.m_frequency >= threshold)
+      if (it->second >= threshold)
         genotype_set.insert(it->first);
     }
   }
@@ -1181,7 +1227,7 @@ uint32_t cPopulation::Last_Sweep(float threshold) {
   for( vector<GenotypeFrequencyMap>::reverse_iterator time = replicate_statistics.clade_frequencies.rbegin(); 
       time != replicate_statistics.clade_frequencies.rend(); ++time ) {
     for( GenotypeFrequencyMap::reverse_iterator node = time->rbegin(); node != time->rend(); ++node) {
-      if( node->second.m_frequency >= threshold )
+      if( node->second >= threshold )
         return node->first;
     }
   }
@@ -1294,38 +1340,6 @@ void cPopulation::ConvertExternalData(const string &input_file) {
   //PrintFreqsQuick();
   //PrintTree();
 }
-
-
-
-vector<cGenotypeFrequency>::iterator cPopulation::Find_Node_in_Freq(vector<cGenotypeFrequency> &frequencies, tree<cGenotype>::sibling_iterator this_node) {
-  
-  cGenotypeFrequency return_node;
-  return_node.unique_node_id = this_node->unique_node_id;
-  
-  for( vector<cGenotypeFrequency>::iterator a_node = frequencies.begin(); a_node < frequencies.end(); ++a_node ){
-    if( a_node->unique_node_id == this_node->unique_node_id ) {
-      return a_node;
-    }
-    else
-      return_node.m_frequency = 0;
-  }
-  
-  vector<cGenotypeFrequency> return_vector;
-  return_vector.push_back(return_node);
-  
-  return return_vector.begin();
-}
-
-
-cSubpopulation* cPopulation::Find_Node_in_Populations_By_NodeID(uint32_t this_node) {
-  for( uint32_t it = 0; it < current_subpopulations.size(); ++it ) {
-    if( current_subpopulations[it].GetNode_id() == this_node ) {
-      return &current_subpopulations[it];
-    }
-  }
-  assert(0==1);
-}
-
 
 
 
@@ -1602,7 +1616,7 @@ void cPopulation::PrintFreqsQuick() {
     time_keeper++;
     cout << "Time: " << time_keeper << endl;
     for(GenotypeFrequencyMap::iterator this_genotype=this_time->begin(); this_genotype!=this_time->end(); ++this_genotype) {
-      cout << this_genotype->second.unique_node_id << " " << this_genotype->second.name << " " << this_genotype->second.m_frequency << endl;
+      cout << this_genotype->first << " " << this_genotype->second << endl;
     }
     cout << endl << endl;
   }

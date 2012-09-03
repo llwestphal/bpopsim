@@ -9,7 +9,8 @@ namespace bpopsim {
   class SimulationParameters;
   
   // Defined
-  struct cGenotype{
+  struct cGenotype 
+  {
     uint32_t unique_node_id;
     string   name;
     double   fitness;
@@ -35,18 +36,6 @@ namespace bpopsim {
                         gsl_rng * rng
                         );
     
-   };
-
-  struct cGenotypeFrequency {
-    uint32_t unique_node_id;
-    string name;
-    double m_frequency;
-    
-    //constructor
-    cGenotypeFrequency() :
-    unique_node_id(-1),
-    name(""),
-    m_frequency(0) {};
   };
 
   struct cFrequencySlice {

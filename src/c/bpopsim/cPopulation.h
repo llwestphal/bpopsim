@@ -238,6 +238,7 @@ namespace bpopsim {
     // Tree that tracks ancestry of the subpopulations
     tree<cGenotype> genotype_tree;
     uint32_t unique_genotype_count;            // used to assign node ids in tree, should equal number of nodes that ever existed
+    map<uint32_t, tree<cGenotype>::iterator> genotype_id_map_into_tree;
     uint32_t existing_genotype_count;          // only the current number of genotypes in existence
     double maximum_subpopulation_fitness;
     

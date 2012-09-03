@@ -9,7 +9,7 @@ using namespace std;
 namespace bpopsim {
 
 
-  class GenotypeFrequencyMap : public map<uint32_t,cGenotypeFrequency> {
+  class GenotypeFrequencyMap : public map<uint32_t,double> {
   
   public:
     // Returns zero if not found
@@ -17,7 +17,7 @@ namespace bpopsim {
       if (!count(in_genotype_id))
         return 0.0;
       
-      return (*this)[in_genotype_id].m_frequency;
+      return (*this)[in_genotype_id];
     }
     
   };
@@ -352,24 +352,13 @@ namespace bpopsim {
     // Prints out the tree using bracket notation.
     void   PrintTree() { kptree::print_tree_bracketed(genotype_tree); cout << endl; }
     
-    //!!! Lookup methods
-    
-    cSubpopulation* Find_Node_in_Populations_By_NodeID(uint32_t this_node);
-    
-    
-    
-    
     //!!! Data Analysis Methods
     
     void   ConvertExternalData(const string &input_file);
-    vector<cGenotypeFrequency>::iterator Find_Node_in_Freq(
-                                                           vector<cGenotypeFrequency> &frequencies, 
-                                                           tree<cGenotype>::sibling_iterator this_node
-                                                           );
     
     uint32_t Last_Sweep(float threshold);
     tree<cGenotype>::iterator FindGenotypeInTreeByID(uint32_t id);
-    set<uint32_t> GenotypesFromAncestorToFinalDominant();
+    set<uint32_t> GenotypesFromAncestorToFinalSweep();
     vector<uint32_t> GenotypesAboveThreshold(float threshold);
     vector<uint32_t> CladesAboveThreshold(float threshold);
     

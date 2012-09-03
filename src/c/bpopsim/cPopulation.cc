@@ -227,19 +227,8 @@ void cPopulation::OutputMullerMatrix(uint32_t frequency_resolution)
   
   cerr << "Output: " << output_file_name << endl;
   
-  //vector< tree<cGenotype>::iterator > where(m_tree.size());
   map<uint32_t, uint32_t> renumber;
   uint32_t renumber_value(0);
-  
-  //double threshold(.025);
-  //vector<bool> relevant_columns(newtree->size(), true);
-  
-  //Build vector to store all iterators in tree for parental recall later
-  //@JEB should we store this iterator in cGenotypeFrequency?
-  //@AGM storing transient information like iterators in an object won't work
-  
-  /*for (tree<cGenotype>::iterator node_loc = m_tree.begin(); node_loc != m_tree.end(); node_loc++)
-   where[(*node_loc).unique_node_id] = node_loc;*/
   
   uint32_t time = 0;
   
@@ -261,40 +250,52 @@ void cPopulation::OutputMullerMatrix(uint32_t frequency_resolution)
     // cout << child_freqs[j].low << " " << child_freqs[j].high << endl;
     // }
     // PrintTree();
+        
+    double pixel_step = 1.0/frequency_resolution;
     
-    uint32_t last_node_meeting_span;
+    // create the pixels
+    vector<uint32_t> output_pixels(frequency_resolution, 0);
     
-    double pixel_step, min_step;
-    min_step = (double) 1/frequency_resolution;
+    for (uint32_t j=0; j<child_freqs.size(); j++) {
+      
+      int32_t low = ceil(child_freqs[j].low/pixel_step);
+      int32_t high = floor(child_freqs[j].high/pixel_step);
+
+      for(int32_t pixel = low; pixel <= high; pixel++) {
+        
+        if( renumber.count(child_freqs[j].unique_node_id) == 0 ) {
+          renumber[child_freqs[j].unique_node_id] = renumber_value++;
+        }
+        output_pixels[pixel] = renumber[child_freqs[j].unique_node_id];
+      }
+    }
     
+    /*
     //@agm Here I first iterate through the number of pixels
     for (uint32_t i=1; i<=frequency_resolution; i++) {
-      
-      //Determine the position of the current pixel_step
-      pixel_step = (double) i/frequency_resolution;
-      
+            
       for (uint32_t j=0; j<child_freqs.size(); j++) {
         
         if( child_freqs[j].high >= pixel_step ) {
-          
-          //if( span > min_step ) 
-          {
             
-            //Add new significant mutations to a map for renumbering
-            if( renumber.count(child_freqs[j].unique_node_id) == 0 ) {
-              renumber.insert(make_pair(child_freqs[j].unique_node_id, renumber_value));
-              renumber_value++;
-              renumber_value %= frequency_resolution;
-            }
-            //Return the renumbered-number for the unique_node_id from the built map
-            output_file<< left << setw(6) << renumber.find(child_freqs[j].unique_node_id)->second;
-            last_node_meeting_span = renumber.find(child_freqs[j].unique_node_id)->second;
+          //Add new significant mutations to a map for renumbering
+          if( renumber.count(child_freqs[j].unique_node_id) == 0 ) {
+            renumber[child_freqs[j].unique_node_id] = renumber_value++;
           }
+          //Return the renumbered-number for the unique_node_id from the built map
+          output_file<< left << setw(6) << renumber[child_freqs[j].unique_node_id];
+          last_node_meeting_span = renumber[child_freqs[j].unique_node_id];
           
           break;
         }
       }
     }
+     */
+    
+    for(uint32_t pixel = 0; pixel < frequency_resolution; pixel++) {
+      output_file<< left << setw(6) << output_pixels[pixel];
+    }
+    
     output_file << endl;
   }
 }
@@ -776,6 +777,7 @@ void cPopulation::SeedPopulationWithOneGenotype() {
 // Note that if you call add subpopulation, you may need to update the population size!
 void cPopulation::AddSubpopulation(cSubpopulation& subpop) 
 {
+  genotype_id_map_into_tree[subpop.GetGenotype().unique_node_id] = subpop.GetGenotypeIter();
 	current_subpopulations.push_back(subpop);
   existing_genotype_count++;
   
@@ -794,6 +796,7 @@ void cPopulation::CullSubpopulationsThatDidNotEstablish() {
       tree<cGenotype>::leaf_iterator ite = it;
       it++;
       genotype_tree.erase(ite);
+      genotype_id_map_into_tree.erase(ite->unique_node_id);
     } else {
       it++;
     }
@@ -1088,15 +1091,7 @@ double cPopulation::AssignChildFrequency(tree<cGenotype>::sibling_iterator this_
 
 tree<cGenotype>::iterator cPopulation::FindGenotypeInTreeByID(uint32_t id) 
 {
-  
-  tree<cGenotype>::iterator it;
-  for(it = genotype_tree.begin(); it != genotype_tree.end(); ++it) {
-    if (it->unique_node_id == id)
-      break;
-  }
-  
-  assert(it != genotype_tree.end());
-  return(it);
+  return genotype_id_map_into_tree[id];
 }
 
 

@@ -965,6 +965,9 @@ void cPopulation::RecordStatisticsAtTransfer()
 void cPopulation::RecordStatisticsAtEnd()
 {	
   
+  if (!output_parameters.output_diverged_frequencies)
+    return;
+  
   // Record mutations diverged by diverged_mutation_depth at each transfer
   uint32_t max_depth = output_parameters.diverged_mutation_depth;
   
@@ -1213,7 +1216,7 @@ set<uint32_t> cPopulation::GenotypesFromAncestorToFinalDominant()
     genotype_set.insert(parent_node->unique_node_id);
   }
   
-  cerr << genotype_set.size() << endl;
+  //cerr << genotype_set.size() << endl;
   
   return genotype_set;
 }

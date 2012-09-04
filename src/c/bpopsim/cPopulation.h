@@ -198,12 +198,14 @@ namespace bpopsim {
         coarse_graining = from_string<uint32_t>(options["coarse-graining"]);
         burn_in = from_string<uint32_t>(options["burn-in"]);
         diverged_mutation_depth = from_string<uint32_t>(options["diverged-mutation-depth"]);
+        output_diverged_frequencies = options.count("output-diverged-frequencies");
       }
       
       string output_directory_name;
       uint32_t coarse_graining;
       int32_t burn_in;            // Number of transfers to perform before recording output
       uint32_t diverged_mutation_depth;
+      bool output_diverged_frequencies;
 
     } output_parameters;
     

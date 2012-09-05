@@ -57,8 +57,9 @@ int bpopsim_default_action(int argc, char* argv[])
   options("coarse-graining,c", "Only print stats every this many transfers to all output files.", 1);
   options("output-average-fitness", "Output average fitness to file 'average_fitness.tab'",TAKES_NO_ARGUMENT);
   options("output-average-mutations", "Output mutation numbers to file 'average_mutations_count.tab'",TAKES_NO_ARGUMENT);
-  options("output-clade-frequencies", "Output clade (mutation) frequencies for replicate X to file 'clade_frequencies_X.tab'", TAKES_NO_ARGUMENT);
-  options("output-genotype-frequencies", "Print genotype frequencies for replicate X to file 'genotype_frequencies_X.tab'.", TAKES_NO_ARGUMENT);
+  options("output-clade-frequencies", "Output clade (mutation) frequencies (above minimum) for replicate X to file 'clade_frequencies_X.tab'", TAKES_NO_ARGUMENT);
+  options("output-genotype-frequencies", "Output genotype frequencies (above minimum) for replicate X to file 'genotype_frequencies_X.tab'.", TAKES_NO_ARGUMENT);
+  options("minimum-output-frequency", "Only output clade/genotype frequencies that are above this frequency at some time point.", 0.01);
   options("output-diverged-frequencies", "Output frequencies of clades that differ by at least X mutations from the line of descent to the final dominant to 'diverged_frequencies_X.tab'",TAKES_NO_ARGUMENT);
   options("diverged-mutation-depth", "Maximum depth of diverged mutations to output.", 10);
   options("output-muller", "Output Muller matrix to file 'muller.mat'. Cell values are genotypes to color.", TAKES_NO_ARGUMENT);
@@ -141,11 +142,11 @@ int bpopsim_default_action(int argc, char* argv[])
 
     // Output Per-Simulation Files
     if( options.count("output-clade-frequencies") ) {
-      population.OutputCladeFrequencies(0.01);
+      population.OutputCladeFrequencies();
     }
     
     if( options.count("output-genotype-frequencies") ) {
-      population.OutputGenotypeFrequencies(0.01);
+      population.OutputGenotypeFrequencies();
     }
     
     if( options.count("output-muller") ) {

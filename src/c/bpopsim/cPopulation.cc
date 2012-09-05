@@ -123,17 +123,17 @@ void cPopulation::DisplaySimulationSummary()
  true, and fill NA spaces as the read.table
  function allows. */
 
-void cPopulation::OutputCladeFrequencies(double frequency_threshold)
+void cPopulation::OutputCladeFrequencies()
 {  
   //vector<uint32_t> all_sweep_ids = GenotypesFromAncestorToFinalDominant(frequency_threshold);
   
-  vector<uint32_t> all_sweep_ids = CladesAboveThreshold(frequency_threshold);
+  vector<uint32_t> all_sweep_ids = CladesAboveThreshold(output_parameters.minimum_output_frequency);
 
   
   //Print each sweeping genotype and its frequency per time
 	ofstream output_file;
   string output_file_name = output_parameters.output_directory_name + "/clade_frequencies_" 
-    + to_string(frequency_threshold, 4) + "_" + to_string(replicate) + ".dat";
+    + to_string(output_parameters.minimum_output_frequency, 4) + "_" + to_string(replicate) + ".dat";
 	output_file.open(output_file_name.c_str(),ios::out);
     
   cerr << "Output: " << output_file_name << endl;
@@ -156,14 +156,14 @@ void cPopulation::OutputCladeFrequencies(double frequency_threshold)
   output_file.close();
 }
 
-void cPopulation::OutputGenotypeFrequencies(double frequency_threshold)
+void cPopulation::OutputGenotypeFrequencies()
 {  
-  vector<uint32_t> all_sweep_ids = GenotypesAboveThreshold(frequency_threshold);
+  vector<uint32_t> all_sweep_ids = GenotypesAboveThreshold(output_parameters.minimum_output_frequency);
   
   //Print each sweeping genotype and its frequency per time
 	ofstream output_file;
   string output_file_name = output_parameters.output_directory_name + "/genotype_frequencies_" 
-  + to_string(frequency_threshold, 4) + "_" + to_string(replicate) + ".dat";
+  + to_string(output_parameters.minimum_output_frequency, 4) + "_" + to_string(replicate) + ".dat";
 	output_file.open(output_file_name.c_str(),ios::out);
   
   cerr << "Output: " << output_file_name << endl;

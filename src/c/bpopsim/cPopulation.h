@@ -199,6 +199,8 @@ namespace bpopsim {
         burn_in = from_string<uint32_t>(options["burn-in"]);
         diverged_mutation_depth = from_string<uint32_t>(options["diverged-mutation-depth"]);
         output_diverged_frequencies = options.count("output-diverged-frequencies");
+        minimum_output_frequency = from_string<double>(options["minimum-output-frequency"]);
+
       }
       
       string output_directory_name;
@@ -206,6 +208,7 @@ namespace bpopsim {
       int32_t burn_in;            // Number of transfers to perform before recording output
       uint32_t diverged_mutation_depth;
       bool output_diverged_frequencies;
+      double minimum_output_frequency;
 
     } output_parameters;
     
@@ -277,8 +280,8 @@ namespace bpopsim {
     void   RunSimulation();
     void   DisplaySimulationSummary();
 
-    void   OutputCladeFrequencies(double frequency_threshold = 0);
-    void   OutputGenotypeFrequencies(double frequency_threshold = 0);
+    void   OutputCladeFrequencies();
+    void   OutputGenotypeFrequencies();
     void   OutputMullerMatrix(uint32_t frequency_resolution);
 
     

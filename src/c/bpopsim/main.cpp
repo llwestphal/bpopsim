@@ -89,17 +89,13 @@ int bpopsim_default_action(int argc, char* argv[])
 	}    
     
   // Require one output option
-  if ( !options.count("output-genotype-frequencies")
+  if ( !options.count("output-average-fitness")
+    && !options.count("output-average-mutations")
     && !options.count("output-clade-frequencies")
+    && !options.count("output-genotype-frequencies")
+    && !options.count("output-diverged-frequencies")
     && !options.count("output-muller")
-    && !options.count("output-average-fitness")
-   // && !options.count("output-dominant-genotypes")
-   // && !options.count("print-screen")
-   // && !options.count("time-sweep")
-   // && !options.count("max-diff")
-   // && !options.count("single-fit")
-   // && !options.count("sweeping-descent-fitness")
-    ) {
+  ) {
     
     options.addUsage("");
     options.addUsage("You must provide at least one output option.");

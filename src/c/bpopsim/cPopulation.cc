@@ -186,38 +186,6 @@ void cPopulation::OutputGenotypeFrequencies()
   output_file.close();
 }
 
-// Prints the frequency of every genotype at the current time above frequency_threshold
-
-/* This version is NOT doing what it says
-void cPopulation::OutputGenotypeFrequencies(double frequency_threshold) 
-{  
-  ofstream output_file;
-  string output_file_name = output_parameters.output_directory_name + "/clade_frequencies_" 
-    + to_string(frequency_threshold) + "_" + to_string(replicate) + ".dat";
-	output_file.open(output_file_name.c_str(),ios_base::out);
-  
-  cerr << "Output: " << output_file_name << endl;
-  
-	for (uint32_t i = 0; i<replicate_statistics.clade_frequencies.size(); i++) {
-		double total_freqs = 0;
-    for ( vector<cGenotypeFrequency>::iterator it = replicate_statistics.genotype_frequencies[i].begin(); 
-         it!=replicate_statistics.genotype_frequencies[i].end(); ++it) {
-      
-      //@agm set up a minimum frequency to report the print out the number so it isn't overwhelming.
-      if ((*it).m_frequency > 0.01) {
-       // cout << "Frequency of mutation # " << right << setw(6) << (*it).unique_node_id << " at time ";
-        output_file << "Frequency of mutation # " << right << setw(6) << (*it).unique_node_id << " at time ";
-      //  cout << right << setw(4) << i << " is: " << left << setw(10) << (*it).m_frequency << endl;
-        output_file << right << setw(4) << i << " is: " << left << setw(10) << (*it).m_frequency << endl;
-      }
-      total_freqs += (*it).m_frequency;
-    }
-		//cout << "Round # " << i << " sum of frequencies is: " << total_freqs << endl << endl;
-    output_file << "Round # " << i << " sum of frequencies is: " << total_freqs << endl << endl;
-	}
-} 
-*/
-
 void cPopulation::OutputMullerMatrix(uint32_t frequency_resolution)
 {
   ofstream output_file;
@@ -244,12 +212,6 @@ void cPopulation::OutputMullerMatrix(uint32_t frequency_resolution)
     
     AssignChildFrequency(location, 0, 1, &child_freqs, *this_time_freq);
     sort(child_freqs.begin(), child_freqs.end(), cSortByLow());
-    
-    //cout << "Time " << time << " Child freqs size: " << child_freqs.size() << endl;
-    // for (uint32_t j=0; j<child_freqs.size(); j++) {
-    // cout << child_freqs[j].low << " " << child_freqs[j].high << endl;
-    // }
-    // PrintTree();
         
     double pixel_step = 1.0/frequency_resolution;
     
@@ -260,7 +222,11 @@ void cPopulation::OutputMullerMatrix(uint32_t frequency_resolution)
       
       int32_t low = ceil(child_freqs[j].low/pixel_step);
       int32_t high = floor(child_freqs[j].high/pixel_step);
-
+      
+      // prevent floating point errors!
+      high = min(static_cast<int32_t>(frequency_resolution)-1, high);
+      low = min (0, low);
+            
       for(int32_t pixel = low; pixel <= high; pixel++) {
         
         if( renumber.count(child_freqs[j].unique_node_id) == 0 ) {
@@ -270,29 +236,8 @@ void cPopulation::OutputMullerMatrix(uint32_t frequency_resolution)
       }
     }
     
-    /*
-    //@agm Here I first iterate through the number of pixels
-    for (uint32_t i=1; i<=frequency_resolution; i++) {
-            
-      for (uint32_t j=0; j<child_freqs.size(); j++) {
-        
-        if( child_freqs[j].high >= pixel_step ) {
-            
-          //Add new significant mutations to a map for renumbering
-          if( renumber.count(child_freqs[j].unique_node_id) == 0 ) {
-            renumber[child_freqs[j].unique_node_id] = renumber_value++;
-          }
-          //Return the renumbered-number for the unique_node_id from the built map
-          output_file<< left << setw(6) << renumber[child_freqs[j].unique_node_id];
-          last_node_meeting_span = renumber[child_freqs[j].unique_node_id];
-          
-          break;
-        }
-      }
-    }
-     */
-    
     for(uint32_t pixel = 0; pixel < frequency_resolution; pixel++) {
+      if (pixel != 0) output_file << " ";
       output_file<< left << setw(6) << output_pixels[pixel];
     }
     

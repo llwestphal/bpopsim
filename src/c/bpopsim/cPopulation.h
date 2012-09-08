@@ -282,7 +282,7 @@ namespace bpopsim {
 
     void   OutputCladeFrequencies();
     void   OutputGenotypeFrequencies();
-    void   OutputMullerMatrix(uint32_t frequency_resolution);
+    void   OutputMullerMatrix(uint32_t frequency_resolution, bool line_of_descent_separate);
 
     
     /// ---> Need to check output below here

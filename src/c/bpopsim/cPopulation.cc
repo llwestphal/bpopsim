@@ -213,21 +213,24 @@ void cPopulation::OutputMullerMatrix(uint32_t frequency_resolution)
     AssignChildFrequency(location, 0, 1, &child_freqs, *this_time_freq);
     sort(child_freqs.begin(), child_freqs.end(), cSortByLow());
         
-    double pixel_step = 1.0/frequency_resolution;
+    double pixel_step = 1.0/(frequency_resolution+1);
     
-    // create the pixels
+    // create the pixels one fewer than "resolution"
     vector<uint32_t> output_pixels(frequency_resolution, 0);
     
     for (uint32_t j=0; j<child_freqs.size(); j++) {
       
-      int32_t low = ceil(child_freqs[j].low/pixel_step);
-      int32_t high = floor(child_freqs[j].high/pixel_step);
+      // We look at frequencies that are !!centered!! on the locations of the pixels.
+      
+      
+      int32_t low = ceil(child_freqs[j].low/pixel_step - 0.5);
+      int32_t high = ceil(child_freqs[j].high/pixel_step - 0.5);
       
       // prevent floating point errors!
-      high = min(static_cast<int32_t>(frequency_resolution)-1, high);
-      low = min (0, low);
+      high = min(static_cast<int32_t>(frequency_resolution), high);
+      low = max(0, low);
             
-      for(int32_t pixel = low; pixel <= high; pixel++) {
+      for(int32_t pixel = low; pixel < high; pixel++) {
         
         if( renumber.count(child_freqs[j].unique_node_id) == 0 ) {
           renumber[child_freqs[j].unique_node_id] = renumber_value++;
@@ -236,7 +239,7 @@ void cPopulation::OutputMullerMatrix(uint32_t frequency_resolution)
       }
     }
     
-    for(uint32_t pixel = 0; pixel < frequency_resolution; pixel++) {
+    for(uint32_t pixel = 0; pixel < output_pixels.size(); pixel++) {
       if (pixel != 0) output_file << " ";
       output_file<< left << setw(6) << output_pixels[pixel];
     }

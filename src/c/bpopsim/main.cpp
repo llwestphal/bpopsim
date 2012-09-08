@@ -62,16 +62,15 @@ int bpopsim_default_action(int argc, char* argv[])
   options("minimum-output-frequency", "Only output clade/genotype frequencies that are above this frequency at some time point.", 0.01);
   options("output-diverged-frequencies", "Output frequencies of clades that differ by at least X mutations from the line of descent to the final dominant to 'diverged_frequencies_X.tab'",TAKES_NO_ARGUMENT);
   options("diverged-mutation-depth", "Maximum depth of diverged mutations to output.", 10);
-  options("output-muller", "Output Muller matrix to file 'muller.mat'. Cell values are genotypes to color.", TAKES_NO_ARGUMENT);
-  options("muller-resolution,w", "Muller plot vertical resolution.", 200);
-  
+  options("output-muller", "Output Muller matrix for replicate X to file 'muller_matrix_X.dat'. Cell values unique genotypes. This file can be used to make plots of population dynamics.", TAKES_NO_ARGUMENT);
+  options("muller-resolution,w", "Muller matrix vertical resolution.", 200);
+  options("muller-lod,w", "In the Muller matrix, give genotypes on the line of descent to the final dominant negative numbers, so that they can be plotted in separate colors.", TAKES_NO_ARGUMENT);
+
   // Not (re)implemented
 //  options("output-dominant-genotypes", "Output dominant genotype frequencies to file 'dominant_genotypes.csv'", TAKES_NO_ARGUMENT);
-//  options("dominant-genotype-frequency-cutoff", "Print Average Fitness", 0.001);
 //  ("output-time-to-sweep", "Print time to sweep for each mutation", TAKES_NO_ARGUMENT)
 //  ("output-max-diff", "Print max difference of sweeping mutations", TAKES_NO_ARGUMENT)
 //  ("output-single-fitness", "Print the fitness of the single cell.", TAKES_NO_ARGUMENT)
-//  ("output-convert-tree", "Convert an external phylogenetic tree.", TAKES_NO_ARGUMENT)
 //  ("output-sweeping-descent-fitness", "Output the average fitness of sweeping descent per time.", TAKES_NO_ARGUMENT)
   
  // options.addUsage("");
@@ -146,7 +145,7 @@ int bpopsim_default_action(int argc, char* argv[])
     }
     
     if( options.count("output-muller") ) {
-      population.OutputMullerMatrix(from_string<uint32_t>(options["muller-resolution"]));
+      population.OutputMullerMatrix(from_string<uint32_t>(options["muller-resolution"]), options.count("muller-lod"));
     }
     
     /*

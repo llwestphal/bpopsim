@@ -186,17 +186,24 @@ void cPopulation::OutputGenotypeFrequencies()
   output_file.close();
 }
 
-void cPopulation::OutputMullerMatrix(uint32_t frequency_resolution)
+void cPopulation::OutputMullerMatrix(uint32_t frequency_resolution, bool line_of_descent_separate)
 {
   ofstream output_file;
   string output_file_name = output_parameters.output_directory_name + "/muller_matrix_" 
-    + to_string(frequency_resolution) + "_" + to_string(replicate) + ".dat";
+    /* + to_string(frequency_resolution) + "_" */ + to_string(replicate) + ".dat";
 	output_file.open(output_file_name.c_str(),ios_base::out);
   
   cerr << "Output: " << output_file_name << endl;
   
-  map<uint32_t, uint32_t> renumber;
-  uint32_t renumber_value(0);
+  map<uint32_t, int32_t> renumber;
+  int32_t renumber_value(0);
+  int32_t renumber_lod_value(-1);
+  
+  // algorithm below is the same no matter what, just depends on whether lod_genotypes is populated
+  set<uint32_t> lod_genotypes;
+  if (line_of_descent_separate) {
+    lod_genotypes = GenotypesFromAncestorToFinalDominant();
+  }
   
   uint32_t time = 0;
   
@@ -213,27 +220,34 @@ void cPopulation::OutputMullerMatrix(uint32_t frequency_resolution)
     AssignChildFrequency(location, 0, 1, &child_freqs, *this_time_freq);
     sort(child_freqs.begin(), child_freqs.end(), cSortByLow());
         
-    double pixel_step = 1.0/(frequency_resolution+1);
+    // Note: we look at frequencies that are !!centered!! on the locations of the pixels.
+    // if you look at frequencies on the bottom or top of pixels then you get a row that
+    // has essentailly random genotypes in it on the edge
+    double pixel_step = 1.0/frequency_resolution;
     
-    // create the pixels one fewer than "resolution"
-    vector<uint32_t> output_pixels(frequency_resolution, 0);
+    // create the pixels
+    vector<int32_t> output_pixels(frequency_resolution, 0);
     
     for (uint32_t j=0; j<child_freqs.size(); j++) {
       
       // We look at frequencies that are !!centered!! on the locations of the pixels.
-      
-      
+      // this is why we are subtracting half here. 
       int32_t low = ceil(child_freqs[j].low/pixel_step - 0.5);
       int32_t high = ceil(child_freqs[j].high/pixel_step - 0.5);
       
       // prevent floating point errors!
-      high = min(static_cast<int32_t>(frequency_resolution), high);
-      low = max(0, low);
+      //high = min(static_cast<int32_t>(frequency_resolution), high);
+      //low = max(0, low);
             
       for(int32_t pixel = low; pixel < high; pixel++) {
         
         if( renumber.count(child_freqs[j].unique_node_id) == 0 ) {
-          renumber[child_freqs[j].unique_node_id] = renumber_value++;
+          
+          if ( lod_genotypes.count(child_freqs[j].unique_node_id) != 0 ) {
+            renumber[child_freqs[j].unique_node_id] = renumber_lod_value--;
+          } else {
+            renumber[child_freqs[j].unique_node_id] = renumber_value++;
+          }
         }
         output_pixels[pixel] = renumber[child_freqs[j].unique_node_id];
       }

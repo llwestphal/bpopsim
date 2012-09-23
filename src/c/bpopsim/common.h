@@ -11,6 +11,8 @@
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 // C++
 #include <algorithm>
@@ -360,7 +362,34 @@ inline string dirname(string file_name)
   return ((found != string::npos) ? file_name.substr(0, found) : "");
 }
 
-// Must be included last because it relites on these functions
+inline string create_path(string path)
+{
+  int status = umask(0);
+  
+  if (path.find("/") != string::npos) {
+    string accumulate_path;
+    vector<string> directories = split(path, "/");
+    
+    for (vector<string>::iterator itr = directories.begin();
+         itr != directories.end(); itr ++) {
+      accumulate_path.append(*itr);
+      status = mkdir(accumulate_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+      accumulate_path.append("/");
+    }
+  } else {
+    status = mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+  }
+  
+  if (status && (errno != EEXIST))
+  {
+    cerr << "Could not create path: '" << path << "'" << endl;
+    exit(-1);
+  }
+  
+  return path;
+}
+
+// Must be included last because it relies on these functions
 #include "anyoption.h"
 
 #endif

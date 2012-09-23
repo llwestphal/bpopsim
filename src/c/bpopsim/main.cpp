@@ -63,8 +63,8 @@ int bpopsim_default_action(int argc, char* argv[])
   options("output-diverged-frequencies", "Output frequencies of clades that differ by at least X mutations from the line of descent to the final dominant to 'diverged_frequencies_X.tab'",TAKES_NO_ARGUMENT);
   options("diverged-mutation-depth", "Maximum depth of diverged mutations to output.", 10);
   options("output-muller", "Output Muller matrix for replicate X to file 'muller_matrix_X.dat'. Cell values unique genotypes. This file can be used to make plots of population dynamics.", TAKES_NO_ARGUMENT);
-  options("muller-resolution,w", "Muller matrix vertical resolution.", 200);
-  options("muller-lod,w", "In the Muller matrix, give genotypes on the line of descent to the final dominant negative numbers, so that they can be plotted in separate colors.", TAKES_NO_ARGUMENT);
+  options("muller-resolution", "Muller matrix vertical resolution.", 200);
+  options("muller-lod", "In the Muller matrix, give genotypes on the line of descent to the final dominant negative numbers, so that they can be plotted in separate colors.", TAKES_NO_ARGUMENT);
 
   // Not (re)implemented
 //  options("output-dominant-genotypes", "Output dominant genotype frequencies to file 'dominant_genotypes.csv'", TAKES_NO_ARGUMENT);
@@ -101,6 +101,9 @@ int bpopsim_default_action(int argc, char* argv[])
     options.printUsage();
 		return -1;
   }
+  
+  // Create output directory
+  create_path(options["output-folder"]);
   
   g_verbose = options.count("verbose");
 

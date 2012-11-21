@@ -1,5 +1,9 @@
 #/usr/bin/R
 
+library(foreach)
+library(doMC)
+registerDoMC()
+
 options <- commandArgs(trailingOnly = TRUE)
 
 ##Get set commandline arguments
@@ -58,15 +62,17 @@ image.matrix <- function(x, colorTable=NULL, xlab="x", ylab="y", ...) {
 }
 
 is.adjacent <- function(x, y, vec) {
+  
+  #this.grid <- expand.grid(list(a=which(vec == x), b=which(vec == y)))
+  
   pos_x <- which(vec == x)
   pos_y <- which(vec == y)
   
-  for(i in pos_y) {
-    if(1 %in% abs(i - pos_x)) 
-      return(T)
-  }
+  for(i in pos_y)
+    if( any(1==abs(i - pos_x)) ) 
+      return(1)
   
-  return(F)
+  return(0)
 }
 
 check.colors <- function(color_vec, adj, color_pallete) {
@@ -115,7 +121,7 @@ grown_up = c()
 ## I go through the muller matrix looking for genotypes that never rise above 1% frequency
 ## Then, I reset those that do not rise high enough to the number 5 and thus gray
 ## There is probably a more efficient way to do this
-for( i in 1:num_times ) {
+for(i in 1:num_times) {
   this_time <- muller_mat[, i]
   freq_frame <- as.data.frame(table(this_time) / num_pixels)
   colnames(freq_frame) <- c("Genotype", "Freq")
@@ -136,20 +142,21 @@ print(sort(grown_up))
 ## Again there is probably a little more efficient way to do it
 ## For loops in R are generally not a good idea
 
-num <- 0
-for( i in 1:(length(grown_up) - 1) ) {
-  num <- num + i
-}
-
+num <- sum(1:length(grown_up) - 1)
 adjacency <- rep(F, num)
 
-for( i in 1:length(muller_mat[1, ]) ) {
+sink("/dev/null")
+
+l1 <- 1:length(muller_mat[1, ])
+l2 <- 1:(length(grown_up) - 1)
+
+foreach(i=l1) %dopar% {
   this_time <- muller_mat[, i]
   
   counter <- 1
   
-  for( j in 1:(length(grown_up) - 1) ){
-    for( k in (j+1):length(grown_up) ) {
+  for(j in l2) {
+    for(k in (j+1):length(grown_up)) {
       if( !adjacency[counter] ) {
         adjacency[counter] = is.adjacent(grown_up[j], grown_up[k], this_time)
       }
@@ -157,6 +164,9 @@ for( i in 1:length(muller_mat[1, ]) ) {
     }
   }
 }
+
+sink()
+
 ## Now that we have colored all small genotypes gray we will start coloring the rest of the plot
 
 #colors = hsv(seq(0, 0.5, length.out = length(grown_up)), s = 0.75, v = 0.65)

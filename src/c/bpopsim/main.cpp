@@ -50,7 +50,7 @@ int bpopsim_default_action(int argc, char* argv[])
   options("max-marker-divergence-ratio,m", "Stop if divergence factor between the subpopulations with the most abundant and next-most abundant marker state exceeds this factor.", 100);
   options("transfer-interval-to-print,t", "Marker divergence printing intervals.", 1);
   options.addUsage("");
-  options.addUsage("==== Output Files and Options ====");  
+  options.addUsage("==== Statistical Output Files and Options ====");  
   options.addUsage("");  
   options("output-folder,o", "Base output folder. All output files will be created here.", ".");
   options("burn-in,b", "Perform this number of transfers before beginning to output statistics (before transfer numbered 0).", 0);
@@ -62,7 +62,13 @@ int bpopsim_default_action(int argc, char* argv[])
   options("minimum-output-frequency", "Only output clade/genotype frequencies that are above this frequency at some time point.", 0.01);
   options("output-diverged-frequencies", "Output frequencies of clades that differ by at least X mutations from the line of descent to the final dominant to 'diverged_frequencies_X.tab'",TAKES_NO_ARGUMENT);
   options("diverged-mutation-depth", "Maximum depth of diverged mutations to output.", 10);
-  options("output-muller", "Output Muller matrix for replicate X to file 'muller_matrix_X.dat'. Cell values unique genotypes. This file can be used to make plots of population dynamics.", TAKES_NO_ARGUMENT);
+  options("output-largest-sweep-size", "Output the largest number of mutations sweeping simultaneously along the line of descent to the final dominant to 'largest_sweep_size.tab'",TAKES_NO_ARGUMENT);
+  options("minimum-sweep-frequency-difference", "Adjacent mutations along the line of descent must have frequncies that are different by at least this threshold at one recorded time point to be considered part of different sweeps.",0.05);
+  options("output-longest-sweep-time", "Output the longest time that a mutation along the line of descent to the final dominant took to sweep from ≥5% to ≥95% frequency in the population to 'longest_sweep_time.tab'",TAKES_NO_ARGUMENT);
+  options.addUsage("");
+  options.addUsage("==== Muller Plot Output Files and Options ====");  
+  options.addUsage("");  
+  options("output-muller", "Output Muller matrix for replicate X to file 'muller_matrix_X.dat'. Cell values unique genotypes. This file can be used to make plots of population dynamics.", TAKES_NO_ARGUMENT);  
   options("muller-resolution", "Muller matrix vertical resolution.", 200);
   options("muller-lod", "In the Muller matrix, give genotypes on the line of descent to the final dominant negative numbers, so that they can be plotted in separate colors.", TAKES_NO_ARGUMENT);
 
@@ -93,6 +99,8 @@ int bpopsim_default_action(int argc, char* argv[])
     && !options.count("output-clade-frequencies")
     && !options.count("output-genotype-frequencies")
     && !options.count("output-diverged-frequencies")
+    && !options.count("output-largest-sweep-size")
+    && !options.count("output-longest-sweep-time")
     && !options.count("output-muller")
   ) {
     
@@ -197,6 +205,14 @@ int bpopsim_default_action(int argc, char* argv[])
   
   if (options.count("output-diverged-frequencies") ) {
     final_statistics.OutputDivergedFrequenciesByDepth();
+  }
+
+  if (options.count("output-largest-sweep-size") ) {
+    final_statistics.OutputLargestSweepSize();
+  }
+  
+  if (options.count("output-longest-sweep-time") ) {
+    final_statistics.OutputLongestSweepTime();
   }
   
   /*

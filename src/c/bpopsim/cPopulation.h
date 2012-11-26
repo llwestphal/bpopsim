@@ -34,6 +34,7 @@ namespace bpopsim {
     
     vector< vector<double> > diverged_frequencies_by_depth; // percent of population diverged from dominant lineage by
                                                             // certain depth (number of mutations) or more
+    int32_t longest_sweep_time;                             // for any mutation in the replicate; measured in transfers
     
     uint32_t total_mutations;                             // Number of mutations so far
     uint32_t total_subpopulations_lost;                   // Number of subpopulations that no longer exist
@@ -53,6 +54,8 @@ namespace bpopsim {
     void OutputAveragePopulationFitness();
     void OutputAveragePopulationMutationCounts();
     void OutputDivergedFrequenciesByDepth();
+    void OutputLargestSweepSize();
+    void OutputLongestSweepTime();
 
     string output_directory_name;
     uint32_t coarse_graining;   // Only used for calculating statistics and ignoring intermediate time points
@@ -200,7 +203,8 @@ namespace bpopsim {
         diverged_mutation_depth = from_string<uint32_t>(options["diverged-mutation-depth"]);
         output_diverged_frequencies = options.count("output-diverged-frequencies");
         minimum_output_frequency = from_string<double>(options["minimum-output-frequency"]);
-
+        output_largest_sweep_size = options.count("output-largest-sweep-size");
+        output_longest_sweep_time = options.count("output-longest-sweep-time");
       }
       
       string output_directory_name;
@@ -208,6 +212,8 @@ namespace bpopsim {
       int32_t burn_in;            // Number of transfers to perform before recording output
       uint32_t diverged_mutation_depth;
       bool output_diverged_frequencies;
+      bool output_largest_sweep_size;
+      bool output_longest_sweep_time;
       double minimum_output_frequency;
 
     } output_parameters;

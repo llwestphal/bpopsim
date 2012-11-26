@@ -433,6 +433,42 @@ void cStatistics::OutputDivergedFrequenciesByDepth()
   }
 }
 
+// Not implemented
+void cStatistics::OutputLargestSweepSize() 
+{
+  ofstream output_file;
+  string output_file_name = output_directory_name + "/largest_sweep_size.tab";
+  output_file.open(output_file_name.c_str(),ios::out);
+ /* 
+  int32_t num_entries = (*this)[0].diverged_frequencies_by_depth.size();
+
+  for (uint32_t replicate = 0; replicate < this->size(); ++replicate) {
+    
+    cReplicateStatistics& replicate_statistics = (*this)[replicate];
+    
+    // Loop through the final line of descent
+    
+    
+    output_file << endl;
+  }
+*/  
+  output_file.close();
+}
+
+void cStatistics::OutputLongestSweepTime()
+{
+  ofstream output_file;
+  string output_file_name = output_directory_name + "/longest_sweep_time.tab";
+  output_file.open(output_file_name.c_str(),ios::out);
+  
+  for (uint32_t replicate = 0; replicate < this->size(); ++replicate) {
+    cReplicateStatistics& replicate_statistics = (*this)[replicate];
+    output_file << replicate_statistics.longest_sweep_time << endl;
+  }
+  
+  output_file.close();
+}
+
 void cPopulation::UpdateSubpopulationsForGrowthExactWithFractionalCells(double update_time) 
 {
   uint32_t i=-1;
@@ -926,87 +962,127 @@ void cPopulation::RecordStatisticsAtTransfer()
 
 void cPopulation::RecordStatisticsAtEnd()
 {	
+  if (output_parameters.output_diverged_frequencies) {
   
-  if (!output_parameters.output_diverged_frequencies)
-    return;
-  
-  // Record mutations diverged by diverged_mutation_depth at each transfer
-  uint32_t max_depth = output_parameters.diverged_mutation_depth;
-  
-  // Determine the dominant line of descent.
-  //set<uint32_t> dominant_clade_set = GenotypesFromAncestorToFinalSweep();
-  set<uint32_t> dominant_clade_set = GenotypesFromAncestorToFinalDominant();
-  //cerr << "Number in dominant clade: " << dominant_clade_set.size() << endl;
-  
-  // @JEB - there are two ways to think about this
-  //       1) Sum all genotypes that are this many steps diverged from the dominant LOD
-  //             use 
-  //       2) Count the size of the maximum clade that is diverged by this many mutations from the dominant LOD
-  //  #2 is more like the LTEE results we are comparing to.
-  
-  
-  // METHOD 1:
-  /*
-  // Step through each transfer (well, each recorded time point)
-  for (uint32_t transfer=0; transfer < replicate_statistics.genotype_frequencies.size(); transfer++) {
-    GenotypeFrequencyMap& this_genotype_frequencies = replicate_statistics.genotype_frequencies[transfer];
-    vector<double> add_frequencies(max_depth, 0);    
+    // Record mutations diverged by diverged_mutation_depth at each transfer
+    uint32_t max_depth = output_parameters.diverged_mutation_depth;
     
-    // Determine the number of steps back to the line of descent and add to this category and higher ones
-    for (GenotypeFrequencyMap::iterator it=this_genotype_frequencies.begin(); it!= this_genotype_frequencies.end(); it++) {
-      uint32_t this_node_id = it->first;
+    // Determine the dominant line of descent.
+    //set<uint32_t> dominant_clade_set = GenotypesFromAncestorToFinalSweep();
+    set<uint32_t> dominant_clade_set = GenotypesFromAncestorToFinalDominant();
+    //cerr << "Number in dominant clade: " << dominant_clade_set.size() << endl;
+    
+    // @JEB - there are two ways to think about this
+    //       1) Sum all genotypes that are this many steps diverged from the dominant LOD
+    //             use 
+    //       2) Count the size of the maximum clade that is diverged by this many mutations from the dominant LOD
+    //  #2 is more like the LTEE results we are comparing to.
+    
+    
+    // METHOD 1:
+    /*
+    // Step through each transfer (well, each recorded time point)
+    for (uint32_t transfer=0; transfer < replicate_statistics.genotype_frequencies.size(); transfer++) {
+      GenotypeFrequencyMap& this_genotype_frequencies = replicate_statistics.genotype_frequencies[transfer];
+      vector<double> add_frequencies(max_depth, 0);    
       
-      tree<cGenotype>::iterator itt = FindGenotypeInTreeByID(this_node_id);
-
-      int32_t this_depth = 0;
-      while ((itt != NULL) && (!dominant_clade_set.count(itt->unique_node_id))) {
+      // Determine the number of steps back to the line of descent and add to this category and higher ones
+      for (GenotypeFrequencyMap::iterator it=this_genotype_frequencies.begin(); it!= this_genotype_frequencies.end(); it++) {
+        uint32_t this_node_id = it->first;
         
+        tree<cGenotype>::iterator itt = FindGenotypeInTreeByID(this_node_id);
 
-        
-        if (this_depth < max_depth) {
-          add_frequencies[this_depth] += this_genotype_frequencies[this_node_id];
+        int32_t this_depth = 0;
+        while ((itt != NULL) && (!dominant_clade_set.count(itt->unique_node_id))) {
+          
+
+          
+          if (this_depth < max_depth) {
+            add_frequencies[this_depth] += this_genotype_frequencies[this_node_id];
+          }
+          
+          itt = genotype_tree.parent(itt); 
+          this_depth++;
         }
         
+        assert(itt != NULL);
+      } // end genotype loop
+      
+      replicate_statistics.diverged_frequencies_by_depth.push_back(add_frequencies);
+    } // end transfer loop
+     */
+    
+    // METHOD 2:
+    // Step through each transfer (well, each recorded time point)
+    for (uint32_t transfer=0; transfer < replicate_statistics.clade_frequencies.size(); transfer++) {
+      GenotypeFrequencyMap& this_clade_frequencies = replicate_statistics.clade_frequencies[transfer];
+      vector<double> add_frequencies(max_depth, 0);    
+     
+      // Determine the number of steps back to the line of descent and add to this category and higher ones
+      for (GenotypeFrequencyMap::iterator it=this_clade_frequencies.begin(); it!= this_clade_frequencies.end(); it++) {
+        uint32_t this_node_id = it->first;
+     
+        tree<cGenotype>::iterator itt = FindGenotypeInTreeByID(this_node_id);
+     
+        int32_t this_depth = 0;
+        while ((itt != NULL) && (!dominant_clade_set.count(itt->unique_node_id))) {
+     
+          if (this_depth < max_depth) {
+            add_frequencies[this_depth] = max(add_frequencies[this_depth],this_clade_frequencies[this_node_id]);
+          }
+     
         itt = genotype_tree.parent(itt); 
         this_depth++;
       }
-      
-      assert(itt != NULL);
-    } // end genotype loop
-    
-    replicate_statistics.diverged_frequencies_by_depth.push_back(add_frequencies);
-  } // end transfer loop
-   */
+     
+       assert(itt != NULL);
+     } // end genotype loop
+     
+     replicate_statistics.diverged_frequencies_by_depth.push_back(add_frequencies);
+    } // end transfer loop
+  }
   
-  // METHOD 2:
-  // Step through each transfer (well, each recorded time point)
-  for (uint32_t transfer=0; transfer < replicate_statistics.clade_frequencies.size(); transfer++) {
-    GenotypeFrequencyMap& this_clade_frequencies = replicate_statistics.clade_frequencies[transfer];
-    vector<double> add_frequencies(max_depth, 0);    
-   
-    // Determine the number of steps back to the line of descent and add to this category and higher ones
-    for (GenotypeFrequencyMap::iterator it=this_clade_frequencies.begin(); it!= this_clade_frequencies.end(); it++) {
-      uint32_t this_node_id = it->first;
-   
-      tree<cGenotype>::iterator itt = FindGenotypeInTreeByID(this_node_id);
-   
-      int32_t this_depth = 0;
-      while ((itt != NULL) && (!dominant_clade_set.count(itt->unique_node_id))) {
-   
-        if (this_depth < max_depth) {
-          add_frequencies[this_depth] = max(add_frequencies[this_depth],this_clade_frequencies[this_node_id]);
+  
+  if (output_parameters.output_largest_sweep_size) {
+    assert(false); // not implemented
+  }
+  
+  if (output_parameters.output_longest_sweep_time) {
+    bool debug = false;
+
+    set<uint32_t> dominant_clade_set = GenotypesFromAncestorToFinalDominant();
+    replicate_statistics.longest_sweep_time = 0;
+    // for each genotype on the dominant line of descent
+    for(set<uint32_t>::iterator it = dominant_clade_set.begin(); it != dominant_clade_set.end(); it++) {
+      
+      uint32_t on_genotype_id = *it;
+      int32_t start_transfer = 0;
+      int32_t end_transfer = 0;
+
+      // determine how many transfers it took to go from ≤5% to ≥95%
+      cout << "== " << on_genotype_id << " ==" << endl;
+      for (uint32_t transfer=0; transfer < replicate_statistics.clade_frequencies.size(); transfer++) {
+        GenotypeFrequencyMap& this_clade_frequencies = replicate_statistics.clade_frequencies[transfer];
+        if (this_clade_frequencies[on_genotype_id] <= 0.05) {
+          start_transfer = transfer;
+          if (debug) cout << this_clade_frequencies[on_genotype_id] << " (start)" << endl;
         }
-   
-      itt = genotype_tree.parent(itt); 
-      this_depth++;
-    }
-   
-     assert(itt != NULL);
-   } // end genotype loop
-   
-   replicate_statistics.diverged_frequencies_by_depth.push_back(add_frequencies);
-  } // end transfer loop
-   
+        else if (this_clade_frequencies[on_genotype_id] >= 0.95) {
+          end_transfer = transfer;
+          if (debug) cout << this_clade_frequencies[on_genotype_id] << " (end)" << endl;
+          break;
+        } else {
+          if (debug) cout << this_clade_frequencies[on_genotype_id] << endl;
+        }
+      }
+      
+      if (debug) cout << start_transfer << "-" << end_transfer << endl;
+      
+      int32_t this_sweep_time = end_transfer - start_transfer;
+      replicate_statistics.longest_sweep_time  = max(replicate_statistics.longest_sweep_time, 
+                                                     this_sweep_time * static_cast<int32_t>(output_parameters.coarse_graining));
+    }    
+  } // end output_longest_sweep_time
 }
 
 //////////  Utility Functions //////////

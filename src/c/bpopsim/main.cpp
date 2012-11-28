@@ -41,8 +41,8 @@ int bpopsim_default_action(int argc, char* argv[])
   options("number-of-transfers,n", "Max number of transfer to replicate", 50);
   options("initial-fitness,z", "Initial fitness.", 1.0);
   options("mutation-rates,u", "Mutation rate per cell division. Supply option multiple times to define categories of mutations.", "1E-7");
-  options("fitness-effects,s", "Fitness increment per mutation. Supply option multiple times to define categories of mutations.", 0.1);
-  options("fitness-effect-model,f", "Distribution of mutation fitness effects.", 'u');
+  options("fitness-effects,s", "Mean fitness increment per mutation. Supply option multiple times to define categories of mutations.", 0.1);
+  options("fitness-effect-model,f", "Distribution of mutation fitness effects. Choices are 'u' for uniform and 'e' for exponential distributions.", 'u');
   options.addUsage("");
   options.addUsage("==== Marker Divergence Options ====");
   options.addUsage("");

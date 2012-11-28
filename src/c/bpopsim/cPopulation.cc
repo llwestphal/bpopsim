@@ -1060,7 +1060,7 @@ void cPopulation::RecordStatisticsAtEnd()
       int32_t end_transfer = 0;
 
       // determine how many transfers it took to go from ≤5% to ≥95%
-      cout << "== " << on_genotype_id << " ==" << endl;
+      if (debug) cout << "== " << on_genotype_id << " ==" << endl;
       for (uint32_t transfer=0; transfer < replicate_statistics.clade_frequencies.size(); transfer++) {
         GenotypeFrequencyMap& this_clade_frequencies = replicate_statistics.clade_frequencies[transfer];
         if (this_clade_frequencies[on_genotype_id] <= 0.05) {

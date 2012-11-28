@@ -91,7 +91,14 @@ check.colors <- function(color_vec, adj, color_pallete) {
   return(F)
 }
 
-muller_mat <- t(as.matrix(read.table(input_file_name, header=F)))*10
+muller_mat <- t(as.matrix(read.table(input_file_name, header=F)))
+
+muller_mat[muller_mat >= 0] <- muller_mat[muller_mat >= 0] + 3
+
+muller_mat[muller_mat < 0 & muller_mat %% 2 == 1] <- 1
+muller_mat[muller_mat < 0 & muller_mat %% 2 == 0] <- 2
+
+
 
 if( output_file_type == "pdf") {
   pdf(paste(output_file_name, ".pdf", sep = ''), 
@@ -167,22 +174,19 @@ foreach(i=l1) %dopar% {
 
 sink()
 
-## Now that we have colored all small genotypes gray we will start coloring the rest of the plot
-
-#colors = hsv(seq(0, 0.5, length.out = length(grown_up)), s = 0.75, v = 0.65)
-#colors <- colors()[1:100]
-cols <- c('black', 'green', 'darkred', 'tan', 'lightgreen', 'orange', 'purple',
-          'red', 'gold', 'darkgreen', 'brown')
+cols <- c('darkblue', 'darkcyan', 'firebrick', 'brown1', 'blueviolet', 'deeppink4', 'chartreuse4', 'chocolate4', 'darkgoldenrod4',
+          'darkgoldenrod2', 'darkorange2', 'darkgreen')
 
 cols = append(cols, 'darkgray')
 
 col_vec <- rep(0, length(grown_up))
 col_vec[length(col_vec)] <- length(cols)
 
-this_color <- 1
+this_color <- 3
 counter <- 1
 
 col_vec[1] = 1
+col_vec[2] = 2
 
 for( i in 1:(length(grown_up) - 1 )) {
   for( j in (i+1):length(grown_up) ) {
@@ -197,7 +201,7 @@ for( i in 1:(length(grown_up) - 1 )) {
       while(keep_trying) {
         this_color <- this_color + 1
         if( this_color >= length(cols) )
-          this_color = 1
+          this_color = 3
         
         col_vec[j] = this_color
         if( !check.colors(col_vec, adjacency, cols)) {
@@ -220,7 +224,7 @@ for( i in 1:(length(grown_up) - 1 )) {
 
 
 muller_mat[which(muller_mat %in% small_genotypes)] = length(cols)
-for( i in 1:length(grown_up)) {
+for(i in 1:length(grown_up)) {
   muller_mat[muller_mat == grown_up[i]] = col_vec[i]
 }
 

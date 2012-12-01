@@ -13,6 +13,7 @@ cGenotype::cGenotype(
 : unique_node_id(in_node_id)
 , name("")
 , fitness(1.0)
+, this_mutation_fitness_effect(0.0)
 , total_mutation_count(0)
 , marked_for_deletion(false)
 { 
@@ -28,6 +29,7 @@ cGenotype::cGenotype(
 : unique_node_id(in_node_id)
 , name("")
 , fitness(in_ancestor.fitness)
+, this_mutation_fitness_effect(0.0)
 , total_mutation_count(in_ancestor.total_mutation_count)
 , mutation_counts(in_ancestor.mutation_counts)
 , marked_for_deletion(false)
@@ -45,21 +47,20 @@ void cGenotype::AddOneMutation(
   uint32_t this_mutation_category = simulation_parameters.DetermineMutationCategory(rng);
   double average_mutation_fitness_effect = simulation_parameters.mutation_fitness_effects[this_mutation_category];
   
-  double this_mutation_fitness_effect;
   if(simulation_parameters.mutation_fitness_effect_model=="e")
   {
-    this_mutation_fitness_effect = gsl_ran_exponential(rng,average_mutation_fitness_effect);	
+    this->this_mutation_fitness_effect = gsl_ran_exponential(rng,average_mutation_fitness_effect);	
   }
     
   if (simulation_parameters.mutation_fitness_effect_model=="u")
   {
-    this_mutation_fitness_effect = average_mutation_fitness_effect;
+    this->this_mutation_fitness_effect = average_mutation_fitness_effect;
   }
   
   // Update our information
-  total_mutation_count++;
-  mutation_counts[this_mutation_category]++;
-  fitness += this_mutation_fitness_effect;
+  this->total_mutation_count++;
+  this->mutation_counts[this_mutation_category]++;
+  this->fitness += this->this_mutation_fitness_effect;
 }
   
 /* Copy constructor */

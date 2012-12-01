@@ -138,6 +138,12 @@ void cPopulation::OutputCladeFrequencies()
     
   cerr << "Output: " << output_file_name << endl;
   
+  output_file << "#fitness_effect";
+  for (uint32_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
+    output_file << "\t" <<  genotype_id_map_into_tree[all_sweep_ids[a_node]]->this_mutation_fitness_effect;
+  }
+  output_file << endl;
+  
   output_file << "transfer";
   for (uint32_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
     output_file << "\t" << "clade_" << all_sweep_ids[a_node];
@@ -234,10 +240,6 @@ void cPopulation::OutputMullerMatrix(uint32_t frequency_resolution, bool line_of
       // this is why we are subtracting half here. 
       int32_t low = ceil(child_freqs[j].low/pixel_step - 0.5);
       int32_t high = ceil(child_freqs[j].high/pixel_step - 0.5);
-      
-      // prevent floating point errors!
-      //high = min(static_cast<int32_t>(frequency_resolution), high);
-      //low = max(0, low);
             
       for(int32_t pixel = low; pixel < high; pixel++) {
         
@@ -1226,9 +1228,8 @@ set<uint32_t> cPopulation::GenotypesFromAncestorToFinalSweep()
 
 set<uint32_t> cPopulation::GenotypesFromAncestorToFinalDominant() 
 {
-  // Start at ancestor and take the greatest clade at each step
-  
-  // Go through current clades and find the one 
+  // Go through all sub clades (mutants) starting at the ancestor and take the highest-frequency one at each step
+  // = dominant line-of-descent
   set<uint32_t> genotype_set;
   
   GenotypeFrequencyMap& frequencies = replicate_statistics.clade_frequencies.back();
@@ -1257,6 +1258,7 @@ set<uint32_t> cPopulation::GenotypesFromAncestorToFinalDominant()
   //cerr << genotype_set.size() << endl;
   
   return genotype_set;
+  
 }
 
 // Returns a list of all clades that were ever above the

@@ -11,12 +11,13 @@ namespace bpopsim {
   // Defined
   struct cGenotype 
   {
-    uint32_t unique_node_id;
-    string   name;
-    double   fitness;
+    uint32_t  unique_node_id;
+    string    name;
+    double    fitness;
+    double this_mutation_fitness_effect; // Size of the mutation that created this genotype
     uint32_t  total_mutation_count;   // total number of mutations
     vector<uint32_t> mutation_counts; // number of mutations in each category
-    bool    marked_for_deletion;      // do individuals of this type still exist?
+    bool      marked_for_deletion;      // do individuals of this type still exist?
     
     cGenotype(
               SimulationParameters& in_simulation_parameters, 

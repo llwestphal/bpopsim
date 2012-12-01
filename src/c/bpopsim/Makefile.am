@@ -29,7 +29,15 @@ LDADD = $(BOOST_PROGRAM_OPTIONS_LIBS)
 bin_PROGRAMS = bpopsim
 
 bpopsim_SOURCES = \
+	anyoption.cpp \
+        anyoption.h \
+        common.h \
 	cPopulation.cc \
+	cPopulation.h \
 	cSubpopulation.cc \
+	cSubpopulation.h \
+	icsilog.h \
 	icsilog.c \
-	main.cpp	
+	main.cpp \
+	tree.hh \
+	tree_util.hh	

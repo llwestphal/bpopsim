@@ -45,6 +45,7 @@ bpopsim.xcodeproj/xcuserdata
 ##autotools
 ^Makefile.in$
 ^Makefile$
+^INSTALL$
 ^configure$
 ^src/c/bpopsim/.deps
 ^src/c/bpopsim/Makefile$

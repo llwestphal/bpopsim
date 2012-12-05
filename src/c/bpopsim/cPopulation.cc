@@ -129,6 +129,7 @@ void cPopulation::OutputCladeFrequencies()
   
   vector<uint32_t> all_sweep_ids = CladesAboveThreshold(output_parameters.minimum_output_frequency);
 
+  set<uint32_t> lod = GenotypesFromAncestorToFinalDominant();
   
   //Print each sweeping genotype and its frequency per time
 	ofstream output_file;
@@ -137,6 +138,12 @@ void cPopulation::OutputCladeFrequencies()
 	output_file.open(output_file_name.c_str(),ios::out);
     
   cerr << "Output: " << output_file_name << endl;
+  
+  output_file << "#on_dominant_line_of_descent";
+  for (uint32_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {
+    output_file << "\t" <<  (lod.count(all_sweep_ids[a_node]) ? 1 : 0);
+  }
+  output_file << endl;
   
   output_file << "#fitness_effect";
   for (uint32_t a_node=0; a_node<all_sweep_ids.size(); a_node++) {

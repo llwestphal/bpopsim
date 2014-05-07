@@ -2,6 +2,7 @@
 
 library(foreach)
 library(doMC)
+library(colorRamps)
 registerDoMC()
 
 options <- commandArgs(trailingOnly = TRUE)
@@ -93,7 +94,7 @@ check.colors <- function(color_vec, adj, color_pallete) {
   
   return(F)
 }
-
+cat(input_file_name, "\n")
 muller_mat <- t(as.matrix(read.table(input_file_name, header=F)))
 num_blues <- 1
 
@@ -184,10 +185,12 @@ foreach(i=l1) %dopar% {
 
 sink()
 
-cols <- c('firebrick', 'brown1', 'blueviolet', 'deeppink4', 'chocolate4', 'darkgoldenrod4', 
-          'darkgoldenrod2', 'darkorange2', 'darkgreen', 'chartreuse3', 'darkslateblue', 'darkgray')
+#cols <- c('firebrick', 'brown1', 'blueviolet', 'deeppink4', 'chocolate4', 'darkgoldenrod4', 
+#          'darkgoldenrod2', 'darkorange2', 'darkgreen', 'chartreuse3', 'darkslateblue', 'darkgray')
 
-# Switch pallette to grays if requested
+cols <- primary.colors(18)
+
+# Switch palette to grays if requested
 if(lod_blues) {
   cols <- c('darkblue', 'dodgerblue4', 'darkcyan', 'firebrick', 'brown1', 
             'blueviolet', 'deeppink4', 'chocolate4', 'darkgoldenrod4', 

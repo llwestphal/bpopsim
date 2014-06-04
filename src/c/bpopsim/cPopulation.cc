@@ -133,8 +133,8 @@ void cPopulation::OutputCladeFrequencies()
   //Print each sweeping genotype and its frequency per time
 	ofstream output_file;
   string output_file_name = output_parameters.output_directory_name + "/clade_frequencies_" 
-    + to_string(output_parameters.minimum_output_frequency, 4) + "_" + to_string(replicate) + ".dat";
-	output_file.open(output_file_name.c_str(),ios::out);
+    + to_string(output_parameters.minimum_output_frequency) + "_" + to_string(replicate) + ".dat";
+	output_file.open(output_file_name.c_str(),ios::out);///removed ",4" from the minimum_output_frequency to_string to distinguish frequencies lower than 1E-4
     
   cerr << "Output: " << output_file_name << endl;
   

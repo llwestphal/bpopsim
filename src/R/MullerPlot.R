@@ -2,14 +2,20 @@
 
 library(foreach)
 library(doMC)
+library(colorRamps)
 registerDoMC()
 
 options <- commandArgs(trailingOnly = TRUE)
+
+##You can only do line of descent if you have negative numbers denoting the line... 
+##Otherwise you will get nonsense!!
 
 ##Get set commandline arguments
 input_file_name = options[1];
 output_file_name = options[2]
 output_file_type = options[3]
+lod_blues = type.convert(options[4])
+non_lod_gray = type.convert(options[5])
 
 ## Set the working directory
 setwd('.')
@@ -63,8 +69,6 @@ image.matrix <- function(x, colorTable=NULL, xlab="x", ylab="y", ...) {
 
 is.adjacent <- function(x, y, vec) {
   
-  #this.grid <- expand.grid(list(a=which(vec == x), b=which(vec == y)))
-  
   pos_x <- which(vec == x)
   pos_y <- which(vec == y)
   
@@ -90,15 +94,22 @@ check.colors <- function(color_vec, adj, color_pallete) {
   
   return(F)
 }
-
+cat(input_file_name, "\n")
 muller_mat <- t(as.matrix(read.table(input_file_name, header=F)))
+num_blues <- 1
 
-muller_mat[muller_mat >= 0] <- muller_mat[muller_mat >= 0] + 3
+if(lod_blues) {
+  num_blues <- 4
+  
+  muller_mat[muller_mat >= 0] <- muller_mat[muller_mat >= 0] + num_blues
+  
+  muller_mat[muller_mat < 0 & muller_mat %% 3 == 1] <- 1
+  muller_mat[muller_mat < 0 & muller_mat %% 3 == 2] <- 2
+  muller_mat[muller_mat < 0 & muller_mat %% 3 == 0] <- 3
+}
 
-muller_mat[muller_mat < 0 & muller_mat %% 2 == 1] <- 1
-muller_mat[muller_mat < 0 & muller_mat %% 2 == 0] <- 2
-
-
+if(min(muller_mat) < 1)
+  muller_mat <- muller_mat + -1*min(muller_mat) + 1
 
 if( output_file_type == "pdf") {
   pdf(paste(output_file_name, ".pdf", sep = ''), 
@@ -134,12 +145,12 @@ for(i in 1:num_times) {
   colnames(freq_frame) <- c("Genotype", "Freq")
   freq_frame$Genotype = as.numeric(as.character(freq_frame$Genotype))
   
-  small_genotypes = append(small_genotypes, freq_frame$Genotype)
+  #small_genotypes = append(small_genotypes, freq_frame$Genotype)
   grown_up  = append(grown_up, freq_frame$Genotype[freq_frame$Freq > 0.01])
 }
 
 grown_up <- unique(grown_up)
-small_genotypes <- unique(small_genotypes)
+small_genotypes <- unique(as.vector(muller_mat))
 small_genotypes = setdiff(small_genotypes, grown_up)
 
 print(sort(grown_up))
@@ -174,21 +185,36 @@ foreach(i=l1) %dopar% {
 
 sink()
 
-cols <- c('darkblue', 'darkcyan', 'firebrick', 'brown1', 'blueviolet', 'deeppink4', 'chartreuse4', 'chocolate4', 'darkgoldenrod4',
-          'darkgoldenrod2', 'darkorange2', 'darkgreen')
+#cols <- c('firebrick', 'brown1', 'blueviolet', 'deeppink4', 'chocolate4', 'darkgoldenrod4', 
+#          'darkgoldenrod2', 'darkorange2', 'darkgreen', 'chartreuse3', 'darkslateblue', 'darkgray')
 
-cols = append(cols, 'darkgray')
+cols <- primary.colors(18)
 
-col_vec <- rep(0, length(grown_up))
-col_vec[length(col_vec)] <- length(cols)
+# Switch palette to grays if requested
+if(lod_blues) {
+  cols <- c('darkblue', 'dodgerblue4', 'darkcyan', 'firebrick', 'brown1', 
+            'blueviolet', 'deeppink4', 'chocolate4', 'darkgoldenrod4', 
+            'darkgoldenrod2', 'darkorange2', 'darkgreen', 'darkgray')
+}
+if(non_lod_gray & lod_blues) {
+  cols <- c('darkblue', 'dodgerblue4', 'darkcyan', 'gray15', 'gray25', 'gray35', 
+            'gray45', 'gray55', 'gray65', 'gray75', 'gray85')
+}
 
-this_color <- 3
+##It is critical to change all the small genotypes to an unused number to prevent bad renumbering
+##Since all numbers are made positive at the beginning of the script I use -9999
+for(i in small_genotypes) {
+  muller_mat[muller_mat == i] <- -9999
+}
+
+this_color <- num_blues
 counter <- 1
 
-col_vec[1] = 1
-col_vec[2] = 2
+col_vec <- rep(0, length(grown_up))
+for(i in 1:num_blues)
+  col_vec[i] = i
 
-for( i in 1:(length(grown_up) - 1 )) {
+for(i in 1:(length(grown_up) - 1 )) {
   for( j in (i+1):length(grown_up) ) {
     if( !adjacency[counter] & col_vec[i] == 0) {
       col_vec[j] = this_color
@@ -200,34 +226,37 @@ for( i in 1:(length(grown_up) - 1 )) {
       
       while(keep_trying) {
         this_color <- this_color + 1
-        if( this_color >= length(cols) )
-          this_color = 3
+        if(this_color >= length(cols))
+          this_color = num_blues
         
-        col_vec[j] = this_color
-        if( !check.colors(col_vec, adjacency, cols)) {
+        if(adjacency[i] & col_vec[i] != this_color | !adjacency[i]) {
+          col_vec[j] = this_color
+          #print(this_color)
+          #keep_trying <- F
           break
         }
-        else{
-          col_vec[j] = 0
-        }
         
-        if(permutations >= length(cols)) {
+        if(permutations >= length(cols)-1) {
           stop("Color possibilities exhausted... You will have to add more colors to prevent color adjacency.")
         }
         
-        print(this_color)
         permutations <- permutations + 1
       }
     }
   }
 }
 
+#write.table(muller_mat, '~/Desktop/check_mat_before.dat', row.names=F, col.names=F)
 
-muller_mat[which(muller_mat %in% small_genotypes)] = length(cols)
 for(i in 1:length(grown_up)) {
-  muller_mat[muller_mat == grown_up[i]] = col_vec[i]
+  muller_mat[muller_mat == grown_up[i]] <- col_vec[i]
 }
 
+muller_mat[muller_mat == -9999] <- length(cols)
+
+#write.table(muller_mat, '~/Desktop/check_mat.dat', row.names=F, col.names=F)
+
+print(unique(as.vector(muller_mat)))
 print(check.colors(col_vec, adjacency, cols))
 
 print(col_vec)
@@ -245,7 +274,8 @@ image.matrix(muller_mat,
              axes=FALSE,
              xaxt="n",
              yaxt="n",
-             cex.lab=2.75)
+             cex.lab=2.75,
+             useRaster=T)
 
 axis(1,
      at=xticks,

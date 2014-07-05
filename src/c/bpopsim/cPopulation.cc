@@ -39,7 +39,7 @@ void cPopulation::RunSimulation()
     SeedPopulationWithOneGenotype();
   }
   
-  //Get an initial time points
+  //Get an initial time point
   RecordStatisticsAtTransfer();
   
   cerr << "    Replicate: " << setw(3) << replicate << "  Transfer: " << setw(4) << num_completed_transfers;
@@ -52,7 +52,8 @@ void cPopulation::RunSimulation()
   // Get us started with a mutation
   num_divisions_until_next_mutation += CalculateDivisionsUntilNextBeneficialMutation();
 
-  while( num_completed_transfers < simulation_parameters.maximum_number_of_transfers ) {
+  run_end_condition_met = false;
+  while(!run_end_condition_met && (num_completed_transfers < simulation_parameters.maximum_number_of_transfers)  ) {
         
     ProcessCellDivisionTimeStepExactWithFractionalCells();
     
@@ -100,6 +101,9 @@ void cPopulation::RunSimulation()
       cerr << "    Replicate: " << setw(3) << replicate << "  Transfer: " << setw(4) << num_completed_transfers;
       cerr << "  Fitness: " << setw(7) << fixed << setprecision(4) << average_subpopulation_fitness << "  Genotypes: " << setw(6) << existing_genotype_count; 
       cerr << endl;
+      
+      if ((simulation_parameters.average_fitness_end_condition != 0) && (average_subpopulation_fitness >= simulation_parameters.average_fitness_end_condition))
+        run_end_condition_met = true;
     }
   }
   
@@ -278,9 +282,7 @@ void cStatistics::OutputAveragePopulationFitness() {
 	output_file.open(output_file_name.c_str(),ios::out);
   
   cerr << "Output: " << output_file_name << endl;
-  
-  int32_t num_entries = (*this)[0].average_population_fitness.size();
-  
+    
   int32_t max_transfers_printed = 0;
   for (uint32_t replicate = 0; replicate < this->size(); ++replicate) {
     cReplicateStatistics& replicate_statistics = (*this)[replicate];
@@ -289,7 +291,7 @@ void cStatistics::OutputAveragePopulationFitness() {
   }
   
   output_file << "replicate";
-  for (uint32_t transfer = 0; transfer < num_entries; ++transfer) {
+  for (uint32_t transfer = 0; transfer < max_transfers_printed; ++transfer) {
     output_file << "\t" << (transfer * coarse_graining);
   }
   output_file << endl;
@@ -299,12 +301,12 @@ void cStatistics::OutputAveragePopulationFitness() {
     cReplicateStatistics& replicate_statistics = (*this)[replicate];
     output_file << (replicate+1);
     
-    for (uint32_t transfer = 0; transfer < num_entries; ++transfer) {
+    for (uint32_t transfer = 0; transfer < max_transfers_printed; ++transfer) {
               
       if (transfer < replicate_statistics.average_population_fitness.size() )
         output_file << "\t" << replicate_statistics.average_population_fitness[transfer];
       else
-        output_file << "\t" << "NA" << endl;
+        output_file << "\t" << "NA";
 
     }
     output_file << endl;

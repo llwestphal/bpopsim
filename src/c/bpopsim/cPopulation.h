@@ -82,6 +82,8 @@ namespace bpopsim {
       mutation_fitness_effects = from_string<vector<double> >(options["fitness-effects"]);
       mutation_fitness_effect_model = options["fitness-effect-model"];
       
+      average_fitness_end_condition = from_string<double>(options["average-fitness-end-condition"]);
+      
       if (mutation_rates_per_division.size() != mutation_fitness_effects.size()) {
         
         options.addUsage("");
@@ -90,8 +92,10 @@ namespace bpopsim {
         exit(-1);
       }
       
-      if (options.count("first-mutation-fitness-effects"))
+      if (options.count("first-mutation-fitness-effects")) {
         first_mutation_fitness_effects = from_string<vector< double > >(options["first-mutation-fitness-effects"]);
+        first_mutation_fitness_effects_string = options["first-mutation-fitness-effects"]; 
+      }
       
       // Populate calculated values
       transfer_dilution_factor = exp(log(2) * generations_per_transfer);
@@ -138,6 +142,8 @@ namespace bpopsim {
       cerr << "  Mutation rates per division              (-u) = " << to_string(mutation_rates_per_division) << endl;
       cerr << "  Mutation fitness effects                 (-s) = " << to_string(mutation_fitness_effects) << endl;
       cerr << "  Mutation fitness effect model            (-f) = " << mutation_fitness_effect_model << endl;
+      cerr << "  Initial mutation fitness effects         (-1) = " << substitute(first_mutation_fitness_effects_string, "\n", ",") << endl;
+      cerr << "  Average fitness end condition (0=OFF)         = " << average_fitness_end_condition << endl;
     }
     
     uint32_t DetermineMutationCategory(gsl_rng * rng)
@@ -167,7 +173,9 @@ namespace bpopsim {
     vector<double> mutation_rates_per_division;       // Rate per cell division of mutations in each category
     vector<double> mutation_fitness_effects;          // Effect of mutations in each category = selection coefficient for uniform model 
     string mutation_fitness_effect_model;             // Model for drawing fitness effects: 'u' = uniform NOT FULLY IMPLEMENTED
-    vector<double> first_mutation_fitness_effects; // NOT FULLY IMPLEMENTED
+    vector<double> first_mutation_fitness_effects;    // Fitness effects of initial mutations (overrides other options)
+    string first_mutation_fitness_effects_string;     //   string version of previous for printing
+    double average_fitness_end_condition;             // End replicate when average fitness is this or greater
     
     // Calculated from Input 
     double transfer_dilution_factor;                  // The transfer dilution fraction

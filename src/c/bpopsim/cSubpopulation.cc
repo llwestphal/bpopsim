@@ -44,22 +44,33 @@ void cGenotype::AddOneMutation(
                                )
 {
   // @JEB: more of this could be moved to SimulationParameters object
-  uint32_t this_mutation_category = simulation_parameters.DetermineMutationCategory(rng);
-  double average_mutation_fitness_effect = simulation_parameters.mutation_fitness_effects[this_mutation_category];
   
-  if(simulation_parameters.mutation_fitness_effect_model=="e")
-  {
-    this->this_mutation_fitness_effect = gsl_ran_exponential(rng,average_mutation_fitness_effect);	
-  }
+  // override fitness effects of first mutations
+  if (this->total_mutation_count < simulation_parameters.first_mutation_fitness_effects.size()) {
+    this->this_mutation_fitness_effect = simulation_parameters.first_mutation_fitness_effects[this->total_mutation_count];
     
-  if (simulation_parameters.mutation_fitness_effect_model=="u")
-  {
-    this->this_mutation_fitness_effect = average_mutation_fitness_effect;
+    // Note: we increment only the total number of mutations, not the number in any given category
+  }
+  else { // default behavior
+  
+    uint32_t this_mutation_category = simulation_parameters.DetermineMutationCategory(rng);
+    double average_mutation_fitness_effect = simulation_parameters.mutation_fitness_effects[this_mutation_category];
+    
+    if(simulation_parameters.mutation_fitness_effect_model=="e")
+    {
+      this->this_mutation_fitness_effect = gsl_ran_exponential(rng,average_mutation_fitness_effect);	
+    }
+      
+    if (simulation_parameters.mutation_fitness_effect_model=="u")
+    {
+      this->this_mutation_fitness_effect = average_mutation_fitness_effect;
+    }
+    
+    this->mutation_counts[this_mutation_category]++;
   }
   
   // Update our information
   this->total_mutation_count++;
-  this->mutation_counts[this_mutation_category]++;
   this->fitness += this->this_mutation_fitness_effect;
 }
   
